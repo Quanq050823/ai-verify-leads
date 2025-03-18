@@ -16,7 +16,8 @@ cd material-ui-nextjs-ts
 Install it and run:
 
 ```bash
-npm install
+npm i --legacy-peer-deps
+npm install @xyflow/react --legacy-peer-deps
 npm run dev
 ```
 

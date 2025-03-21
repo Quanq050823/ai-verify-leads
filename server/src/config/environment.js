@@ -38,6 +38,14 @@ const config = {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
     env: process.env.ENV,
+    rabbitMQConfig: {
+        protocol: "amqp",
+        hostname: "localhost",
+        port: "5672",
+        username: "cazoi",
+        password: "secret",
+        vhost: "customers",
+    },
 };
 
 export default config;

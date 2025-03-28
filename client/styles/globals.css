@@ -1943,3 +1943,15 @@ table tfoot tr p {
 	/* box-shadow: 0 4px 8px 0 rgba(92, 92, 92, 0.2),
 		0 6px 20px 0 rgba(108, 108, 108, 0.19); */
 }
+
+.task-card {
+	border-color: rgb(122 122 122 / 58%);
+}
+
+.columnoverlay {
+	min-width: 300px;
+	min-height: 700px;
+	opacity: 60;
+	border: 2;
+	border-color: #0dcaf0;
+}

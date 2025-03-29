@@ -48,7 +48,7 @@ export const createFlow = async (data, user) => {
         let result = await flow.save();
 
         //Create queue for each nodes in RabbitMQ
-        nodeData.nodes.forEach((node) => {
+        nodeData?.nodes?.forEach((node) => {
             Producer.createExchange(node?.type);
             Producer.createQueue(
                 `${node?.type}.${user.userId}.${flow._id}`,
@@ -72,8 +72,8 @@ export const updateFlow = async (flowId, data, user) => {
             throw new ApiError(StatusCodes.NOT_FOUND, "Flow not found");
         }
 
-        flow.name = flowName;
-        flow.nodeData = nodeData;
+        flow.name = flowName || flow.name;
+        flow.nodeData = nodeData || flow.nodeData;
         flow.lastModified = new Date();
 
         let result = await flow.save();

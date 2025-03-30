@@ -8,12 +8,14 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import routes from "./routes/index.js";
 import chalk from "chalk";
-// import { firebaseStorage } from "./config/firebaseApp.js";
+import { firebaseStorage } from "./config/firebaseApp.js";
 import session from "express-session";
 import passport from "passport";
 import Producer from "./config/rabbitMQ.js";
 
 const START_SERVER = () => {
+    process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
     const app = express();
 
     app.use(cookieParser());

@@ -39,7 +39,7 @@ class Producer {
         const channel = await this.createChannel();
         const payload = JSON.stringify({
             routingKey,
-            message,
+            data: message,
             dateTime: new Date().toISOString(),
         });
 

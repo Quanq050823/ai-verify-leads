@@ -11,7 +11,7 @@ import authenticate from "../middlewares/jwtMiddlewares.js";
 export default (app) => {
     app.use("/api/auth", authRoute);
     app.use("/api/hooks", hookRoute);
-    app.use("/api/flow", authenticate, flowRoute);
+    app.use("/api/flow", flowRoute);
     app.use("/api/nodeType", nodeTypeRoute);
     // app.use("/api/user", authenticate, userRoute);
     // app.use("/api/project", authenticate, projectRoute);

@@ -34,6 +34,8 @@ export const createNodeType = async (req, res, next) => {
 
 export const updateNodeType = async (req, res, next) => {
     try {
+        if (req?.file) req.body.img = req?.file;
+
         let result = await service.updateNodeType(req.params.nodeTypeId, req.body);
         res.status(StatusCodes.OK).send(result);
     } catch (err) {

@@ -4,6 +4,7 @@ import ApiError from "../utils/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 import getObjectId from "../utils/getObjectId.js";
 import NodeType from "../models/nodeType.js";
+import uploadImg from "../utils/uploadFirebaseImg.js";
 
 export const getAll = async () => {
     try {
@@ -48,14 +49,18 @@ export const createNodeType = async (nodeType) => {
 
 export const updateNodeType = async (nodeTypeId, data) => {
     try {
-        let nodeType = NodeType.findById(getObjectId(nodeTypeId));
+        let nodeType = await NodeType.findById(getObjectId(nodeTypeId));
         if (!nodeType) {
             throw new ApiError(StatusCodes.NOT_FOUND, "Node type not found");
         }
 
+        let uploadedImg = data?.img
+            ? await uploadImg(data?.img, "nodeType", nodeType._id)
+            : nodeType.img;
+
         nodeType.name = data.name || nodeType.name;
         nodeType.type = data.type || nodeType.type;
-        nodeType.img = data.img || nodeType.img;
+        nodeType.img = uploadedImg;
         nodeType.description = data.description || nodeType.description;
         nodeType.fields = data.fields || nodeType.fields;
 

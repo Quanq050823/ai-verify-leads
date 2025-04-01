@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import getObjectId from "../utils/getObjectId.js";
 import NodeType from "../models/nodeType.js";
 import uploadImg from "../utils/uploadFirebaseImg.js";
+import Producer from "../config/rabbitMQ.js";
 
 export const getAll = async () => {
     try {
@@ -41,6 +42,10 @@ export const createNodeType = async (nodeType) => {
             fields,
         });
         await newNodeType.save();
+
+        Producer.createExchange(key);
+        Producer.createQueue(`${key}.consumer`, key, `${key}.consumer`);
+
         return newNodeType;
     } catch (error) {
         throw error;
@@ -53,6 +58,8 @@ export const updateNodeType = async (nodeTypeId, data) => {
         if (!nodeType) {
             throw new ApiError(StatusCodes.NOT_FOUND, "Node type not found");
         }
+
+        console.log("data", data?.img);
 
         let uploadedImg = data?.img
             ? await uploadImg(data?.img, "nodeType", nodeType._id)

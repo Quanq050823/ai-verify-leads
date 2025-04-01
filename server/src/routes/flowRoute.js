@@ -19,8 +19,8 @@ router.delete("/:flowId", flowController.deleteFlow);
 router.post("/publishLead", async (req, res) => {
     try {
         const result = await Producer.publishMessage(
-            "pre-verify",
-            "pre-verify.67b1c1331e12c93a79317bbb.67dfd768bcf92635cb7753a9",
+            "aiCall",
+            "aiCall.67b1c1331e12c93a79317bbb.67ebfe9f941764a6a229a9e2",
             req.body
         );
         res.status(200).json({ message: "Lead published successfully", result });

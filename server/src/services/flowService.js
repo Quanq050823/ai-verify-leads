@@ -51,9 +51,9 @@ export const createFlow = async (data, user) => {
         nodeData?.nodes?.forEach((node) => {
             Producer.createExchange(node?.type);
             Producer.createQueue(
-                `${node?.type}.${user.userId}.${flow._id}`,
+                `${node.type}.${user.userId}.${flow._id}`,
                 node?.type,
-                `${node?.type}.${user.userId}.${flow._id}`
+                `${node.type}.${user.userId}.${flow._id}`
             );
         });
 

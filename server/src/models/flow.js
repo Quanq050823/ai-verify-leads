@@ -23,6 +23,9 @@ const FlowSchema = mongoose.Schema(
         nodeData: {
             type: mongoose.Schema.Types.Mixed,
         },
+        routeData: {
+            type: mongoose.Schema.Types.Mixed,
+        },
         lastModified: {
             type: Date,
             default: Date.now,

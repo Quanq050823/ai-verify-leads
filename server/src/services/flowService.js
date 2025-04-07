@@ -39,8 +39,16 @@ export const createFlow = async (data, user) => {
             throw new ApiError(StatusCodes.BAD_REQUEST, "Flow name already exists");
         }
 
+        let routeData = nodeData?.edges?.map((edge) => {
+            return {
+                source: edge.source,
+                target: edge.target,
+            };
+        });
+
         let flow = new Flow({
             name: flowName,
+            routeData,
             nodeData,
             createdBy: getObjectId(user.userId),
         });
@@ -51,9 +59,9 @@ export const createFlow = async (data, user) => {
         nodeData?.nodes?.forEach((node) => {
             Producer.createExchange(node?.type);
             Producer.createQueue(
-                `${node.type}.${user.userId}.${flow._id}`,
+                `${user.userId}.${node.id}`,
                 node?.type,
-                `${node.type}.${user.userId}.${flow._id}`
+                `${user.userId}.${node.id}`
             );
         });
 

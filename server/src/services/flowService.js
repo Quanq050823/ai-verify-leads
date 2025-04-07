@@ -59,9 +59,9 @@ export const createFlow = async (data, user) => {
         nodeData?.nodes?.forEach((node) => {
             Producer.createExchange(node?.type);
             Producer.createQueue(
-                `${user.userId}.${node.id}`,
+                `${user.userId}.${flow._id}.${node.id}`,
                 node?.type,
-                `${user.userId}.${node.id}`
+                `${user.userId}.${flow._id}.${node.id}`
             );
         });
 
@@ -124,7 +124,7 @@ export const updateStatus = async (flowId, status, user) => {
         if (flow.status == 0) {
             console.log("Deleting queue...");
             flow?.nodeData?.nodes?.forEach((node) => {
-                Producer.deleteQueue(`${node?.type}.${user.userId}.${flow._id}`, node?.type);
+                Producer.deleteQueue(`${user.userId}.${flow._id}.${node.id}`, node?.type);
             });
         }
 

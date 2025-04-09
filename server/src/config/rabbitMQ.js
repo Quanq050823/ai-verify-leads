@@ -8,7 +8,7 @@ class Producer {
     static async createChannel() {
         if (!this.channel) {
             try {
-                const connection = await amqp.connect(config.rabbitMQConfig);
+                const connection = await amqp.connect(config.rabbitMQURL);
                 this.channel = await connection.createChannel();
                 console.log(chalk.blueBright("✅ Connected to RabbitMQ"));
             } catch (error) {

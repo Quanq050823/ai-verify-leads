@@ -46,6 +46,7 @@ const config = {
         password: "secret",
         vhost: "customers",
     },
+    rabbitMQURL: process.env.RABBITMQ_URL,
 };
 
 export default config;

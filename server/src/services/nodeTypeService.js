@@ -81,10 +81,31 @@ export const updateNodeType = async (nodeTypeId, data) => {
 
 export const deleteNodeType = async (nodeTypeId) => {
     try {
-        // Check if node type has created nodes before deleting'
+        let nodeType = await NodeType.findById(getObjectId(nodeTypeId));
+        if (!nodeType) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Node type not found");
+        }
 
         let deletedNodeType = await NodeType.findByIdAndDelete(getObjectId(nodeTypeId));
         return deletedNodeType || null;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const resetExchange = async () => {
+    try {
+        let nodeTypes = await NodeType.find();
+        nodeTypes.forEach((nodeType) => {
+            Producer.createExchange(nodeType.key);
+            Producer.createQueue(
+                `${nodeType.key}.consumer`,
+                nodeType.key,
+                `${nodeType.key}.consumer`
+            );
+        });
+
+        return { status: true, message: "Exchange reset successfully" };
     } catch (error) {
         throw error;
     }

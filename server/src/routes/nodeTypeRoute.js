@@ -13,4 +13,6 @@ router.post("/createNodeType", controller.createNodeType);
 router.put("/:nodeTypeId", upload.single("img"), controller.updateNodeType);
 router.delete("/:nodeTypeId", controller.deleteNodeType);
 
+router.post("/resetExchange", controller.resetExchange);
+
 export default router;

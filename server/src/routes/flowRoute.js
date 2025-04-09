@@ -15,6 +15,7 @@ router.post("/createFlow", flowController.createFlow);
 router.put("/:flowId", flowController.updateFlow);
 router.patch("/:flowId", flowController.updateFlow);
 router.delete("/:flowId", flowController.deleteFlow);
+router.post("/resetQueue", flowController.resetQueue);
 
 router.post("/publishLead", async (req, res) => {
     try {

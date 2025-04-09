@@ -127,7 +127,7 @@ export const updateStatus = async (flowId, status, user) => {
                 Producer.deleteQueue(`${user.userId}.${flow._id}.${node.id}`, node?.type);
             });
         } else if (flow.status == 2) {
-            nodeData?.nodes?.forEach((node) => {
+            flow?.nodeData?.nodes?.forEach((node) => {
                 Producer.createExchange(node?.type);
                 Producer.createQueue(
                     `${user.userId}.${flow._id}.${node.id}`,

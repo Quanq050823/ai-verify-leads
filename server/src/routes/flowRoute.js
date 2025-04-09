@@ -14,6 +14,8 @@ router.get("/getById/:flowId", flowController.getById);
 router.post("/createFlow", flowController.createFlow);
 router.put("/:flowId", flowController.updateFlow);
 router.patch("/:flowId", flowController.updateFlow);
+router.patch("/disableFlow/:flowId", flowController.disableFlow);
+router.patch("/enableFlow/:flowId", flowController.activeFlow);
 router.delete("/:flowId", flowController.deleteFlow);
 router.post("/resetQueue", flowController.resetQueue);
 

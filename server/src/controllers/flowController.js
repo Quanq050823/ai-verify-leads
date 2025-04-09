@@ -67,3 +67,12 @@ export const deleteFlow = async (req, res, next) => {
         next(err);
     }
 };
+
+export const resetQueue = async (req, res, next) => {
+    try {
+        let result = await flowService.resetQueue();
+        res.status(200).json(result);
+    } catch (err) {
+        next(err);
+    }
+};

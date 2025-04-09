@@ -121,14 +121,42 @@ export const updateStatus = async (flowId, status, user) => {
 
         let result = await flow.save();
 
-        if (flow.status == 0) {
+        if (flow.status == 0 || flow.status == 1) {
             console.log("Deleting queue...");
             flow?.nodeData?.nodes?.forEach((node) => {
                 Producer.deleteQueue(`${user.userId}.${flow._id}.${node.id}`, node?.type);
             });
+        } else if (flow.status == 2) {
+            nodeData?.nodes?.forEach((node) => {
+                Producer.createExchange(node?.type);
+                Producer.createQueue(
+                    `${user.userId}.${flow._id}.${node.id}`,
+                    node?.type,
+                    `${user.userId}.${flow._id}.${node.id}`
+                );
+            });
         }
 
         return result ? result : null;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const resetQueue = async () => {
+    try {
+        let flows = await Flow.find({ status: 2 });
+        flows.forEach((flow) => {
+            flow?.nodeData?.nodes?.forEach((node) => {
+                Producer.createExchange(node?.type);
+                Producer.createQueue(
+                    `${flow.createdBy}.${flow._id}.${node.id}`,
+                    node?.type,
+                    `${flow.createdBy}.${flow._id}.${node.id}`
+                );
+            });
+        });
+        return { status: true, message: "Queue reset successfully" };
     } catch (error) {
         throw error;
     }

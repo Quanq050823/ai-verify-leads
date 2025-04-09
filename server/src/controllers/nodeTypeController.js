@@ -51,3 +51,12 @@ export const deleteNodeType = async (req, res, next) => {
         next(err);
     }
 };
+
+export const resetExchange = async (req, res, next) => {
+    try {
+        let result = await service.resetExchange();
+        res.status(200).json(result);
+    } catch (err) {
+        next(err);
+    }
+};

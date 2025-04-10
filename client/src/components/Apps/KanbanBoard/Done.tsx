@@ -193,6 +193,7 @@ const ToDo: React.FC = () => {
 					borderRadius: "7px",
 					mb: "25px",
 					padding: { xs: "18px", sm: "20px", lg: "25px" },
+					maxWidth: "350px",
 				}}
 				className="rmui-card"
 			>
@@ -212,7 +213,7 @@ const ToDo: React.FC = () => {
 						}}
 						className="text-black"
 					>
-						To Do
+						Schedule
 					</Typography>
 
 					<Box>
@@ -250,9 +251,7 @@ const ToDo: React.FC = () => {
 							transformOrigin={{ horizontal: "right", vertical: "top" }}
 							anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
 						>
-							<MenuItem>Select All</MenuItem>
-							<MenuItem>Edit All</MenuItem>
-							<MenuItem>Delete All</MenuItem>
+							<MenuItem>Delete Column</MenuItem>
 						</Menu>
 					</Box>
 				</Box>
@@ -261,7 +260,11 @@ const ToDo: React.FC = () => {
 					{toDoListData &&
 						toDoListData.map((toDoList, index) => (
 							<Box
-								className={`bg-purple-100 ${toDoList.bgClass}`}
+								className={`bg-purple-100 ${toDoList.bgClass} task-card`}
+								style={{
+									borderWidth: "2px",
+									borderStyle: "solid",
+								}}
 								sx={{
 									padding: "25px",
 									borderRadius: "7px",

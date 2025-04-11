@@ -18,7 +18,7 @@ class Producer {
         return this.channel;
     }
 
-    static async createExchange(exchange, type = "direct") {
+    static async createExchange(exchange, type = "topic") {
         const channel = await this.createChannel();
         await channel.assertExchange(exchange, type, { durable: true });
     }

@@ -204,14 +204,17 @@ function ColumnContainer(props: Props) {
 			<div ref={setNodeRef} style={style} className="columnoverlay">
 				{" "}
 				<Box
+
 					style={{
 						minWidth: "300px",
 						minHeight: "700px",
 					}}
 				>
 					<Card
+
 						{...attributes}
 						{...listeners}
+
 						sx={{
 							boxShadow: "none",
 							borderRadius: "7px",
@@ -234,6 +237,7 @@ function ColumnContainer(props: Props) {
 							}}
 						></Box>
 					</Card>
+
 				</Box>
 				{/* Modal */}
 				<BootstrapDialog
@@ -445,6 +449,7 @@ function ColumnContainer(props: Props) {
 						</Box>
 					</Box>
 				</BootstrapDialog>
+
 			</div>
 		);
 	}

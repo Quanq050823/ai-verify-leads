@@ -179,7 +179,9 @@
 	.mat-accordion
 	.mat-summary
 	.MuiAccordionSummary-content
-	.trezo-badge {
+
+	.Sine-badge {
+
 	top: 50%;
 	padding: 0;
 	right: 34px;
@@ -202,7 +204,8 @@
 	.mat-accordion
 	.mat-summary
 	.MuiAccordionSummary-content
-	.trezo-badge.style-two {
+
+	.Sine-badge.style-two {
 	color: #00b69b;
 	background: rgba(0, 182, 155, 0.07);
 }
@@ -212,7 +215,9 @@
 	.mat-accordion
 	.mat-summary
 	.MuiAccordionSummary-content
-	.trezo-badge.style-three {
+
+	.Sine-badge.style-three {
+
 	color: #ee368c;
 	background: rgba(238, 54, 140, 0.1);
 }
@@ -343,7 +348,9 @@
 	.sidebar-sub-menu
 	.sidemenu-item
 	.sidemenu-link
-	.trezo-badge {
+
+	.Sine-badge {
+
 	top: -1px;
 	color: #fd5812;
 	padding: 2px 6px;
@@ -364,7 +371,9 @@
 	.sidebar-sub-menu
 	.sidemenu-item
 	.sidemenu-link
-	.trezo-badge::before {
+
+	.Sine-badge::before {
+
 	top: 50%;
 	left: -3px;
 	width: 6px;
@@ -382,7 +391,9 @@
 	.sidebar-sub-menu
 	.sidemenu-item
 	.sidemenu-link
-	.trezo-badge.style-two {
+
+	.Sine-badge.style-two {
+
 	color: #25b003;
 	background-color: #d8ffc8;
 }
@@ -394,7 +405,9 @@
 	.sidebar-sub-menu
 	.sidemenu-item
 	.sidemenu-link
-	.trezo-badge.style-two::before {
+
+	.Sine-badge.style-two::before {
+
 	background: #d8ffc8;
 }
 .left-sidebar-menu
@@ -696,7 +709,9 @@
 	.mat-accordion
 	.mat-summary
 	.MuiAccordionSummary-content
-	.trezo-badge {
+
+	.Sine-badge {
+
 	right: auto;
 	left: 34px;
 }
@@ -753,7 +768,9 @@
 	.sidebar-sub-menu
 	.sidemenu-item
 	.sidemenu-link
-	.trezo-badge {
+
+	.Sine-badge {
+
 	margin-left: 0;
 	margin-right: 9px;
 }
@@ -888,7 +905,9 @@
 		.mat-accordion
 		.mat-summary
 		.MuiAccordionSummary-content
-		.trezo-badge {
+
+		.Sine-badge {
+
 		display: none;
 	}
 	.main-wrapper-content.active
@@ -989,7 +1008,9 @@
 		.mat-accordion
 		.mat-summary
 		.MuiAccordionSummary-content
-		.trezo-badge {
+
+		.Sine-badge {
+
 		display: inline-block;
 	}
 	.main-wrapper-content.active
@@ -1084,7 +1105,9 @@
 		.mat-accordion
 		.mat-summary
 		.MuiAccordionSummary-content
-		.trezo-badge {
+
+		.Sine-badge {
+
 		display: none;
 	}
 	.main-wrapper-content.compact-sidebar
@@ -1187,7 +1210,9 @@
 		.mat-accordion
 		.mat-summary
 		.MuiAccordionSummary-content
-		.trezo-badge {
+
+		.Sine-badge {
+
 		display: inline-block;
 	}
 	.main-wrapper-content.compact-sidebar

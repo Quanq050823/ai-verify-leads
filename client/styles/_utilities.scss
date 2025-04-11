@@ -99,7 +99,7 @@
 	background-color: transparent !important;
 }
 .bg-gray {
-	background-color: #F5F7F8 !important;
+	background-color: #f5f7f8 !important;
 }
 .bg-gray-50 {
 	background-color: #f6f7f9 !important;
@@ -132,58 +132,58 @@
 	background-color: var(--orangeColor) !important;
 }
 .bg-primary-50 {
-	background-color: #ECF0FF !important;
+	background-color: #ecf0ff !important;
 }
 .bg-danger-50 {
-	background-color: #FFF2F0 !important;
+	background-color: #fff2f0 !important;
 }
 .bg-success-50 {
-	background-color: #EEFFE5 !important;
+	background-color: #eeffe5 !important;
 }
 .bg-secondary-50 {
-	background-color: #DAEBFF !important;
+	background-color: #daebff !important;
 }
 .bg-secondary-500 {
 	background-color: rgb(53 132 252) !important;
 }
 .bg-purple-50 {
-	background-color: #FAF5FF !important;
+	background-color: #faf5ff !important;
 }
 .bg-orange-50 {
-	background-color: #FFF5ED !important;
+	background-color: #fff5ed !important;
 }
 .bg-purple-100 {
-	background-color: #F3E8FF !important;
+	background-color: #f3e8ff !important;
 }
 .bg-orange-100 {
-	background-color: #FFE8D4 !important;
+	background-color: #ffe8d4 !important;
 }
 .bg-success-100 {
-	background-color: #D8FFC8 !important;
+	background-color: #d8ffc8 !important;
 }
 .bg-success-500 {
 	background-color: rgb(55 216 10) !important;
 }
 .bg-secondary-100 {
-	background-color: #DAEBFF !important;
+	background-color: #daebff !important;
 }
 .bg-primary-100 {
-	background-color: #DDE4FF !important;
+	background-color: #dde4ff !important;
 }
 .bg-danger-100 {
-	background-color: #FFE1DD !important;
+	background-color: #ffe1dd !important;
 }
 .bg-info-100 {
 	background-color: rgb(179 236 252) !important;
 }
 .bg-danger-200 {
-	background-color: #FFC8C0 !important;
+	background-color: #ffc8c0 !important;
 }
 .bg-primary-500 {
-	background-color: #605DFF !important;
+	background-color: #605dff !important;
 }
 .bg-purple-700 {
-	background-color: #605DFF !important;
+	background-color: #605dff !important;
 }
 .bg-f6f7f9 {
 	background-color: #f6f7f9 !important;
@@ -212,7 +212,7 @@
 .bg-grey-100 {
 	background-color: #eceef2;
 }
-  
+
 // Text Color
 .text-body {
 	color: var(--bodyColor) !important;
@@ -301,7 +301,7 @@
 	border: none !important;
 }
 .border-color-primary {
-	border-color: var(--primaryColor) !important; 
+	border-color: var(--primaryColor) !important;
 }
 
 // Border Radius
@@ -380,8 +380,8 @@
 }
 
 // Badge
-.trezo-badge {
-	background-color: #ECF0FF;
+.Sine-badge {
+	background-color: #ecf0ff;
 	color: var(--primaryColor);
 	display: inline-block;
 	border-radius: 4px;
@@ -389,31 +389,58 @@
 	font: {
 		weight: 500;
 		size: 12px;
-	};
+	}
 
-	&.pending, &.Pending {
-		background-color: rgba(255, 193, 7, .15);
+	&.pending,
+	&.Pending {
+		background-color: rgba(255, 193, 7, 0.15);
 		color: var(--warningColor);
 	}
-	&.rejected, &.Rejected, &.NotAvailable, &.notAvailable &.Not.Available, &.not.available, &.Not, &.not, &.past, &.Past	{
-		background-color: #FFE1DD;
+	&.rejected,
+	&.Rejected,
+	&.NotAvailable,
+	&.notAvailable &.Not.Available,
+	&.not.available,
+	&.Not,
+	&.not,
+	&.past,
+	&.Past {
+		background-color: #ffe1dd;
 		color: var(--dangerColor);
 	}
-	&.pInProgress, &.cancelled, &.Cancelled, &.draft, &.Draft, &.deactive, &.Deactive, &.Deactivate, &.deactivate, &.Unread, &.unread {
-		background-color: #FFE8D4;
-		color: #EE3E08;
+	&.pInProgress,
+	&.cancelled,
+	&.Cancelled,
+	&.draft,
+	&.Draft,
+	&.deactive,
+	&.Deactive,
+	&.Deactivate,
+	&.deactivate,
+	&.Unread,
+	&.unread {
+		background-color: #ffe8d4;
+		color: #ee3e08;
 	}
-	&.inProgress, &.in.Progress, &.In.Progress, &.finished, .Finished, &.shipped, &.Shipped, &.pFinished {
-		background-color: #D8FFC8;
+	&.inProgress,
+	&.in.Progress,
+	&.In.Progress,
+	&.finished,
+	.Finished,
+	&.shipped,
+	&.Shipped,
+	&.pFinished {
+		background-color: #d8ffc8;
 		color: var(--successColor);
 	}
 	&.pPending {
-		background-color: #F3E8FF;
-		color: #7C24CC;
+		background-color: #f3e8ff;
+		color: #7c24cc;
 	}
-	&.rescheduled, &.Rescheduled {
-    color: #c52b09;
-    background-color: #ffe8d4;
+	&.rescheduled,
+	&.Rescheduled {
+		color: #c52b09;
+		background-color: #ffe8d4;
 	}
 }
 
@@ -463,7 +490,7 @@
 .ml-15 {
 	margin-left: 15px !important;
 }
- 
+
 // RTL Style
 [dir="rtl"] {
 	.ml-1 {
@@ -563,7 +590,7 @@
 	margin-right: 11px !important;
 }
 .mr-12 {
-	margin-right: 12px !important; 
+	margin-right: 12px !important;
 }
 .mr-13 {
 	margin-right: 13px !important;
@@ -582,7 +609,6 @@
 .-mr-25 {
 	margin-right: -25px !important;
 }
-
 
 // RTL Style
 [dir="rtl"] {
@@ -631,7 +657,7 @@
 		margin-left: 11px !important;
 	}
 	.mr-12 {
-		margin-right: 0 !important; 
+		margin-right: 0 !important;
 		margin-left: 12px !important;
 	}
 	.mr-13 {
@@ -646,7 +672,7 @@
 		margin-right: 0 !important;
 		margin-left: 15px !important;
 	}
-	
+
 	// minus
 	.-mr-10 {
 		margin-right: 0 !important;
@@ -891,4 +917,3 @@
 		padding-left: 15px !important;
 	}
 }
- 

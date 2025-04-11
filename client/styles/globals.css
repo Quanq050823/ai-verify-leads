@@ -481,7 +481,7 @@
 	text-decoration: line-through !important;
 }
 
-.trezo-badge {
+.Sine-badge {
 	background-color: #ecf0ff;
 	color: var(--primaryColor);
 	display: inline-block;
@@ -490,54 +490,54 @@
 	font-weight: 500;
 	font-size: 12px;
 }
-.trezo-badge.pending,
-.trezo-badge.Pending {
+.Sine-badge.pending,
+.Sine-badge.Pending {
 	background-color: rgba(255, 193, 7, 0.15);
 	color: var(--warningColor);
 }
-.trezo-badge.rejected,
-.trezo-badge.Rejected,
-.trezo-badge.NotAvailable,
-.trezo-badge.notAvailable .trezo-badge.Not.Available,
-.trezo-badge.not.available,
-.trezo-badge.Not,
-.trezo-badge.not,
-.trezo-badge.past,
-.trezo-badge.Past {
+.Sine-badge.rejected,
+.Sine-badge.Rejected,
+.Sine-badge.NotAvailable,
+.Sine-badge.notAvailable .Sine-badge.Not.Available,
+.Sine-badge.not.available,
+.Sine-badge.Not,
+.Sine-badge.not,
+.Sine-badge.past,
+.Sine-badge.Past {
 	background-color: #ffe1dd;
 	color: var(--dangerColor);
 }
-.trezo-badge.pInProgress,
-.trezo-badge.cancelled,
-.trezo-badge.Cancelled,
-.trezo-badge.draft,
-.trezo-badge.Draft,
-.trezo-badge.deactive,
-.trezo-badge.Deactive,
-.trezo-badge.Deactivate,
-.trezo-badge.deactivate,
-.trezo-badge.Unread,
-.trezo-badge.unread {
+.Sine-badge.pInProgress,
+.Sine-badge.cancelled,
+.Sine-badge.Cancelled,
+.Sine-badge.draft,
+.Sine-badge.Draft,
+.Sine-badge.deactive,
+.Sine-badge.Deactive,
+.Sine-badge.Deactivate,
+.Sine-badge.deactivate,
+.Sine-badge.Unread,
+.Sine-badge.unread {
 	background-color: #ffe8d4;
 	color: #ee3e08;
 }
-.trezo-badge.inProgress,
-.trezo-badge.in.Progress,
-.trezo-badge.In.Progress,
-.trezo-badge.finished,
-.trezo-badge .Finished,
-.trezo-badge.shipped,
-.trezo-badge.Shipped,
-.trezo-badge.pFinished {
+.Sine-badge.inProgress,
+.Sine-badge.in.Progress,
+.Sine-badge.In.Progress,
+.Sine-badge.finished,
+.Sine-badge .Finished,
+.Sine-badge.shipped,
+.Sine-badge.Shipped,
+.Sine-badge.pFinished {
 	background-color: #d8ffc8;
 	color: var(--successColor);
 }
-.trezo-badge.pPending {
+.Sine-badge.pPending {
 	background-color: #f3e8ff;
 	color: #7c24cc;
 }
-.trezo-badge.rescheduled,
-.trezo-badge.Rescheduled {
+.Sine-badge.rescheduled,
+.Sine-badge.Rescheduled {
 	color: #c52b09;
 	background-color: #ffe8d4;
 }
@@ -1955,3 +1955,10 @@ table tfoot tr p {
 	border: 2;
 	border-color: #0dcaf0;
 }
+
+.navbar-logo {
+	content: url("/images/Sine_logo.png");
+	width: 143px;
+	height: auto;
+}
+

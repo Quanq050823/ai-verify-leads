@@ -137,15 +137,6 @@ const MenuProps = {
 	},
 };
 
-const names = [
-	"Sarah Johnson",
-	"Michael Smith",
-	"Emily Brown",
-	"Jason Lee",
-	"Ashley Davis",
-	"Mark Thompson",
-];
-
 function ColumnContainer(props: Props) {
 	const { column, deleteColumn } = props;
 
@@ -213,14 +204,14 @@ function ColumnContainer(props: Props) {
 			<div ref={setNodeRef} style={style} className="columnoverlay">
 				{" "}
 				<Box
-					{...attributes}
-					{...listeners}
 					style={{
 						minWidth: "300px",
 						minHeight: "700px",
 					}}
 				>
 					<Card
+						{...attributes}
+						{...listeners}
 						sx={{
 							boxShadow: "none",
 							borderRadius: "7px",
@@ -243,220 +234,217 @@ function ColumnContainer(props: Props) {
 							}}
 						></Box>
 					</Card>
-
-					{/* Modal */}
-					<BootstrapDialog
-						onClose={handleCloseModal}
-						aria-labelledby="customized-dialog-title"
-						open={openModal}
-						className="rmu-modal"
-					>
-						<Box>
-							<Box
+				</Box>
+				{/* Modal */}
+				<BootstrapDialog
+					onClose={handleCloseModal}
+					aria-labelledby="customized-dialog-title"
+					open={openModal}
+					className="rmu-modal"
+				>
+					<Box>
+						<Box
+							sx={{
+								display: "flex",
+								justifyContent: "space-between",
+								alignItems: "center",
+								background: "#f6f7f9",
+								padding: { xs: "15px 20px", md: "25px" },
+							}}
+							className="rmu-modal-header"
+						>
+							<Typography
+								id="modal-modal-title"
+								variant="h6"
 								sx={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-									background: "#f6f7f9",
-									padding: { xs: "15px 20px", md: "25px" },
+									fontWeight: "600",
+									fontSize: { xs: "16px", md: "18px" },
 								}}
-								className="rmu-modal-header"
+								className="text-black"
 							>
-								<Typography
-									id="modal-modal-title"
-									variant="h6"
+								Add New Card
+							</Typography>
+
+							<IconButton
+								aria-label="remove"
+								size="small"
+								onClick={handleCloseModal}
+							>
+								<ClearIcon />
+							</IconButton>
+						</Box>
+
+						<Box className="rmu-modal-content">
+							<Box component="form" noValidate onSubmit={handleSubmit}>
+								<Box
 									sx={{
-										fontWeight: "600",
-										fontSize: { xs: "16px", md: "18px" },
+										padding: "25px",
+										borderRadius: "8px",
 									}}
-									className="text-black"
+									className="bg-white"
 								>
-									Add New Card
-								</Typography>
+									<Grid container alignItems="center" spacing={2}>
+										<Grid item xs={12} md={12} lg={12}>
+											<Typography
+												component="h5"
+												sx={{
+													fontWeight: "500",
+													fontSize: "14px",
+													mb: "12px",
+												}}
+												className="text-black"
+											>
+												Name
+											</Typography>
 
-								<IconButton
-									aria-label="remove"
-									size="small"
-									onClick={handleCloseModal}
-								>
-									<ClearIcon />
-								</IconButton>
-							</Box>
-
-							<Box className="rmu-modal-content">
-								<Box component="form" noValidate onSubmit={handleSubmit}>
-									<Box
-										sx={{
-											padding: "25px",
-											borderRadius: "8px",
-										}}
-										className="bg-white"
-									>
-										<Grid container alignItems="center" spacing={2}>
-											<Grid item xs={12} md={12} lg={12}>
-												<Typography
-													component="h5"
-													sx={{
-														fontWeight: "500",
-														fontSize: "14px",
-														mb: "12px",
-													}}
-													className="text-black"
-												>
-													Name
-												</Typography>
-
-												<TextField
-													autoComplete="name"
-													name="name"
-													required
-													fullWidth
-													id="name"
-													label="Name"
-													autoFocus
-													InputProps={{
-														style: { borderRadius: 8 },
-													}}
-												/>
-											</Grid>
-
-											<Grid item xs={12} md={12} lg={12}>
-												<Typography
-													component="h5"
-													sx={{
-														fontWeight: "500",
-														fontSize: "14px",
-														mb: "12px",
-													}}
-													className="text-black"
-												>
-													Email
-												</Typography>
-
-												<TextField
-													autoComplete="email"
-													name="email"
-													required
-													fullWidth
-													id="email"
-													label="Email"
-													InputProps={{
-														style: { borderRadius: 8 },
-													}}
-												/>
-											</Grid>
-
-											<Grid item xs={12} md={12} lg={12}>
-												<Typography
-													component="h5"
-													sx={{
-														fontWeight: "500",
-														fontSize: "14px",
-														mb: "12px",
-													}}
-													className="text-black"
-												>
-													Phone
-												</Typography>
-
-												<TextField
-													autoComplete="phone"
-													name="phone"
-													required
-													fullWidth
-													id="phone"
-													label="Phone"
-													InputProps={{
-														style: { borderRadius: 8 },
-													}}
-												/>
-											</Grid>
-
-											<Grid item xs={12} md={12} lg={12}>
-												<Typography
-													component="h5"
-													sx={{
-														fontWeight: "500",
-														fontSize: "14px",
-														mb: "12px",
-													}}
-													className="text-black"
-												>
-													Source
-												</Typography>
-
-												<FormControl fullWidth>
-													<InputLabel id="source-select-label">
-														Source
-													</InputLabel>
-													<Select
-														labelId="source-select-label"
-														id="source-select"
-														name="source"
-														required
-														input={<OutlinedInput label="Source" />}
-													>
-														<MenuItem value="Facebook">Facebook</MenuItem>
-														<MenuItem value="Import GG Sheet">
-															Import GG Sheet
-														</MenuItem>
-													</Select>
-												</FormControl>
-											</Grid>
-
-											<Grid item xs={12} mt={1}>
-												<Box
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "end",
-														gap: "10px",
-													}}
-												>
-													<Button
-														onClick={handleCloseModal}
-														variant="outlined"
-														color="error"
-														sx={{
-															textTransform: "capitalize",
-															borderRadius: "8px",
-															fontWeight: "500",
-															fontSize: "13px",
-															padding: "11px 30px",
-														}}
-													>
-														Cancel
-													</Button>
-
-													<Button
-														type="submit"
-														variant="contained"
-														sx={{
-															textTransform: "capitalize",
-															borderRadius: "8px",
-															fontWeight: "500",
-															fontSize: "13px",
-															padding: "11px 30px",
-															color: "#fff !important",
-														}}
-													>
-														<AddIcon
-															sx={{
-																position: "relative",
-																top: "-1px",
-															}}
-														/>{" "}
-														Create
-													</Button>
-												</Box>
-											</Grid>
+											<TextField
+												autoComplete="name"
+												name="name"
+												required
+												fullWidth
+												id="name"
+												label="Name"
+												autoFocus
+												InputProps={{
+													style: { borderRadius: 8 },
+												}}
+											/>
 										</Grid>
-									</Box>
+
+										<Grid item xs={12} md={12} lg={12}>
+											<Typography
+												component="h5"
+												sx={{
+													fontWeight: "500",
+													fontSize: "14px",
+													mb: "12px",
+												}}
+												className="text-black"
+											>
+												Email
+											</Typography>
+
+											<TextField
+												autoComplete="email"
+												name="email"
+												required
+												fullWidth
+												id="email"
+												label="Email"
+												InputProps={{
+													style: { borderRadius: 8 },
+												}}
+											/>
+										</Grid>
+
+										<Grid item xs={12} md={12} lg={12}>
+											<Typography
+												component="h5"
+												sx={{
+													fontWeight: "500",
+													fontSize: "14px",
+													mb: "12px",
+												}}
+												className="text-black"
+											>
+												Phone
+											</Typography>
+
+											<TextField
+												autoComplete="phone"
+												name="phone"
+												required
+												fullWidth
+												id="phone"
+												label="Phone"
+												InputProps={{
+													style: { borderRadius: 8 },
+												}}
+											/>
+										</Grid>
+
+										<Grid item xs={12} md={12} lg={12}>
+											<Typography
+												component="h5"
+												sx={{
+													fontWeight: "500",
+													fontSize: "14px",
+													mb: "12px",
+												}}
+												className="text-black"
+											>
+												Source
+											</Typography>
+
+											<FormControl fullWidth>
+												<InputLabel id="source-select-label">Source</InputLabel>
+												<Select
+													labelId="source-select-label"
+													id="source-select"
+													name="source"
+													required
+													input={<OutlinedInput label="Source" />}
+												>
+													<MenuItem value="Facebook">Facebook</MenuItem>
+													<MenuItem value="Import GG Sheet">
+														Import GG Sheet
+													</MenuItem>
+												</Select>
+											</FormControl>
+										</Grid>
+
+										<Grid item xs={12} mt={1}>
+											<Box
+												sx={{
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "end",
+													gap: "10px",
+												}}
+											>
+												<Button
+													onClick={handleCloseModal}
+													variant="outlined"
+													color="error"
+													sx={{
+														textTransform: "capitalize",
+														borderRadius: "8px",
+														fontWeight: "500",
+														fontSize: "13px",
+														padding: "11px 30px",
+													}}
+												>
+													Cancel
+												</Button>
+
+												<Button
+													type="submit"
+													variant="contained"
+													sx={{
+														textTransform: "capitalize",
+														borderRadius: "8px",
+														fontWeight: "500",
+														fontSize: "13px",
+														padding: "11px 30px",
+														color: "#fff !important",
+													}}
+												>
+													<AddIcon
+														sx={{
+															position: "relative",
+															top: "-1px",
+														}}
+													/>{" "}
+													Create
+												</Button>
+											</Box>
+										</Grid>
+									</Grid>
 								</Box>
 							</Box>
 						</Box>
-					</BootstrapDialog>
-				</Box>
+					</Box>
+				</BootstrapDialog>
 			</div>
 		);
 	}

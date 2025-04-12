@@ -6,6 +6,20 @@
 	--darkSecondaryColor: #15203c;
 }
 
+::-webkit-scrollbar {
+	width: 4px;
+	height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: #005261;
+	border-radius: 9999px;
+}
+
+::-webkit-scrollbar-horizontal {
+	height: 2px;
+}
+
 .th-toggle-mode {
 	cursor: pointer;
 }
@@ -463,4 +477,18 @@
 
 .dark-theme .blackdialog {
 	background-color: #15203c !important;
+}
+
+.dark-theme .task-card {
+	border-color: rgb(5, 245, 245);
+}
+
+.dark-theme .task-card:hover {
+	border: 1px solid rgb(45, 233, 247);
+
+
+.dark-theme .navbar-logo {
+	content: url("/images/Sine_logo_dark.png");
+	width: 143px;
+	height: auto;
 }

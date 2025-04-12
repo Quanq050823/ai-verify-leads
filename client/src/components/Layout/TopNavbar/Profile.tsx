@@ -200,7 +200,7 @@ const Profile: React.FC<ProfileProps> = () => {
 
 				<MenuItem sx={{ padding: "8px 20px" }}>
 					<Link
-						href="/authentication/logout/"
+						href="/pages/authentication/logout/"
 						className="text-black"
 						style={{
 							display: "flex",

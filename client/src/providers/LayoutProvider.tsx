@@ -20,19 +20,20 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
 	};
 
 	const isAuthPage = [
-		"/authentication/sign-in/",
-		"/authentication/sign-up/",
-		"/authentication/forgot-password/",
-		"/authentication/reset-password/",
-		"/authentication/confirm-email/",
-		"/authentication/lock-screen/",
-		"/authentication/logout/",
-		"/coming-soon/",
-		"/front-pages/features/",
-		"/front-pages/team/",
-		"/front-pages/faq/",
-		"/front-pages/contact/",
+		"/pages/authentication/sign-in/",
+		"/pages/authentication/sign-up/",
+		"/pages/authentication/forgot-password/",
+		"/pages/authentication/reset-password/",
+		"/pages/authentication/confirm-email/",
+		"/pages/authentication/lock-screen/",
+		"/pages/authentication/logout/",
+		"/pages/coming-soon/",
+		"/pages/front-pages/features/",
+		"/pages/front-pages/team/",
+		"/pages/front-pages/faq/",
+		"/pages/front-pages/contact/",
 		"/pages/customflow/",
+		"/",
 	].includes(pathname);
 
 	return (

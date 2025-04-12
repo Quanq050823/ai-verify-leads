@@ -29,26 +29,13 @@ const Footer: React.FC = () => {
 					<Grid container columnSpacing={{ xs: 1, sm: 2, md: 2, lg: 3 }}>
 						<Grid item xs={12} sm={6} md={6} lg={3} className="fp-grid-item">
 							<div className="single-footer-widget">
-								<Link href="/" className="logo">
-									<Image
-										src="/images/logo-big.svg"
-										alt="logo"
-										width={100}
-										height={26}
-									/>
-									<Image
-										src="/images/white-logo-big.svg"
-										className="d-none"
-										alt="logo"
-										width={142}
-										height={38}
-									/>
+								<Link href="/" className="">
+									<Box sx={{ marginBottom: 2 }} className="navbar-logo"></Box>
 								</Link>
 
 								<p>
-									With customizable dashboards tailored to your needs,
-									collaborate effortlessly with your team and stay ahead with
-									real-time updates.
+									SmartLead with AI-Powered Calls: Automate Lead Qualification
+									From flow builder to real-time calls
 								</p>
 
 								<div className="socials">
@@ -70,19 +57,13 @@ const Footer: React.FC = () => {
 
 						<Grid item xs={12} sm={6} md={6} lg={3} className="fp-grid-item">
 							<div className="single-footer-widget">
-								<h3>Our Products</h3>
+								<h3>Our Team</h3>
 								<ul className="custom-links">
 									<li>
-										<Link href="#">Trezo Dashboard</Link>
+										<Link href="#">Sine</Link>
 									</li>
 									<li>
-										<Link href="#">Tagus Admin</Link>
-									</li>
-									<li>
-										<Link href="#">eCademy LMS</Link>
-									</li>
-									<li>
-										<Link href="#">Admash Template</Link>
+										<Link href="#">Cavoibeo</Link>
 									</li>
 								</ul>
 							</div>
@@ -90,20 +71,26 @@ const Footer: React.FC = () => {
 
 						<Grid item xs={12} sm={6} md={6} lg={3} className="fp-grid-item">
 							<div className="single-footer-widget">
-								<h3>Quick Links</h3>
+								<h3>Resources</h3>
 
 								<ul className="custom-links">
 									<li>
-										<Link href="#">Home</Link>
+										<Link href="#">Technical support</Link>
 									</li>
 									<li>
-										<Link href="#">Features</Link>
+										<Link href="#">Purchasing & licensing</Link>
 									</li>
 									<li>
-										<Link href="#">Testimonials</Link>
+										<Link href="#">Sine Community</Link>
 									</li>
 									<li>
-										<Link href="#">Our Team</Link>
+										<Link href="#">Knowledge base</Link>
+									</li>
+									<li>
+										<Link href="#">Marketplace</Link>
+									</li>
+									<li>
+										<Link href="#">My account</Link>
 									</li>
 								</ul>
 							</div>
@@ -133,7 +120,7 @@ const Footer: React.FC = () => {
 
 				<div className="copyright-area bg-white text-center">
 					<div className="container">
-						<p>©Copy right by Sine</p>
+						<p>Copyright © 2024 Sine</p>
 					</div>
 				</div>
 			</Box>

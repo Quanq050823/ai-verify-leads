@@ -14,7 +14,12 @@ import DashBoard from "./pages/dashboard/page";
 export default function Home() {
 	return (
 		<>
-			<DashBoard />
+			{/* <DashBoard /> */}
+			<div className="fp-wrapper">
+				<Navbar />
+				<HeroBanner />
+				<Footer />
+			</div>
 		</>
 	);
 }

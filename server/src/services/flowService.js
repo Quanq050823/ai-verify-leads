@@ -7,6 +7,19 @@ import getObjectId from "../utils/getObjectId.js";
 import Producer from "../config/rabbitMQ.js";
 import Flow from "../models/flow.js";
 
+export const checkFlowExists = async (flowId, userId) => {
+    try {
+        let flowExists = await Flow.findOne({
+            _id: getObjectId(flowId),
+            userId: getObjectId(userId),
+            status: { $ne: 0 },
+        });
+        return flowExists ? flowExists : false;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const getFlows = async (user) => {
     try {
         let flows = await Flow.find({ createdBy: user.userId });

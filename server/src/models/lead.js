@@ -4,13 +4,14 @@ import mongoose from "mongoose";
 
 const leadSchema = mongoose.Schema(
     {
-        name: {
-            type: String,
-            required: true,
-        },
-        owner: {
+        userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
+            required: true,
+        },
+        flowId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Flow",
             required: true,
         },
         status: {
@@ -21,12 +22,8 @@ const leadSchema = mongoose.Schema(
         leadData: {
             type: mongoose.Schema.Types.Mixed,
         },
-        currentNode: {
+        nodeId: {
             type: mongoose.Schema.Types.Mixed,
-        },
-        createdDate: {
-            type: Date,
-            default: Date.now,
         },
     },
     { timestamps: true }

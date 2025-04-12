@@ -1,3 +1,4 @@
+.vscode/
 node_modules/
 
 .env
@@ -10,3 +11,19 @@ server/node_modules/
 server/.env
 server/.vscode
 server/build
+
+client/node_modules/
+client/.env
+client/.vscode
+client/.next
+client/build
+
+# Binaries
+worker/bin/
+worker/*.exe
+/*.out
+# OS files
+worker/.DS_Store
+# Go stuff
+worker/vendor/
+worker/.env

@@ -43,8 +43,8 @@ export const createNodeType = async (nodeType) => {
         });
         await newNodeType.save();
 
-        Producer.createExchange(key);
-        Producer.createQueue(`${key}.consumer`, key, `${key}.consumer`);
+        await Producer.createExchange(key);
+        await Producer.createQueue(`${key}.consumer`, key, `#`);
 
         return newNodeType;
     } catch (error) {
@@ -96,13 +96,9 @@ export const deleteNodeType = async (nodeTypeId) => {
 export const resetExchange = async () => {
     try {
         let nodeTypes = await NodeType.find();
-        nodeTypes.forEach((nodeType) => {
-            Producer.createExchange(nodeType.key);
-            Producer.createQueue(
-                `${nodeType.key}.consumer`,
-                nodeType.key,
-                `${nodeType.key}.consumer`
-            );
+        nodeTypes.forEach(async (nodeType) => {
+            await Producer.createExchange(nodeType.key);
+            await Producer.createQueue(`${nodeType.key}.consumer`, nodeType.key, `#`);
         });
 
         return { status: true, message: "Exchange reset successfully" };

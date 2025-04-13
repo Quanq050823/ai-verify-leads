@@ -1,6 +1,7 @@
 import amqp from "amqplib";
 import config from "./environment.js";
 import chalk from "chalk";
+import { v4 as uuidv4 } from "uuid";
 
 class Producer {
     static channel;
@@ -43,7 +44,35 @@ class Producer {
             dateTime: new Date().toISOString(),
         });
 
-        channel.publish(exchange, routingKey, Buffer.from(payload));
+        channel.publish(exchange, routingKey, Buffer.from(payload), {
+            contentType: "application/json",
+            contentEncoding: "utf-8",
+        });
+        console.log(
+            `📤 Message sent: ${message} | Exchange: ${exchange} | Routing Key: ${routingKey}`
+        );
+    }
+
+    static async publishToCelery(exchange, routingKey, message, task) {
+        const channel = await this.createChannel();
+        const payload = {
+            id: uuidv4(),
+            task: task,
+            args: [],
+            kwargs: {
+                message,
+            },
+            retries: 0,
+            eta: null,
+        };
+
+        console.log(payload);
+
+        channel.publish(exchange, routingKey, Buffer.from(JSON.stringify(payload)), {
+            contentType: "application/json",
+            contentEncoding: "utf-8",
+        });
+
         console.log(
             `📤 Message sent: ${message} | Exchange: ${exchange} | Routing Key: ${routingKey}`
         );

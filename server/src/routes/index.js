@@ -2,7 +2,7 @@
 
 // import userRoute from "./userRoute.js";
 import authRoute from "./authRoute.js";
-import hookRoute from "./hookRoute.js";
+import webhookRoute from "./webhookRoute.js";
 import flowRoute from "./flowRoute.js";
 import nodeTypeRoute from "./nodeTypeRoute.js";
 
@@ -10,7 +10,7 @@ import { errorHandlingMiddleware } from "./../middlewares/errorHandlingMiddlewar
 import authenticate from "../middlewares/jwtMiddlewares.js";
 export default (app) => {
     app.use("/api/auth", authRoute);
-    app.use("/api/hooks", hookRoute);
+    app.use("/api/hooks", webhookRoute);
     app.use("/api/flow", authenticate, flowRoute);
     app.use("/api/nodeType", nodeTypeRoute);
     // app.use("/api/user", authenticate, userRoute);

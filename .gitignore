@@ -18,12 +18,10 @@ client/.vscode
 client/.next
 client/build
 
-# Binaries
-worker/bin/
-worker/*.exe
-/*.out
-# OS files
-worker/.DS_Store
-# Go stuff
-worker/vendor/
-worker/.env
+celery-worker/__pycache__/
+celery-worker/*.log
+celery-worker/*.pid
+celery-worker/env/
+celery-worker/.env
+celery-worker/celery-env
+

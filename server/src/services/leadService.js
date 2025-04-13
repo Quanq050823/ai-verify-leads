@@ -22,10 +22,17 @@ export const publishLead = async (userId, flowId, nodeId, leads) => {
         const targetNode = routing.target.split("_")[0];
 
         leads.forEach(async (lead) => {
-            await Producer.publishMessage(
+            await Producer.publishToCelery(
                 targetNode,
-                `${userId}.${flowId}.${targetNode}`,
-                lead._id
+                `${userId}.${flowId}.${routing?.target}`,
+                {
+                    leadId: lead._id,
+                    flowId: flowId,
+                    userId: userId,
+                    nodeId: nodeId,
+                    targetNode: routing?.target,
+                },
+                "tasks.ai_call"
             );
         });
 

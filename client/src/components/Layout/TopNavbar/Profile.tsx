@@ -22,10 +22,23 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SupportIcon from "@mui/icons-material/Support";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { LogoutServices } from "@/services/AuthServices";
+import { useFetchUser } from "@/services/userServices";
 
 interface ProfileProps {}
 
 const Profile: React.FC<ProfileProps> = () => {
+	const [user, setUser] = React.useState<any>();
+	React.useEffect(() => {
+		const fetchUser = async () => {
+			let user = await useFetchUser();
+			setUser(user);
+		};
+		fetchUser();
+	}, []);
+
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
 
@@ -35,6 +48,11 @@ const Profile: React.FC<ProfileProps> = () => {
 
 	const handleClose = () => {
 		setAnchorEl(null);
+	};
+
+	const handleLogout = async (event: any) => {
+		event.preventDefault();
+		LogoutServices();
 	};
 
 	return (
@@ -49,11 +67,11 @@ const Profile: React.FC<ProfileProps> = () => {
 					aria-expanded={open ? "true" : undefined}
 				>
 					<Avatar
-						src="/images/DQ_avt.jpg"
+						src={user?.avatar || "/images/default-avatar.png"}
 						alt="Olivia"
 						sx={{
-							width: { xs: "35px", sm: "42px" },
-							height: { xs: "35px", sm: "42px" },
+							width: { xs: "20px", sm: "28px" },
+							height: { xs: "20px", sm: "28px" },
 							border: "2px solid #C2CDFF",
 						}}
 						className="mr-8"
@@ -67,7 +85,7 @@ const Profile: React.FC<ProfileProps> = () => {
 						}}
 						className="text-black"
 					>
-						Quang
+						{user?.name}
 					</Typography>
 					<KeyboardArrowDownIcon sx={{ fontSize: "15px" }} />
 				</IconButton>
@@ -112,7 +130,7 @@ const Profile: React.FC<ProfileProps> = () => {
 			>
 				<MenuItem sx={{ padding: "10px 20px" }}>
 					<Avatar
-						src="/images/DQ_avt.jpg"
+						src={user?.avatar || "/images/default-avatar.png"}
 						sx={{
 							width: 31,
 							height: 31,
@@ -130,10 +148,10 @@ const Profile: React.FC<ProfileProps> = () => {
 							}}
 							className="text-black"
 						>
-							Duc Quang
+							{user?.name}
 						</Typography>
 
-						<Typography sx={{ fontSize: "12px" }}>Business User</Typography>
+						<Typography sx={{ fontSize: "12px" }}>{user?.email}</Typography>
 					</Box>
 				</MenuItem>
 
@@ -141,7 +159,7 @@ const Profile: React.FC<ProfileProps> = () => {
 
 				<MenuItem sx={{ padding: "8px 20px" }}>
 					<Link
-						href="/my-profile/"
+						href="/user/"
 						className="text-black"
 						style={{
 							display: "flex",
@@ -159,25 +177,56 @@ const Profile: React.FC<ProfileProps> = () => {
 					</Link>
 				</MenuItem>
 
-				<MenuItem sx={{ padding: "8px 20px" }}>
-					<Link
-						href="/ecommerce/checkout/"
-						className="text-black"
-						style={{
-							display: "flex",
-							alignItems: "center",
-						}}
-					>
-						<ListItemIcon sx={{ mr: "-10px", mt: "-3px" }}>
-							<CreditCardIcon
-								sx={{ fontSize: "20px" }}
-								className="text-black"
-							/>
-						</ListItemIcon>
+				{/* <MenuItem sx={{ padding: "8px 20px" }}>
+                    <Link
+                        href="/sine/chat/"
+                        className="text-black"
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        <ListItemIcon sx={{ mr: "-10px", mt: "-3px" }}>
+                            <ChatIcon sx={{ fontSize: "20px" }} className="text-black" />
+                        </ListItemIcon>
 
-						<span style={{ fontSize: "13px" }}>Billing</span>
-					</Link>
-				</MenuItem>
+                        <span style={{ fontSize: "13px" }}>Messages</span>
+                    </Link>
+                </MenuItem>
+
+                <MenuItem sx={{ padding: "8px 20px" }}>
+                    <Link
+                        href="/sine/your-work/"
+                        className="text-black"
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        <ListItemIcon sx={{ mr: "-10px", mt: "-3px" }}>
+                            <ListIcon sx={{ fontSize: "20px" }} className="text-black" />
+                        </ListItemIcon>
+
+                        <span style={{ fontSize: "13px" }}>My Task</span>
+                    </Link>
+                </MenuItem>
+
+                <MenuItem sx={{ padding: "8px 20px" }}>
+                    <Link
+                        href="/ecommerce/checkout/"
+                        className="text-black"
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        <ListItemIcon sx={{ mr: "-10px", mt: "-3px" }}>
+                            <CreditCardIcon sx={{ fontSize: "20px" }} className="text-black" />
+                        </ListItemIcon>
+
+                        <span style={{ fontSize: "13px" }}>Billing</span>
+                    </Link>
+                </MenuItem> */}
 
 				<Divider sx={{ borderColor: "#F6F7F9" }} />
 
@@ -198,9 +247,42 @@ const Profile: React.FC<ProfileProps> = () => {
 					</Link>
 				</MenuItem>
 
-				<MenuItem sx={{ padding: "8px 20px" }}>
-					<Link
-						href="/pages/authentication/logout/"
+				{/* <MenuItem sx={{ padding: "8px 20px" }}>
+                    <Link
+                        href="/faq/"
+                        className="text-black"
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        <ListItemIcon sx={{ mr: "-10px", mt: "-3px" }}>
+                            <SupportIcon sx={{ fontSize: "20px" }} className="text-black" />
+                        </ListItemIcon>
+
+                        <span style={{ fontSize: "13px" }}>Support</span>
+                    </Link>
+                </MenuItem>
+
+                <MenuItem sx={{ padding: "8px 20px" }}>
+                    <Link
+                        href="/authentication/lock-screen/"
+                        className="text-black"
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        <ListItemIcon sx={{ mr: "-10px", mt: "-3px" }}>
+                            <LockOpenIcon sx={{ fontSize: "20px" }} className="text-black" />
+                        </ListItemIcon>
+
+                        <span style={{ fontSize: "13px" }}>Lock Screen</span>
+                    </Link>
+                </MenuItem> */}
+
+				<MenuItem sx={{ padding: "8px 20px" }} onClick={handleLogout}>
+					<Box
 						className="text-black"
 						style={{
 							display: "flex",
@@ -212,7 +294,7 @@ const Profile: React.FC<ProfileProps> = () => {
 						</ListItemIcon>
 
 						<span style={{ fontSize: "13px" }}>Logout</span>
-					</Link>
+					</Box>
 				</MenuItem>
 			</Menu>
 		</>

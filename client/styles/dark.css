@@ -2,53 +2,10 @@
 	--darkBodyBg: #0a0e19;
 	--darkCardBg: #0c1427;
 	--darkBorder: #172036;
-	--darkBodyColor: #8695aa;
+	--darkBodyColor: #f6f6f6;
 	--darkSecondaryColor: #15203c;
 }
 
-::-webkit-scrollbar {
-	width: 4px;
-	height: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-	background-color: #005261;
-	border-radius: 9999px;
-}
-
-::-webkit-scrollbar-horizontal {
-	height: 2px;
-}
-
-.th-toggle-mode {
-	cursor: pointer;
-}
-.th-toggle-mode i {
-	font-size: 22px;
-	color: #fe7a36;
-}
-.th-toggle-mode .ri-moon-line {
-	display: none;
-}
-.th-toggle-mode.active .ri-sun-line {
-	display: none;
-}
-.th-toggle-mode.active .ri-moon-line {
-	display: block;
-}
-
-.t-settings-btn i {
-	animation: spin 1.5s linear infinite;
-}
-
-@keyframes spin {
-	0% {
-		transform: rotate(0deg);
-	}
-	100% {
-		transform: rotate(360deg);
-	}
-}
 .dark-theme {
 	background-color: var(--darkBodyBg);
 }
@@ -100,16 +57,13 @@
 .dark-theme .MuiTypography-body2,
 .dark-theme .MuiStepLabel-label,
 .dark-theme .MuiTypography-caption {
-	color: var(--darkBodyColor);
-}
-.dark-theme .dark-border {
-	border-color: 1px solid var(--darkBorder) !important;
+	color: #dddddd;
 }
 .dark-theme .bg-white {
 	background-color: #0c1427 !important;
 }
-.dark-theme .bg-gray-50 {
-	background-color: #0a0e19 !important;
+.dark-theme .allwhite {
+	background-color: #fff !important;
 }
 .dark-theme .text-black {
 	color: var(--whiteColor) !important;
@@ -139,15 +93,8 @@
 .dark-theme .bg-secondary-100,
 .dark-theme .bg-success-100,
 .dark-theme .bg-orange-100,
-.dark-theme .bg-primary-100,
-.dark-theme .bg-danger-100 {
+.dark-theme .bg-primary-100 {
 	background-color: var(--darkSecondaryColor) !important;
-}
-.dark-theme .bg-eceef2 {
-	background-color: var(--darkBodyBg) !important;
-}
-.dark-theme .bg-grey-100 {
-	background-color: #333 !important;
 }
 .dark-theme .border {
 	border: 1px solid var(--darkBorder) !important;
@@ -171,14 +118,14 @@
 .dark-theme .MuiFormControl-root .MuiInputBase-root .MuiInputBase-input {
 	color: #fff;
 }
+.dark-theme .MuiFormControl-root .MuiFormLabel-root {
+	color: var(--darkBodyColor);
+}
 .dark-theme .MuiFormControl-root .MuiOutlinedInput-notchedOutline {
 	border: 1px solid var(--darkBorder) !important;
 }
 .dark-theme .MuiFormControl-root .MuiOutlinedInput-notchedOutline:hover {
 	border: 1px solid #fff !important;
-}
-.dark-theme .MuiFormLabel-root {
-	color: var(--darkBodyColor);
 }
 .dark-theme .mantine-RichTextEditor-root {
 	background-color: var(--darkCardBg);
@@ -198,7 +145,7 @@
 }
 .dark-theme textarea {
 	background-color: var(--darkCardBg);
-	border: 1px solid var(--darkBorder) !important;
+	border: 1px solid var(--darkBorder);
 	color: #fff;
 }
 .dark-theme .MuiSelect-icon {
@@ -394,101 +341,246 @@
 }
 .dark-theme .footer-area {
 	background-color: var(--darkCardBg);
-}
-.dark-theme .ds-item {
-	border-bottom: 1px solid var(--darkBorder);
-}
-.dark-theme .ds-item:first-child {
-	border-top: 1px solid var(--darkBorder);
-}
-.dark-theme .ticketsStatusContent::before {
-	background: var(--darkBorder);
-}
-.dark-theme .he-card {
-	background-color: #000 !important;
-}
-.dark-theme .exchange-card {
-	background-color: #000 !important;
-}
-.dark-theme .exchange-card .border-bottom {
-	border-color: var(--darkBorder) !important;
-}
-.dark-theme .exchange-card .text-black {
-	color: #fff !important;
-}
-.dark-theme .exchange-card .MuiInputBase-root {
-	background-color: var(--darkCardBg) !important;
-}
-.dark-theme .MuiPaper-root {
-	background-color: var(--darkBodyBg);
-}
-.dark-theme
-	.mui-976ow0-MuiButtonBase-root-MuiMenuItem-root-MuiMultiSectionDigitalClockSection-item.Mui-selected {
-	color: #fff !important;
-}
-.dark-theme .rsw-editor {
-	border: 1px solid var(--darkBorder) !important;
-}
-.dark-theme .rsw-editor .rsw-toolbar {
-	background-color: var(--darkBodyBg);
-	border-bottom: 1px solid var(--darkBodyBg);
-}
-.dark-theme .rsw-editor .rsw-separator {
-	border-color: 1px solid var(--darkBorder) !important;
-}
-.dark-theme .campaign-goal label .MuiTypography-root {
-	color: var(--darkBodyColor);
-}
-.dark-theme .tc-slide .swiper-pagination .swiper-pagination-bullet {
-	background-color: #fff;
-}
-.dark-theme .rp-slide .swiper-pagination .swiper-pagination-bullet {
-	background-color: #fff;
-}
-.dark-theme .apexcharts-radialbar-hollow {
-	fill: var(--darkBodyBg);
-}
-.dark-theme .crc-for-dark {
-	background-color: var(--darkBodyBg);
-}
-.dark-theme .for-dark-bg {
-	background-color: var(--darkBodyBg);
-}
-.dark-theme .tsm-charts .apexcharts-datalabels .apexcharts-text,
-.dark-theme .otd-charts .apexcharts-datalabels .apexcharts-text,
-.dark-theme .c-of-m .apexcharts-datalabels .apexcharts-text,
-.dark-theme .eb-chart .apexcharts-datalabels .apexcharts-text {
-	fill: #fff !important;
-}
-.dark-theme code {
-	background-color: #000 !important;
 } /*# sourceMappingURL=dark.css.map */
-
-.dark-theme .flow-item {
-	transition: transform 0.3s ease-in-out; /* Hiệu ứng zoom mượt mà khi hover */
-	background-color: #0c1427; /* Màu nền khi hover */
+.dark-theme .epicCard {
+	background-color: inherit;
+} /*# sourceMappingURL=dark.css.map */
+.dark-theme .epicCard:hover {
+	background-color: #001c45;
+} /*# sourceMappingURL=dark.css.map */
+.dark-theme #searchboxColor {
+	background-color: #031125 !important;
+	color: #fff;
 }
-.dark-theme .flow-item:hover {
-	background-color: #2a3146; /* Màu nền khi hover */
-	transform: scale(1.01); /* Hiệu ứng phóng to nhẹ */
-	/* box-shadow: 0 4px 8px 0 rgba(92, 92, 92, 0.2),
-		0 6px 20px 0 rgba(108, 108, 108, 0.19); */
+.dark-theme .tablePagination {
+	background-color: #031125 !important;
+}
+.dark-theme .accordionItem:hover {
+	background-color: #001c45;
+}
+.dark-theme .accordionItem {
+	background-color: #0c1427;
+}
+.dark-theme .addMember:hover {
+	background-color: #000291;
+}
+.dark-theme .addMember {
+	background-color: #001851;
+}
+.dark-theme .backlogItem {
+	background-color: #15334a;
+	color: #fff;
+}
+.dark-theme .backlogItem:hover {
+	background-color: #004d87;
+	color: #fff;
+}
+.dark-theme .createIssueBtn {
+	background-color: #006184;
+	color: #fff;
+}
+.dark-theme .createIssueBtn:hover {
+	background-color: #0b88b4;
+	color: #fff;
+}
+.dark-theme .createIssuebacklogBtn {
+	background-color: #006184;
+	color: #fff;
+}
+.dark-theme .createIssuebacklogBtn:hover {
+	background-color: #0b88b4;
+	color: #fff;
+}
+.dark-theme .backlogCard {
+	background-color: #0a0e19 !important;
+	color: #fff;
+}
+.dark-theme .backlogItembg {
+	background-color: #1a2d5a24 !important;
+	color: #fff;
+}
+.dark-theme .epicSelectBg {
+	background-color: #842362a1;
+	color: #fff;
+	border: none;
+}
+.dark-theme .epicSelectBg:hover {
+	background-color: #8c1462d4;
+	color: #fff;
+}
+.dark-theme .progressSelectBg {
+	background-color: #0bb4b2ad;
+	color: #fff;
+	border: none;
+}
+.dark-theme .progressSelectBg:hover {
+	background-color: #0bb4b2fa;
+	color: #fff;
 }
 
-.dark-theme .blackdialog {
-	background-color: #15203c !important;
+.dark-theme .ItemSelectBg {
+	background-color: #15334a;
+	color: #fff;
+	border: none;
+}
+.dark-theme .ItemSelectBg:hover {
+	background-color: #193f5b;
+	color: #fff;
 }
 
-.dark-theme .task-card {
-	border-color: rgb(5, 245, 245);
+.datePicker {
+	background-color: #0a0e19 !important;
+}
+
+.dark-theme .MuiTypography-caption {
+	color: #dddddd;
+}
+
+::-webkit-scrollbar {
+	width: 4px;
+	height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: #005261;
+	border-radius: 9999px;
+}
+
+::-webkit-scrollbar-horizontal {
+	height: 2px;
 }
 
 .dark-theme .task-card:hover {
 	border: 1px solid rgb(45, 233, 247);
 
 
+.dark-theme .sidebar-menu-divider {
+	border-top-width: 1px;
+	border-style: solid none none;
+	border-color: #ffffff;
+	margin-bottom: 5px;
+}
+
+.dark-theme .css-1790nmb {
+	width: 200px;
+	height: 200px;
+	display: flex;
+	flex-direction: column;
+	-webkit-box-align: center;
+	align-items: center;
+	-webkit-box-pack: center;
+	justify-content: center;
+	padding: var(--ds-space-200, 15px);
+	position: relative;
+	border-radius: 100%;
+	transition: background-color 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.dark-theme .text-dark {
+	color: #dddddd !important;
+}
+
+.dark-theme .background-authentication {
+	background-image: url("/images/authentication/LoginBackground_darkTheme.jpg");
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	width: 100%;
+	min-height: 100vh;
+}
+
+.dark-theme .authentication-input {
+	border: 1px solid #fff;
+	border-radius: 7px;
+}
+
 .dark-theme .navbar-logo {
 	content: url("/images/Sine_logo_dark.png");
 	width: 143px;
 	height: auto;
+}
+
+.dark-theme .fp-outlined-btn {
+	color: #dddddd;
+	border: 1px solid #dddddd;
+}
+
+.dark-theme .sidebar-menu-divider {
+	margin-top: 10px;
+	margin-bottom: 10px;
+	border-width: 2px;
+	border-style: solid solid solid;
+	border-color: #151d31;
+	background-color: #040d1d24;
+}
+
+.dark-theme .custom-modal-dialog-header {
+	background-color: #00443b;
+}
+.dark-theme .custom-modal-dialog-content {
+	background-color: #283331 !important;
+}
+.dark-theme .custom-edit-dialog-header {
+	background-color: #00132d;
+}
+.dark-theme .custom-edit-dialog-content {
+	background-color: #080b13 !important;
+}
+
+.dark-theme .custom-delete-dialog-header {
+	background-color: #3c151c;
+}
+.dark-theme .custom-delete-dialog-content {
+	background-color: #1f0711 !important;
+}
+
+.dark-theme .input-column-title {
+	background-color: #070b13;
+	border-color: rgb(5, 245, 245);
+	border-style: solid;
+	border-width: 2px;
+	border-radius: 4px;
+	color: #fff;
+}
+
+.dark-theme .bg-custom {
+	background-color: #b2b2b20f;
+}
+
+.dark-theme .message-button {
+	position: fixed;
+	bottom: 40px;
+	right: 40px;
+	background-color: #007bff;
+	color: white;
+	border: none;
+	border-radius: 50%;
+	width: 60px;
+	height: 60px;
+	padding: 0;
+	font-size: 27px;
+	cursor: pointer;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	z-index: 1000;
+}
+
+.dark-theme .message-button:hover {
+	background-color: #0056b3;
+}
+
+.dark-theme .chat-form-custom {
+	color: #262626 !important;
+}
+
+.dark-theme .task-card {
+	border-color: rgb(5, 245, 245);
+}
+
+.dark-theme .addrolesBtn {
+	background-color: #1c93ee94 !important;
+	color: #fff !important;
+}
+
+.dark-theme .BacklogInput {
+	color: #fff !important;
 }

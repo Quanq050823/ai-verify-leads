@@ -37,6 +37,11 @@ const config = {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
+    facebookAuthConfig: {
+        appId: process.env.FACEBOOK_APP_ID,
+        appSecret: process.env.FACEBOOK_APP_SECRET,
+        callBackUrl: process.env.FACEBOOK_CALLBACK_URL,
+    },
     env: process.env.ENV,
     rabbitMQConfig: {
         protocol: "amqp",

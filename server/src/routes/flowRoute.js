@@ -23,7 +23,7 @@ router.post("/publishLead", async (req, res) => {
     try {
         const result = await Producer.publishMessage(
             "aiCall",
-            "aiCall.67b1c1331e12c93a79317bbb.67ebfe9f941764a6a229a9e2",
+            "67b1c1331e12c93a79317bbb.67f704b14cd3acb38825d64c.aiCall_1742107265386",
             req.body
         );
         res.status(200).json({ message: "Lead published successfully", result });

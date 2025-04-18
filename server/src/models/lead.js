@@ -1,39 +1,34 @@
 "use strict";
 
-import e from "express";
 import mongoose from "mongoose";
 
-const FlowSchema = mongoose.Schema(
+const leadSchema = mongoose.Schema(
     {
-        name: {
-            type: String,
-            required: true,
-        },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
         },
+        flowId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Flow",
+            required: true,
+        },
         status: {
             type: Number,
             enum: [0, 1, 2],
-            required: true,
             default: 1,
         },
-        nodeData: {
+        leadData: {
             type: mongoose.Schema.Types.Mixed,
         },
-        routeData: {
+        nodeId: {
             type: mongoose.Schema.Types.Mixed,
-        },
-        lastModified: {
-            type: Date,
-            default: Date.now,
         },
     },
     { timestamps: true }
 );
 
-const Flow = mongoose.model("Flow", FlowSchema);
+const Lead = mongoose.model("Lead", leadSchema);
 
-export default Flow;
+export default Lead;

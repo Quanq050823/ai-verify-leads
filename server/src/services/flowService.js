@@ -7,6 +7,19 @@ import getObjectId from "../utils/getObjectId.js";
 import Producer from "../config/rabbitMQ.js";
 import Flow from "../models/flow.js";
 
+export const checkFlowExists = async (flowId, userId) => {
+    try {
+        let flowExists = await Flow.findOne({
+            _id: getObjectId(flowId),
+            userId: getObjectId(userId),
+            status: { $ne: 0 },
+        });
+        return flowExists ? flowExists : false;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const getFlows = async (user) => {
     try {
         let flows = await Flow.find({ createdBy: user.userId });
@@ -56,7 +69,7 @@ export const createFlow = async (data, user) => {
         let result = await flow.save();
 
         //Create queue for each nodes in RabbitMQ
-        nodeData?.nodes?.forEach((node) => {
+        await nodeData?.nodes?.forEach((node) => {
             Producer.createExchange(node?.type);
             Producer.createQueue(
                 `${user.userId}.${flow._id}.${node.id}`,
@@ -80,11 +93,40 @@ export const updateFlow = async (flowId, data, user) => {
             throw new ApiError(StatusCodes.NOT_FOUND, "Flow not found");
         }
 
+        let oldNodeData = flow.nodeData != nodeData ? flow.nodeData : null;
+
         flow.name = flowName || flow.name;
         flow.nodeData = nodeData || flow.nodeData;
         flow.lastModified = new Date();
+        flow.routeData =
+            flow.nodeData != nodeData
+                ? nodeData?.edges?.map((edge) => {
+                      return {
+                          source: edge.source,
+                          target: edge.target,
+                      };
+                  })
+                : flow.routeData;
 
         let result = await flow.save();
+
+        if (oldNodeData) {
+            //Delete old queue
+            oldNodeData?.nodes?.forEach(async (node) => {
+                await Producer.deleteQueue(`${user.userId}.${flow._id}.${node.id}`, node?.type);
+            });
+
+            //Create new queue for each nodes in RabbitMQ
+            flow.nodeData?.nodes?.forEach(async (node) => {
+                await Producer.createExchange(node?.type);
+                await Producer.createQueue(
+                    `${user.userId}.${flow._id}.${node.id}`,
+                    node?.type,
+                    `${user.userId}.${flow._id}.${node.id}`
+                );
+            });
+        }
+
         return result ? result : null;
     } catch (error) {
         throw error;
@@ -123,13 +165,13 @@ export const updateStatus = async (flowId, status, user) => {
 
         if (flow.status == 0 || flow.status == 1) {
             console.log("Deleting queue...");
-            flow?.nodeData?.nodes?.forEach((node) => {
-                Producer.deleteQueue(`${user.userId}.${flow._id}.${node.id}`, node?.type);
+            flow?.nodeData?.nodes?.forEach(async (node) => {
+                await Producer.deleteQueue(`${user.userId}.${flow._id}.${node.id}`, node?.type);
             });
         } else if (flow.status == 2) {
-            flow?.nodeData?.nodes?.forEach((node) => {
-                Producer.createExchange(node?.type);
-                Producer.createQueue(
+            flow?.nodeData?.nodes?.forEach(async (node) => {
+                await Producer.createExchange(node?.type);
+                await Producer.createQueue(
                     `${user.userId}.${flow._id}.${node.id}`,
                     node?.type,
                     `${user.userId}.${flow._id}.${node.id}`
@@ -147,9 +189,9 @@ export const resetQueue = async () => {
     try {
         let flows = await Flow.find({ status: 2 });
         flows.forEach((flow) => {
-            flow?.nodeData?.nodes?.forEach((node) => {
-                Producer.createExchange(node?.type);
-                Producer.createQueue(
+            flow?.nodeData?.nodes?.forEach(async (node) => {
+                await Producer.createExchange(node?.type);
+                await Producer.createQueue(
                     `${flow.createdBy}.${flow._id}.${node.id}`,
                     node?.type,
                     `${flow.createdBy}.${flow._id}.${node.id}`

@@ -20,7 +20,6 @@ export const updateConnection = async (userId, provider = "facebook", profile) =
         profile.accessToken = newAccessToken;
 
         if (isExisted) {
-            console.log("Update neee");
             user = await User.findOneAndUpdate(
                 { _id: userId, "adsConnection.profile.id": profile.id },
                 {
@@ -68,7 +67,7 @@ export const exchangeLongLivedToken = async (shortToken) => {
     });
 
     const res = await fetch(`https://graph.facebook.com/v22.0/oauth/access_token?${params}`);
-    if (!res.ok) throw new ApiError(StatusCodes.BAD_REQUEST, "Failed to exchange token");
+    if (!res.ok) throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to exchange token");
     return (await res.json()).access_token;
 };
 
@@ -76,7 +75,7 @@ export const getUserPages = async (userAccessToken) => {
     const res = await fetch(
         `https://graph.facebook.com/v22.0/me/accounts?access_token=${userAccessToken}`
     );
-    if (!res.ok) throw new Error("Failed to get pages");
+    if (!res.ok) throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to get pages");
     return (await res.json()).data;
 };
 
@@ -84,7 +83,7 @@ export const getForms = async (pageId, pageAccessToken) => {
     const res = await fetch(
         `https://graph.facebook.com/v22.0/${pageId}/leadgen_forms?access_token=${pageAccessToken}`
     );
-    if (!res.ok) throw new ApiError(StatusCodes.BAD_GATEWAY, "Failed to fetch forms");
+    if (!res.ok) throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to fetch forms");
 
     const formsData = await res.json();
     const forms = formsData.data.map((form) => ({

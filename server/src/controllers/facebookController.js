@@ -38,13 +38,23 @@ export const getForm = async (req, res, next) => {
     }
 };
 
+export const subscribePage = async (req, res, next) => {
+    try {
+        const { pageId, pageAccessToken } = req.params;
+        const subscribe = await facebookServices.subscribePageToWebhook(pageId, pageAccessToken);
+        res.status(StatusCodes.OK).send(subscribe);
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const unsubscribePage = async (req, res, next) => {
     try {
-        const { pageId } = req.params;
+        const { pageId, pageAccessToken } = req.params;
         const unsubscribe = await facebookServices.unsubscribePageFromWebhook(
             pageId,
-            config.facebookAuthConfig.appId,
-            config.facebookAuthConfig.appSecret
+            pageAccessToken,
+            config.facebookAuthConfig.appId
         );
         res.status(StatusCodes.OK).send(unsubscribe);
     } catch (err) {

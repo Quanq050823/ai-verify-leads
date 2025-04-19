@@ -39,3 +39,25 @@ export const appScript = async (userId, leads, flowId, currentNode) => {
         throw error;
     }
 };
+
+export const retrieveLead = async (req, res) => {
+    const body = req.body;
+
+    console.log(body);
+    res.status(200).send("EVENT_RECEIVED");
+
+    // if (body.object === "page") {
+    //     body.entry.forEach((entry) => {
+    //         entry.changes.forEach((change) => {
+    //             if (change.field === "leadgen") {
+    //                 const lead = change.value;
+    //                 console.log("Received lead:", lead);
+    //                 // You can add additional processing here, such as saving the lead to your database
+    //             }
+    //         });
+    //     });
+    //     res.status(200).send("EVENT_RECEIVED");
+    // } else {
+    //     res.sendStatus(404);
+    // }
+};

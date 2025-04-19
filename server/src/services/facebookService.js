@@ -3,6 +3,59 @@
 import config from "../config/environment.js";
 import ApiError from "../utils/ApiError.js";
 import { StatusCodes } from "http-status-codes";
+import User from "../models/user.js";
+
+export const updateConnection = async (userId, provider = "facebook", profile) => {
+    try {
+        // console.log("facebookProfile", profile);
+
+        let user;
+        let isExisted = await User.findOne({
+            _id: userId,
+            "adsConnection.profile.id": profile?.id,
+            "adsConnection.provider": provider,
+        });
+
+        const newAccessToken = await exchangeLongLivedToken(profile?.accessToken);
+        profile.accessToken = newAccessToken;
+
+        if (isExisted) {
+            console.log("Update neee");
+            user = await User.findOneAndUpdate(
+                { _id: userId, "adsConnection.profile.id": profile.id },
+                {
+                    $set: {
+                        "adsConnection.$.profile": profile,
+                    },
+                },
+                {
+                    new: true,
+                    select: "-password -federatedCredentials -refreshToken -otp -isVerified",
+                }
+            );
+        } else {
+            user = await User.findOneAndUpdate(
+                { _id: userId },
+                {
+                    $push: {
+                        adsConnection: {
+                            provider,
+                            profile,
+                        },
+                    },
+                },
+                {
+                    new: true,
+                    select: "-password -federatedCredentials -refreshToken -otp -isVerified",
+                }
+            );
+        }
+
+        return user;
+    } catch (error) {
+        throw error;
+    }
+};
 
 export const exchangeLongLivedToken = async (shortToken) => {
     const facebookConfig = config.facebookAuthConfig;

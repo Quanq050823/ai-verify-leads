@@ -62,7 +62,7 @@ router.get(
         failureMessage: true,
         session: false,
     }),
-    facebookController.createUser
+    facebookController.connectFacebook
 );
 
 export default router;

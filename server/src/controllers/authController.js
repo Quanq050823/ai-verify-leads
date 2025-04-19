@@ -62,7 +62,8 @@ const loginWithGoogle = async (req, res, next) => {
         });
 
         // res.status(StatusCodes.OK).send(result);
-        res.redirect(`${config.feUrl}/your-work/`);
+        // res.redirect(`${config.feUrl}/your-work/`);
+        res.redirect(config.beURL);
     } catch (err) {
         next(err);
     }

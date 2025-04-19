@@ -8,22 +8,22 @@ passport.use(
         {
             clientID: config.facebookAuthConfig.appId,
             clientSecret: config.facebookAuthConfig.appSecret,
-            callbackURL: config.facebookAuthConfig.callBackUrl,
+            callbackURL: `${config.beURL}${config.facebookAuthConfig.callBackUrl}`,
             profileFields: ["id", "displayName", "name", "emails", "photos"],
-            passRequestToCallback: true,
+            passReqToCallback: true,
         },
-        function (accessToken, refreshToken, profile, cb) {
+        function (req, accessToken, refreshToken, profile, cb) {
             try {
-                const user = {
-                    facebookId: profile.id,
+                const facebookProfile = {
+                    id: profile.id, //Profile ID
                     name: profile.displayName,
                     email: profile.emails?.[0]?.value || "",
                     accessToken,
                     refreshToken,
-                    profile,
+                    photo: profile.photos?.[0]?.value || "",
                 };
-
-                return cb(null, user);
+                req.facebookProfile = facebookProfile;
+                return cb(null, {});
             } catch (err) {
                 return cb(err, null);
             }
@@ -31,8 +31,8 @@ passport.use(
     )
 );
 
-passport.serializeUser((user, done) => {
-    done(null, user);
+passport.serializeUser((facebookProfile, done) => {
+    done(null, facebookProfile);
 });
 
 passport.deserializeUser((obj, done) => {

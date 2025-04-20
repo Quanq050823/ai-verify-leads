@@ -86,6 +86,8 @@ const processLeadEvent = async (lead) => {
         flows.forEach(async (flow) => {
             let page = await facebookService.getPageByUserAndPageId(flow.userId, lead.page_id);
 
+            const currentNode = flow.nodeData.nodes.find((node) => node.type === "facebookLeadAds");
+
             const leadData = await fetchLeadData(leadgenId, page.access_token);
             const convertedData = convertLeadData(leadData?.field_data);
 
@@ -93,10 +95,8 @@ const processLeadEvent = async (lead) => {
                 userId: getObjectId(flow.userId),
                 flowId: getObjectId(flow._id),
                 leadData: convertedData,
-                nodeId: lead.node_id || null,
+                nodeId: currentNode.id,
             });
-
-            const currentNode = flow.nodeData.nodes.find((node) => node.type === "facebookLeadAds");
 
             await importedLeads.save();
             await publishLead(flow.userId, flow._id, currentNode.id, [importedLeads]);

@@ -8,17 +8,44 @@ import {
 	Typography,
 	FormControl,
 	TextField,
+	IconButton,
 } from "@mui/material";
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { FormLoginServices, loginGoogle } from "@/services/AuthServices";
+import { validateEmail, validatePassword } from "./formValidation";
+import { toast } from "react-toastify";
 
 const SignInForm: React.FC = () => {
+	const [showPassword, setShowPassword] = useState(false);
+
+	const handleLoginForm = async (event: React.FormEvent) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget as HTMLFormElement);
+		FormLoginServices(formData.get("email"), formData.get("password"));
+	};
+
+	const handleLoginWithGG = async (event: React.FormEvent) => {
+		event.preventDefault();
+		await loginGoogle();
+	};
+
 	return (
 		<>
 			<Box
-				className="auth-main-wrapper sign-in-area"
+				className="auth-main-wrapper sign-in-area background-authentication"
 				sx={{
 					py: { xs: "60px", md: "80px", lg: "100px", xl: "135px" },
+					backgroundImage:
+						"url('/images/authentication/LoginBackground_darkTheme.jpg')",
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+					backgroundRepeat: "no-repeat",
+					width: "100%",
+					minheight: "100vh",
 				}}
 			>
 				<Box
@@ -75,7 +102,7 @@ const SignInForm: React.FC = () => {
 								>
 									<Typography
 										variant="h1"
-										className="text-black"
+										className="text-all-black"
 										sx={{
 											fontSize: { xs: "22px", sm: "25px", lg: "28px" },
 											mb: "7px",
@@ -102,12 +129,13 @@ const SignInForm: React.FC = () => {
 								>
 									<Button
 										variant="outlined"
-										className="border bg-white"
+										className="border allwhite"
 										sx={{
 											width: "100%",
 											borderRadius: "8px",
 											padding: "10.5px 20px",
 										}}
+										onClick={handleLoginWithGG}
 									>
 										<Image
 											src="/images/icons/google.svg"
@@ -119,7 +147,7 @@ const SignInForm: React.FC = () => {
 
 									<Button
 										variant="outlined"
-										className="border bg-white"
+										className="border allwhite"
 										sx={{
 											width: "100%",
 											borderRadius: "8px",
@@ -136,7 +164,7 @@ const SignInForm: React.FC = () => {
 
 									<Button
 										variant="outlined"
-										className="border bg-white"
+										className="border allwhite"
 										sx={{
 											width: "100%",
 											borderRadius: "8px",
@@ -152,7 +180,7 @@ const SignInForm: React.FC = () => {
 									</Button>
 								</Box>
 
-								<Box component="form">
+								<Box component="form" onSubmit={handleLoginForm}>
 									<Box mb="15px">
 										<FormControl fullWidth>
 											<Typography
@@ -163,16 +191,18 @@ const SignInForm: React.FC = () => {
 													mb: "10px",
 													display: "block",
 												}}
-												className="text-black"
+												className="text-all-black"
 											>
 												Email Address
 											</Typography>
 
 											<TextField
-												label="example&#64;Sine.com"
+												className="authentication-input"
+												label="example&#64;sine.com"
 												variant="filled"
 												id="email"
 												name="email"
+												inputProps={{ maxLength: 50 }}
 												sx={{
 													"& .MuiInputBase-root": {
 														border: "1px solid #D5D9E2",
@@ -186,7 +216,26 @@ const SignInForm: React.FC = () => {
 														border: "none",
 													},
 												}}
+												onBlur={(e) => {
+													const email = e.target.value;
+													if (typeof window !== "undefined") {
+														const emailErrorElement =
+															document.getElementById("emailError");
+														if (emailErrorElement) {
+															emailErrorElement.innerText =
+																validateEmail(email);
+														}
+													}
+												}}
 											/>
+											<Typography
+												id="emailError"
+												sx={{
+													color: "red",
+													fontSize: "12px",
+													marginTop: "5px !important",
+												}}
+											></Typography>
 										</FormControl>
 									</Box>
 
@@ -200,17 +249,19 @@ const SignInForm: React.FC = () => {
 													mb: "10px",
 													display: "block",
 												}}
-												className="text-black"
+												className="text-all-black"
 											>
 												Password
 											</Typography>
 
 											<TextField
+												className="authentication-input"
 												label="Type Password"
 												variant="filled"
-												type="password"
+												type={showPassword ? "text" : "password"}
 												id="password"
 												name="password"
+												inputProps={{ maxLength: 50 }}
 												sx={{
 													"& .MuiInputBase-root": {
 														border: "1px solid #D5D9E2",
@@ -224,7 +275,40 @@ const SignInForm: React.FC = () => {
 														border: "none",
 													},
 												}}
+												onBlur={(e) => {
+													const password = e.target.value;
+													if (typeof window !== "undefined") {
+														const passwordErrorElement =
+															document.getElementById("passwordError");
+														if (passwordErrorElement) {
+															passwordErrorElement.innerText =
+																validatePassword(password);
+														}
+													}
+												}}
+												InputProps={{
+													endAdornment: (
+														<IconButton
+															onClick={() => setShowPassword(!showPassword)}
+															edge="end"
+														>
+															{showPassword ? (
+																<VisibilityOff />
+															) : (
+																<Visibility />
+															)}
+														</IconButton>
+													),
+												}}
 											/>
+											<Typography
+												id="passwordError"
+												sx={{
+													color: "red",
+													fontSize: "12px",
+													marginTop: "5px !important",
+												}}
+											></Typography>
 										</FormControl>
 									</Box>
 

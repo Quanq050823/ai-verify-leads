@@ -8,17 +8,48 @@ import {
 	Typography,
 	FormControl,
 	TextField,
+	IconButton,
 } from "@mui/material";
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import Visibility from "@mui/icons-material/Visibility";
+import { FormRegisterServices } from "@/services/AuthServices";
+
+import {
+	validateEmail,
+	validatePassword,
+	validateFullName,
+	validateConfirmPassword,
+} from "./formValidation";
 
 const SignUpForm: React.FC = () => {
+	const [showPassword, setShowPassword] = useState(false);
+
+	const handleRegistSubmit = async (event: React.FormEvent) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget as HTMLFormElement);
+		FormRegisterServices(
+			formData.get("fullName"),
+			formData.get("email"),
+			formData.get("password")
+		);
+	};
+
 	return (
 		<>
 			<Box
-				className="auth-main-wrapper sign-up-area"
+				className="auth-main-wrapper sign-up-area background-authentication"
 				sx={{
 					py: { xs: "60px", md: "80px", lg: "100px", xl: "135px" },
+					backgroundImage:
+						'url("https://id-frontend.prod-east.frontend.public.atl-paas.net/assets/wac.92a80da2.svg")',
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+					backgroundRepeat: "no-repeat",
 				}}
 			>
 				<Box
@@ -40,7 +71,7 @@ const SignUpForm: React.FC = () => {
 								}}
 							>
 								<Image
-									src="/images/sign-up.jpg"
+									src="/images/sign-up2.jpeg"
 									alt="sign-up-image"
 									width={646}
 									height={804}
@@ -64,7 +95,12 @@ const SignUpForm: React.FC = () => {
 										mb: "23px",
 									}}
 								>
-									<Box className="navbar-logo"></Box>
+									<Image
+										src="/images/Sine_logo.png"
+										alt="logo"
+										width={142}
+										height={38}
+									/>
 								</Box>
 
 								<Box
@@ -102,7 +138,7 @@ const SignUpForm: React.FC = () => {
 								>
 									<Button
 										variant="outlined"
-										className="border bg-white"
+										className="border allwhite"
 										sx={{
 											width: "100%",
 											borderRadius: "8px",
@@ -119,7 +155,7 @@ const SignUpForm: React.FC = () => {
 
 									<Button
 										variant="outlined"
-										className="border bg-white"
+										className="border allwhite"
 										sx={{
 											width: "100%",
 											borderRadius: "8px",
@@ -136,7 +172,7 @@ const SignUpForm: React.FC = () => {
 
 									<Button
 										variant="outlined"
-										className="border bg-white"
+										className="border allwhite"
 										sx={{
 											width: "100%",
 											borderRadius: "8px",
@@ -152,7 +188,7 @@ const SignUpForm: React.FC = () => {
 									</Button>
 								</Box>
 
-								<Box component="form">
+								<Box component="form" onSubmit={handleRegistSubmit}>
 									<Box mb="15px">
 										<FormControl fullWidth>
 											<Typography
@@ -169,6 +205,7 @@ const SignUpForm: React.FC = () => {
 											</Typography>
 
 											<TextField
+												className="authentication-input"
 												label="Enter your full name"
 												variant="filled"
 												id="fullName"
@@ -186,7 +223,26 @@ const SignUpForm: React.FC = () => {
 														border: "none",
 													},
 												}}
+												onChange={(e) => {
+													const fullName = e.target.value;
+													if (typeof window !== "undefined") {
+														const fullNameErrorElement =
+															document.getElementById("fullNameError");
+														if (fullNameErrorElement) {
+															fullNameErrorElement.innerText =
+																validateFullName(fullName);
+														}
+													}
+												}}
 											/>
+											<Typography
+												id="fullNameError"
+												sx={{
+													color: "red",
+													fontSize: "12px",
+													marginTop: "5px !important",
+												}}
+											></Typography>
 										</FormControl>
 									</Box>
 
@@ -206,10 +262,12 @@ const SignUpForm: React.FC = () => {
 											</Typography>
 
 											<TextField
-												label="example&#64;Sine.com"
+												className="authentication-input"
+												label="example&#64;sine.com"
 												variant="filled"
 												id="email"
 												name="email"
+												inputProps={{ maxLength: 50 }}
 												sx={{
 													"& .MuiInputBase-root": {
 														border: "1px solid #D5D9E2",
@@ -223,7 +281,26 @@ const SignUpForm: React.FC = () => {
 														border: "none",
 													},
 												}}
+												onChange={(e) => {
+													const email = e.target.value;
+													if (typeof window !== "undefined") {
+														const emailErrorElement =
+															document.getElementById("emailError");
+														if (emailErrorElement) {
+															emailErrorElement.innerText =
+																validateEmail(email);
+														}
+													}
+												}}
 											/>
+											<Typography
+												id="emailError"
+												sx={{
+													color: "red",
+													fontSize: "12px",
+													marginTop: "5px !important",
+												}}
+											></Typography>
 										</FormControl>
 									</Box>
 
@@ -243,11 +320,13 @@ const SignUpForm: React.FC = () => {
 											</Typography>
 
 											<TextField
+												className="authentication-input"
 												label="Type Password"
 												variant="filled"
-												type="password"
+												type={showPassword ? "text" : "password"}
 												id="password"
 												name="password"
+												inputProps={{ maxLength: 50 }}
 												sx={{
 													"& .MuiInputBase-root": {
 														border: "1px solid #D5D9E2",
@@ -261,7 +340,120 @@ const SignUpForm: React.FC = () => {
 														border: "none",
 													},
 												}}
+												onBlur={(e) => {
+													const password = e.target.value;
+													if (typeof window !== "undefined") {
+														const passwordErrorElement =
+															document.getElementById("passwordError");
+														if (passwordErrorElement) {
+															passwordErrorElement.innerText =
+																validatePassword(password);
+														}
+													}
+												}}
+												InputProps={{
+													endAdornment: (
+														<IconButton
+															onClick={() => setShowPassword(!showPassword)}
+															edge="end"
+														>
+															{showPassword ? (
+																<VisibilityOff />
+															) : (
+																<Visibility />
+															)}
+														</IconButton>
+													),
+												}}
 											/>
+											<Typography
+												id="passwordError"
+												sx={{
+													color: "red",
+													fontSize: "12px",
+													marginTop: "5px !important",
+												}}
+											></Typography>
+										</FormControl>
+									</Box>
+									<Box mb="15px">
+										<FormControl fullWidth>
+											<Typography
+												component="label"
+												sx={{
+													fontWeight: "500",
+													fontSize: "14px",
+													mb: "10px",
+													display: "block",
+												}}
+												className="text-black"
+											>
+												Confirm Password
+											</Typography>
+
+											<TextField
+												className="authentication-input"
+												label="Type Confirm Password"
+												variant="filled"
+												type={showPassword ? "text" : "password"}
+												id="confirmPassword"
+												name="confirmPassword"
+												inputProps={{ maxLength: 50 }}
+												sx={{
+													"& .MuiInputBase-root": {
+														border: "1px solid #D5D9E2",
+														backgroundColor: "#fff",
+														borderRadius: "7px",
+													},
+													"& .MuiInputBase-root::before": {
+														border: "none",
+													},
+													"& .MuiInputBase-root:hover::before": {
+														border: "none",
+													},
+												}}
+												onChange={(e) => {
+													const confirmPassword = e.target.value;
+													if (typeof window !== "undefined") {
+														const password = (
+															document.getElementById(
+																"password"
+															) as HTMLInputElement
+														)?.value;
+														const confirmPasswordErrorElement =
+															document.getElementById("confirmPasswordError");
+														if (confirmPasswordErrorElement) {
+															confirmPasswordErrorElement.innerText =
+																validateConfirmPassword(
+																	confirmPassword,
+																	password
+																);
+														}
+													}
+												}}
+												InputProps={{
+													endAdornment: (
+														<IconButton
+															onClick={() => setShowPassword(!showPassword)}
+															edge="end"
+														>
+															{showPassword ? (
+																<VisibilityOff />
+															) : (
+																<Visibility />
+															)}
+														</IconButton>
+													),
+												}}
+											/>
+											<Typography
+												id="confirmPasswordError"
+												sx={{
+													color: "red",
+													fontSize: "12px",
+													marginTop: "5px !important",
+												}}
+											></Typography>
 										</FormControl>
 									</Box>
 
@@ -318,7 +510,7 @@ const SignUpForm: React.FC = () => {
 									>
 										Already have an account.{" "}
 										<Link
-											href="/pages/authentication/sign-in/"
+											href="/authentication/sign-in/"
 											className="text-primary"
 											style={{
 												fontWeight: "500",

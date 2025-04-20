@@ -1513,6 +1513,7 @@ table tfoot tr p {
 
 .custom-edit-dialog-header {
 	background-color: #9eb6ff;
+
 }
 .custom-edit-dialog-content {
 	background-color: #ffffff !important;
@@ -1568,6 +1569,11 @@ table tfoot tr p {
 .createIssueBtn {
 	background-color: #605dff !important;
 	color: #fff !important;
+
+}
+
+.BacklogInput {
+	color: #64748b !important;
 }
 
 .BacklogInput {

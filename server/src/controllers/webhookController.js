@@ -47,7 +47,7 @@ export const retrieveLead = async (req, res, next) => {
     try {
         const body = req.body;
 
-        let result = await services.retrieveLead(body);
+        let result = await services.retrieveFaceBookLead(body);
 
         return res.status(200).send("EVENT_RECEIVED");
     } catch (err) {

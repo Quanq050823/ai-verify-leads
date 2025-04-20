@@ -26,10 +26,6 @@ const FlowSchema = mongoose.Schema(
         routeData: {
             type: mongoose.Schema.Types.Mixed,
         },
-        lastModified: {
-            type: Date,
-            default: Date.now,
-        },
     },
     { timestamps: true }
 );

@@ -34,7 +34,7 @@ router.get(
 );
 router.get("/pages/:profileId", controller.getPages);
 router.get("/forms/:pageId", controller.getForm);
-router.post("/subscribePage/:pageId/:pageAccessToken", controller.subscribePage);
-router.delete("/unsubscribePage/:pageId/:pageAccessToken", controller.unsubscribePage);
+router.post("/subscribePage/:pageId", controller.subscribePage);
+router.delete("/unsubscribePage/:pageId", controller.unsubscribePage);
 
 export default router;

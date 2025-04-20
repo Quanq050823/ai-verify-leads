@@ -152,8 +152,6 @@ export const getForms = async (pageId, userId) => {
 
         const page = user.adsConnection[0]?.pages.find((p) => p.id === pageId);
 
-        if (!page) throw new ApiError(StatusCodes.NOT_FOUND, "Page not found");
-
         // Step 2: Fetch forms from Facebook API
         const res = await fetch(
             `https://graph.facebook.com/v22.0/${pageId}/leadgen_forms?access_token=${page.access_token}`
@@ -185,13 +183,27 @@ export const getForms = async (pageId, userId) => {
     }
 };
 
-export const subscribePageToWebhook = async (pageId, pageAccessToken) => {
+export const subscribePageToWebhook = async (pageId, userId) => {
     try {
+        let user = await User.findOne(
+            {
+                _id: getObjectId(userId),
+                "adsConnection.pages.id": pageId,
+            },
+            {
+                "adsConnection.$": 1, // Return the matched adsConnection element
+            }
+        );
+
+        if (!user) throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
+
+        const page = user.adsConnection[0]?.pages.find((p) => p.id === pageId);
+
         const res = await fetch(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                access_token: pageAccessToken,
+                access_token: page.access_token,
                 subscribed_fields: ["leadgen"],
             }),
         });
@@ -207,14 +219,27 @@ export const subscribePageToWebhook = async (pageId, pageAccessToken) => {
     }
 };
 
-export const unsubscribePageFromWebhook = async (pageId, pageAccessToken, appId) => {
-    // The correct endpoint for unsubscribing
+export const unsubscribePageFromWebhook = async (pageId, userId, appId) => {
+    let user = await User.findOne(
+        {
+            _id: getObjectId(userId),
+            "adsConnection.pages.id": pageId,
+        },
+        {
+            "adsConnection.$": 1, // Return the matched adsConnection element
+        }
+    );
+
+    if (!user) throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
+
+    const page = user.adsConnection[0]?.pages.find((p) => p.id === pageId);
+
     const res = await fetch(`https://graph.facebook.com/v22.0/${pageId}/subscribed_apps`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            access_token: pageAccessToken,
-            app_id: appId, // Pass app_id in the body instead
+            access_token: page.access_token,
+            app_id: appId,
         }),
     });
 
@@ -232,4 +257,25 @@ export const getLeadDetails = async (leadgenId, pageAccessToken) => {
     );
     if (!res.ok) throw new Error("Failed to fetch lead data");
     return await res.json();
+};
+
+export const getPageByUserAndPageId = async (userId, pageId) => {
+    try {
+        let user = await User.findOne(
+            {
+                _id: userId,
+                "adsConnection.pages.id": pageId,
+            },
+            {
+                "adsConnection.$": 1, // This will return only the matched element in the array
+            }
+        );
+
+        if (!user) throw new ApiError(StatusCodes.NOT_FOUND, "User not found");
+
+        const page = user.adsConnection[0]?.pages.find((p) => p.id === pageId);
+        return page;
+    } catch (error) {
+        throw error;
+    }
 };

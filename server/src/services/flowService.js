@@ -88,7 +88,7 @@ export const updateFlow = async (flowId, data, user) => {
     try {
         let { flowName, nodeData } = data;
 
-        let flow = await Flow.findOne({ _id: getObjectId(flowId), createdBy: user.userId });
+        let flow = await Flow.findOne({ _id: getObjectId(flowId), userId: user.userId });
         if (!flow) {
             throw new ApiError(StatusCodes.NOT_FOUND, "Flow not found");
         }
@@ -97,16 +97,12 @@ export const updateFlow = async (flowId, data, user) => {
 
         flow.name = flowName || flow.name;
         flow.nodeData = nodeData || flow.nodeData;
-        flow.lastModified = new Date();
-        flow.routeData =
-            flow.nodeData != nodeData
-                ? nodeData?.edges?.map((edge) => {
-                      return {
-                          source: edge.source,
-                          target: edge.target,
-                      };
-                  })
-                : flow.routeData;
+        flow.routeData = nodeData?.edges?.map((edge) => {
+            return {
+                source: edge.source,
+                target: edge.target,
+            };
+        });
 
         let result = await flow.save();
 
@@ -199,6 +195,23 @@ export const resetQueue = async () => {
             });
         });
         return { status: true, message: "Queue reset successfully" };
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getFacebookLeadFlow = async (pageId, formId) => {
+    try {
+        const flow = await Flow.find({
+            "nodeData.nodes.type": "facebookLeadAds",
+            "nodeData.nodes.data.settings.page": pageId,
+            "nodeData.nodes.data.settings.form": formId,
+        });
+        if (!flow) {
+            console.log("Flow not found for the given pageId and formId.");
+            return null;
+        }
+        return flow ? flow : null;
     } catch (error) {
         throw error;
     }

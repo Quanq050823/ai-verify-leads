@@ -4,9 +4,12 @@ import { StatusCodes } from "http-status-codes";
 import ApiError from "../utils/ApiError.js";
 import Producer from "../config/rabbitMQ.js";
 import * as flowService from "./flowService.js";
+import * as facebookService from "./facebookService.js";
+
 import { publishLead } from "./leadService.js";
 import getObjectId from "../utils/objectId.js";
 import Lead from "./../models/lead.js";
+import convertLeadData from "../utils/convertLeadData.js";
 
 export const appScript = async (userId, leads, flowId, currentNode) => {
     try {
@@ -40,16 +43,13 @@ export const appScript = async (userId, leads, flowId, currentNode) => {
     }
 };
 
-const PAGE_ACCESS_TOKEN =
-    "EAAQvKWZCZAU9ABO9MAsrJ1NPtrZAGosfxXrTb89yih9nqZBOhjky0Cka5XTsj2njyZB6pjG2r8UMMbyA6ZBqa7M6O7oIPgUkdkMusqhgLwEqHMTaicaqXozFuCW7AM3pUzvgNnGAmZARnPQfALv1XwXZBliZBCmWgTSmzNbFV9ANX2QUM3D1tcpzbqbLViUa1zc2SmDpO9nFPy5ht";
-
-export const retrieveLead = async (data) => {
+export const retrieveFaceBookLead = async (data) => {
     try {
         if (data.object !== "page") {
             return res.status(400).json({ message: "Unsupported event type" });
         }
 
-        let result = await Promise.all((body.entry || []).map(handleEntry));
+        let result = await Promise.all((data.entry || []).map(handleEntry));
 
         return result;
     } catch (err) {
@@ -78,17 +78,38 @@ const processLeadEvent = async (lead) => {
     }
 
     try {
-        const leadData = await fetchLeadData(leadgenId);
-        const convertedData = convertLeadData(leadData?.field_data);
+        let flows = await flowService.getFacebookLeadFlow(lead.page_id, lead.form_id);
+        if (!flows) {
+            return;
+        }
 
-        console.log("✅ Converted lead data:", convertedData);
+        flows.forEach(async (flow) => {
+            let page = await facebookService.getPageByUserAndPageId(flow.userId, lead.page_id);
+
+            const leadData = await fetchLeadData(leadgenId, page.access_token);
+            const convertedData = convertLeadData(leadData?.field_data);
+
+            let importedLeads = new Lead({
+                userId: getObjectId(flow.userId),
+                flowId: getObjectId(flow._id),
+                leadData: convertedData,
+                nodeId: lead.node_id || null,
+            });
+
+            const currentNode = flow.nodeData.nodes.find((node) => node.type === "facebookLeadAds");
+
+            await importedLeads.save();
+            await publishLead(flow.userId, flow._id, currentNode.id, [importedLeads]);
+        });
+
+        // console.log("✅ Converted lead data:", convertedData);
     } catch (err) {
         throw err;
     }
 };
 
-const fetchLeadData = async (leadgenId) => {
-    const url = `https://graph.facebook.com/v18.0/${leadgenId}?access_token=${PAGE_ACCESS_TOKEN}`;
+const fetchLeadData = async (leadgenId, pageAccessToken) => {
+    const url = `https://graph.facebook.com/v18.0/${leadgenId}?access_token=${pageAccessToken}`;
     const response = await fetch(url);
 
     if (!response.ok) {

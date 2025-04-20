@@ -42,8 +42,9 @@ export const getForm = async (req, res, next) => {
 
 export const subscribePage = async (req, res, next) => {
     try {
-        const { pageId, pageAccessToken } = req.params;
-        const subscribe = await facebookServices.subscribePageToWebhook(pageId, pageAccessToken);
+        // let userId = req?.user?.userId;
+        const { pageId } = req.params;
+        const subscribe = await facebookServices.subscribePageToWebhook(pageId, userId);
         res.status(StatusCodes.OK).send(subscribe);
     } catch (err) {
         next(err);
@@ -52,10 +53,10 @@ export const subscribePage = async (req, res, next) => {
 
 export const unsubscribePage = async (req, res, next) => {
     try {
-        const { pageId, pageAccessToken } = req.params;
+        const { pageId } = req.params;
         const unsubscribe = await facebookServices.unsubscribePageFromWebhook(
             pageId,
-            pageAccessToken,
+            userId,
             config.facebookAuthConfig.appId
         );
         res.status(StatusCodes.OK).send(unsubscribe);

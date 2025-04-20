@@ -18,12 +18,7 @@ export default (app) => {
     // app.use("/api/facebook", authenticate, facebookRoute);
     app.use("/api/facebook", facebookRoute);
     app.use("/api/user", authenticate, userRoute);
-    // app.use("/api/project", authenticate, projectRoute);
-    // app.use("/api/issue-type", authenticate, issueTypeRoute);
-    // app.use("/api/issue", authenticate, issueRoute);
-    // app.use("/api/sprint", authenticate, sprintRoute);
-    // app.use("/api/workflow", authenticate, workflowRoute);
-    // app.use("/api/comment", authenticate, commentRoute);
+
     // app.use("/api/role", authenticate, roleRoute);
     app.use(errorHandlingMiddleware);
 };

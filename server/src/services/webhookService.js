@@ -40,24 +40,60 @@ export const appScript = async (userId, leads, flowId, currentNode) => {
     }
 };
 
-export const retrieveLead = async (req, res) => {
-    const body = req.body;
+const PAGE_ACCESS_TOKEN =
+    "EAAQvKWZCZAU9ABO9MAsrJ1NPtrZAGosfxXrTb89yih9nqZBOhjky0Cka5XTsj2njyZB6pjG2r8UMMbyA6ZBqa7M6O7oIPgUkdkMusqhgLwEqHMTaicaqXozFuCW7AM3pUzvgNnGAmZARnPQfALv1XwXZBliZBCmWgTSmzNbFV9ANX2QUM3D1tcpzbqbLViUa1zc2SmDpO9nFPy5ht";
 
-    console.log(body);
-    res.status(200).send("EVENT_RECEIVED");
+export const retrieveLead = async (data) => {
+    try {
+        if (data.object !== "page") {
+            return res.status(400).json({ message: "Unsupported event type" });
+        }
 
-    // if (body.object === "page") {
-    //     body.entry.forEach((entry) => {
-    //         entry.changes.forEach((change) => {
-    //             if (change.field === "leadgen") {
-    //                 const lead = change.value;
-    //                 console.log("Received lead:", lead);
-    //                 // You can add additional processing here, such as saving the lead to your database
-    //             }
-    //         });
-    //     });
-    //     res.status(200).send("EVENT_RECEIVED");
-    // } else {
-    //     res.sendStatus(404);
-    // }
+        let result = await Promise.all((body.entry || []).map(handleEntry));
+
+        return result;
+    } catch (err) {
+        throw err;
+    }
+};
+
+const handleEntry = async (entry) => {
+    const changes = entry.changes || [];
+
+    for (const change of changes) {
+        if (change.field === "leadgen") {
+            const lead = change.value;
+            console.log("✅ Received lead event:", lead);
+            await processLeadEvent(lead);
+        }
+    }
+};
+
+const processLeadEvent = async (lead) => {
+    const { leadgen_id: leadgenId } = lead;
+
+    if (!leadgenId) {
+        console.warn("⚠️ Missing leadgen_id");
+        return;
+    }
+
+    try {
+        const leadData = await fetchLeadData(leadgenId);
+        const convertedData = convertLeadData(leadData?.field_data);
+
+        console.log("✅ Converted lead data:", convertedData);
+    } catch (err) {
+        throw err;
+    }
+};
+
+const fetchLeadData = async (leadgenId) => {
+    const url = `https://graph.facebook.com/v18.0/${leadgenId}?access_token=${PAGE_ACCESS_TOKEN}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(`Facebook API error: ${response.statusText}`);
+    }
+
+    return await response.json();
 };

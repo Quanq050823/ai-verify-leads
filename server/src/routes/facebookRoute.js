@@ -32,8 +32,8 @@ router.get(
     }),
     controller.connectFacebook
 );
-router.get("/pages/:accessToken", controller.getPages);
-router.get("/forms/:pageId/:accessToken", controller.getForm);
+router.get("/pages/:profileId", controller.getPages);
+router.get("/forms/:pageId", controller.getForm);
 router.post("/subscribePage/:pageId/:pageAccessToken", controller.subscribePage);
 router.delete("/unsubscribePage/:pageId/:pageAccessToken", controller.unsubscribePage);
 

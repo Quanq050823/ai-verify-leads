@@ -46,6 +46,9 @@ const UserSchema = mongoose.Schema(
                 profile: {
                     type: mongoose.Schema.Types.Mixed,
                 },
+                pages: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
             },
         ],
         federatedCredentials: [

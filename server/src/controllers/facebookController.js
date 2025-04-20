@@ -4,10 +4,10 @@ import * as facebookServices from "../services/facebookService.js";
 import * as userServices from "../services/userService.js";
 import config from "../config/environment.js";
 
+let userId = "67b1c1331e12c93a79317bbb";
 export const connectFacebook = async (req, res, next) => {
     try {
         // let userId = req?.user?.userId;
-        let userId = "67b1c1331e12c93a79317bbb";
         let facebookProfile = req.facebookProfile;
 
         let user = await facebookServices.updateConnection(userId, "facebook", facebookProfile);
@@ -20,8 +20,9 @@ export const connectFacebook = async (req, res, next) => {
 
 export const getPages = async (req, res, next) => {
     try {
-        const { accessToken } = req.params;
-        const pages = await facebookServices.getUserPages(accessToken);
+        // let userId = req?.user?.userId;
+        const { profileId } = req.params;
+        const pages = await facebookServices.getUserPages(profileId, userId);
         res.status(StatusCodes.OK).send(pages);
     } catch (err) {
         next(err);
@@ -30,8 +31,9 @@ export const getPages = async (req, res, next) => {
 
 export const getForm = async (req, res, next) => {
     try {
-        const { pageId, accessToken } = req.params;
-        const forms = await facebookServices.getForms(pageId, accessToken);
+        // let userId = req?.user?.userId;
+        const { pageId } = req.params;
+        const forms = await facebookServices.getForms(pageId, userId);
         res.status(StatusCodes.OK).send(forms);
     } catch (err) {
         next(err);

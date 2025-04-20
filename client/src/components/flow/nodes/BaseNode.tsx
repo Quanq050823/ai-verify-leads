@@ -1,193 +1,214 @@
-
-import React, { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
-import { Box, Paper, Typography, Chip, Stack } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import React, { memo } from "react";
+import { Handle, Position, useReactFlow } from "@xyflow/react";
+import { Box, Paper, Typography, Stack, IconButton } from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { lighten } from "@mui/material/styles";
+import { Close as CloseIcon } from "@mui/icons-material";
 
 type BaseNodeProps = {
-  data: {
-    label: string;
-    icon?: React.ReactNode;
-    description?: string;
-    type: string;
-    subType?: string;
-    inputs?: number;
-    outputs?: number;
-    color?: string;
-  };
-  selected: boolean;
-  id: string;
+	data: {
+		label: string;
+		icon?: React.ReactNode;
+		description?: string;
+		type: string;
+		subType?: string;
+		inputs?: number;
+		outputs?: number;
+		color?: string;
+	};
+	selected: boolean;
+	id: string;
 };
 
 const NodeContainer = styled(Paper, {
-  shouldForwardProp: (prop) => prop !== 'selected' && prop !== 'nodeColor',
-})<{ selected?: boolean; nodeColor?: string }>(({ theme, selected, nodeColor }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  padding: theme.spacing(1.5),
-  width: '200px',
-  border: selected ? `1px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
-  boxShadow: selected ? theme.shadows[3] : theme.shadows[1],
-  borderRadius: theme.shape.borderRadius,
-  transition: theme.transitions.create(['box-shadow', 'border-color'], {
-    duration: theme.transitions.duration.short,
-  }),
-  animation: selected ? 'fadeIn 0.3s ease-out' : 'none',
-  '&.selected': {
-    borderColor: theme.palette.primary.main,
-  },
-  '@keyframes fadeIn': {
-    from: {
-      opacity: 0,
-      transform: 'scale(0.9)',
-    },
-    to: {
-      opacity: 1,
-      transform: 'scale(1)',
-    },
-  },
+	shouldForwardProp: (prop) => prop !== "selected" && prop !== "nodeColor",
+})<{ selected?: boolean; nodeColor?: string }>(
+	({ theme, selected, nodeColor }) => ({
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		justifyContent: "center",
+		width: "80px",
+		height: "80px",
+		borderRadius: "50%",
+		backgroundColor: nodeColor || theme.palette.grey[300],
+		position: "relative",
+		cursor: "grab",
+		boxShadow: selected
+			? `0 0 0 3px ${theme.palette.primary.main}, ${theme.shadows[4]}`
+			: theme.shadows[2],
+
+		"&:hover": {
+			boxShadow: `0 0 0 5px ${lighten(
+				nodeColor || theme.palette.grey[300],
+				0.3
+			)}`,
+		},
+
+		"& .MuiSvgIcon-root": {
+			fontSize: "38px",
+			color: "white",
+		},
+	})
+);
+
+const NodeLabel = styled(Box)(({ theme }) => ({
+	position: "absolute",
+	top: "100%",
+	left: "50%",
+	transform: "translateX(-50%)",
+	textAlign: "center",
+	marginTop: "8px",
+	width: "120px",
 }));
 
-const NodeHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  marginBottom: theme.spacing(1),
-}));
-
-const NodeIcon = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'bgcolor',
-})<{ bgcolor?: string }>(({ theme, bgcolor }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: bgcolor || theme.palette.grey[400],
-  color: 'white',
-  borderRadius: theme.shape.borderRadius,
-  padding: theme.spacing(0.5),
-  marginRight: theme.spacing(1),
-  width: '28px',
-  height: '28px',
-}));
-
-const NodeFooter = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  marginTop: theme.spacing(1.5),
-  paddingTop: theme.spacing(0.75),
-  borderTop: `1px solid ${theme.palette.divider}`,
+const ActionLabel = styled(Typography)(({ theme }) => ({
+	fontSize: "11px",
+	color: theme.palette.text.secondary,
+	marginTop: "2px",
 }));
 
 const StyledHandle = styled(Handle)(({ theme }) => ({
-  background: theme.palette.grey[300],
-  border: `2px solid ${theme.palette.grey[400]}`,
-  width: '8px',
-  height: '8px',
-  '&:hover': {
-    background: 'white',
-    borderColor: theme.palette.primary.main,
-  },
+	width: "8px",
+	height: "8px",
+	backgroundColor: "#fff",
+	border: "2px solid #778899",
+	transition: "all 0.2s ease",
+	zIndex: 10,
+
+	"&:hover": {
+		backgroundColor: theme.palette.primary.main,
+		borderColor: theme.palette.primary.dark,
+		transform: "scale(1.2)",
+	},
 }));
 
-const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
-  const nodeColor = data.color || '#94a3b8';
-  
-  // Determine the number of input and output handles
-  const inputCount = data.inputs !== undefined ? data.inputs : 1;
-  const outputCount = data.outputs !== undefined ? data.outputs : 1;
-  
-  // Calculate positions for multiple handles
-  const getHandlePositions = (count: number) => {
-    if (count === 1) return [0.5]; // Center if only one
-    
-    const positions: number[] = [];
-    for (let i = 0; i < count; i++) {
-      positions.push((i / (count - 1)) * 0.8 + 0.1); // Distribute between 0.1 and 0.9
-    }
-    return positions;
-  };
-  
-  const inputPositions = getHandlePositions(inputCount);
-  const outputPositions = getHandlePositions(outputCount);
+const DeleteButton = styled(IconButton)(({ theme }) => ({
+	position: "absolute",
+	top: "-8px",
+	right: "60px",
+	width: "22px",
+	height: "22px",
+	backgroundColor: theme.palette.background.paper,
+	color: theme.palette.grey[500],
+	padding: 0,
+	minWidth: 0,
+	border: `1px solid ${theme.palette.grey[300]}`,
+	boxShadow: theme.shadows[1],
+	opacity: 0,
+	transition: "all 0.2s ease",
+	zIndex: 20,
+	"&:hover": {
+		backgroundColor: theme.palette.error.light,
+		color: theme.palette.error.contrastText,
+	},
+}));
 
-  return (
-    <NodeContainer selected={selected} className={selected ? 'selected fade-in' : ''}>
-      <NodeHeader>
-        <NodeIcon bgcolor={nodeColor}>
-          {data.icon || '●'}
-        </NodeIcon>
-        <Typography variant="subtitle2" noWrap sx={{ flex: 1 }}>
-          {data.label}
-        </Typography>
-      </NodeHeader>
-      
-      <Box sx={{ mb: 1 }}>
-        {data.description && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            {data.description}
-          </Typography>
-        )}
-        <Stack direction="row" spacing={0.5}>
-          <Chip 
-            label={data.type} 
-            size="small" 
-            sx={{ 
-              bgcolor: 'grey.100', 
-              color: 'text.secondary',
-              height: '20px',
-              '& .MuiChip-label': {
-                fontSize: '0.625rem',
-                px: 1,
-              }
-            }} 
-          />
-          {data.subType && (
-            <Chip 
-              label={data.subType} 
-              size="small" 
-              sx={{ 
-                bgcolor: 'grey.100', 
-                color: 'text.secondary',
-                height: '20px',
-                '& .MuiChip-label': {
-                  fontSize: '0.625rem',
-                  px: 1,
-                }
-              }} 
-            />
-          )}
-        </Stack>
-      </Box>
-      
-      <NodeFooter>
-        <Typography variant="caption" color="text.secondary">
-          ID: {id.slice(0, 8)}
-        </Typography>
-      </NodeFooter>
-      
-      {/* Input Handles */}
-      {inputPositions.map((pos, index) => (
-        <StyledHandle
-          key={`input-${index}`}
-          type="target"
-          position={Position.Left}
-          id={`input-${index}`}
-          style={{ left: 0, top: `${pos * 100}%` }}
-        />
-      ))}
-      
-      {/* Output Handles */}
-      {outputPositions.map((pos, index) => (
-        <StyledHandle
-          key={`output-${index}`}
-          type="source"
-          position={Position.Right}
-          id={`output-${index}`}
-          style={{ right: 0, top: `${pos * 100}%` }}
-        />
-      ))}
-    </NodeContainer>
-  );
+const NodeWrapper = styled(Box)({
+	position: "relative",
+	"&:hover .delete-button": {
+		opacity: 1,
+	},
+});
+
+const getActionName = (type: string): string => {
+	switch (type.toLowerCase()) {
+		case "facebookads":
+			return "Get Hook Ads";
+		case "googlesheets":
+			return "Get Lead";
+		case "aicall":
+			return "Process AI";
+		case "calendar":
+			return "Schedule Event";
+		case "webhook":
+			return "HTTP Request";
+		case "condition":
+			return "Branch Logic";
+		case "email":
+			return "Send Email";
+		case "sms":
+			return "Send Message";
+		case "config":
+			return "Configure";
+		case "error":
+			return "Handle Error";
+		default:
+			return "Action";
+	}
+};
+
+const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
+	const nodeColor = data.color || "#94a3b8";
+	const actionName = getActionName(id.split("_")[0]);
+	const { setNodes } = useReactFlow();
+
+	const inputCount = data.inputs !== undefined ? data.inputs : 1;
+	const outputCount = data.outputs !== undefined ? data.outputs : 1;
+
+	const getHandlePositions = (count: number) => {
+		if (count === 1) return [0.5];
+		const positions: number[] = [];
+		for (let i = 0; i < count; i++) {
+			positions.push((i / (count - 1)) * 0.8 + 0.1);
+		}
+		return positions;
+	};
+
+	const inputPositions = getHandlePositions(inputCount);
+	const outputPositions = getHandlePositions(outputCount);
+
+	const handleDeleteNode = (event: React.MouseEvent) => {
+		event.stopPropagation();
+		setNodes((nodes) => nodes.filter((node) => node.id !== id));
+	};
+
+	return (
+		<NodeWrapper>
+			<DeleteButton
+				className="delete-button"
+				onClick={handleDeleteNode}
+				size="small"
+				aria-label="delete node"
+			>
+				<CloseIcon fontSize="small" />
+			</DeleteButton>
+
+			<NodeContainer selected={selected} nodeColor={nodeColor}>
+				{data.icon}
+			</NodeContainer>
+
+			<NodeLabel>
+				<Typography
+					variant="body2"
+					sx={{ fontWeight: 500, color: "text.primary" }}
+				>
+					{data.label}
+				</Typography>
+				<ActionLabel>{actionName}</ActionLabel>
+			</NodeLabel>
+
+			{inputPositions.map((pos, index) => (
+				<StyledHandle
+					key={`input-${index}`}
+					type="target"
+					position={Position.Left}
+					id={`input-${index}`}
+					style={{ left: -4, top: `${pos * 100}%` }}
+				/>
+			))}
+
+			{outputPositions.map((pos, index) => (
+				<StyledHandle
+					key={`output-${index}`}
+					type="source"
+					position={Position.Right}
+					id={`output-${index}`}
+					style={{ right: -4, top: `${pos * 100}%` }}
+				/>
+			))}
+		</NodeWrapper>
+	);
 };
 
 export default memo(BaseNode);

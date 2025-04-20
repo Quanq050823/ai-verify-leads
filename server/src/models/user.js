@@ -38,6 +38,19 @@ const UserSchema = mongoose.Schema(
         jobTitle: String,
         department: String,
         organization: String,
+        adsConnection: [
+            {
+                provider: {
+                    type: String,
+                },
+                profile: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
+                pages: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
+            },
+        ],
         federatedCredentials: [
             {
                 _id: String,

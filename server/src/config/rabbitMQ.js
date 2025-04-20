@@ -66,7 +66,7 @@ class Producer {
             eta: null,
         };
 
-        console.log(payload);
+        // console.log(payload);
 
         channel.publish(exchange, routingKey, Buffer.from(JSON.stringify(payload)), {
             contentType: "application/json",

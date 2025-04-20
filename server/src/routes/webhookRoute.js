@@ -7,5 +7,8 @@ import("../middlewares/googleAuthMiddleware.js");
 const router = express.Router();
 
 router.post("/appScript/:userId/:flowId/:nodeId", controller.getByAppScript);
+router.get("/facebook", controller.verifyWebhook);
+
+router.post("/facebook", controller.retrieveLead);
 
 export default router;

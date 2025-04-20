@@ -16,7 +16,7 @@ const leadSchema = mongoose.Schema(
         },
         status: {
             type: Number,
-            enum: [0, 1, 2],
+            enum: [0, 1, 2], //0: deleted, 1: queuing, 2: in-progress
             default: 1,
         },
         leadData: {

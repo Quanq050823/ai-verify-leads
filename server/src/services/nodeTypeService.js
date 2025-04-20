@@ -59,8 +59,6 @@ export const updateNodeType = async (nodeTypeId, data) => {
             throw new ApiError(StatusCodes.NOT_FOUND, "Node type not found");
         }
 
-        console.log("data", data?.img);
-
         let uploadedImg = data?.img
             ? await uploadImg(data?.img, "nodeType", nodeType._id)
             : nodeType.img;

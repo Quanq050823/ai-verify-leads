@@ -20,7 +20,7 @@ export const CheckCookieServices = async () => {
 		});
 		if (response.data.isAuthenticated) {
 			toast.success("You have already logged in!");
-			window.location.href = "/your-work";
+			window.location.href = "/pages/dashboard";
 		} else {
 			toast.success("Please login again!");
 			window.location.href = "/pages/authentication/sign-in/";
@@ -35,7 +35,7 @@ export const FormLoginServices = async (email: any, password: any) => {
 	try {
 		await axios2.post("/auth/login", { email: email, password: password });
 		toast.success("Successful signing in!");
-		window.location.href = "/your-work";
+		window.location.href = "/pages/dashboard";
 	} catch (error: any) {
 		toast.error(error?.response?.data?.message);
 		console.log(error);

@@ -14,8 +14,23 @@ import {
 	Chip,
 	styled,
 	SelectChangeEvent,
+	CircularProgress,
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
+	Alert,
 } from "@mui/material";
-import { Close } from "@mui/icons-material";
+import { Close, NotificationImportant } from "@mui/icons-material";
+import {
+	useFacebookConnections,
+	useFacebookPages,
+	useFacebookForms,
+	subscribePageToWebhook,
+	unsubscribePageFromWebhook,
+} from "@/services/facebookServices";
 
 type PropertiesPanelProps = {
 	selectedNode: Node | null;
@@ -50,7 +65,7 @@ interface NodeSettings {
 const PanelContainer = styled(Paper)(({ theme }) => ({
 	backgroundColor: theme.palette.background.paper,
 	borderLeft: `1px solid ${theme.palette.divider}`,
-	width: "280px",
+	width: "300px",
 	height: "100%",
 	padding: theme.spacing(2),
 	boxShadow: theme.shadows[2],
@@ -79,6 +94,357 @@ const NodeColorIndicator = styled(Box, {
 	backgroundColor: bgcolor || "#94a3b8",
 	marginRight: "8px",
 }));
+
+// Facebook Connection Select Component
+interface ConnectionSelectProps {
+	value: string;
+	onChange: (value: string) => void;
+}
+
+const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
+	value,
+	onChange,
+}) => {
+	const { connections, loading, error } = useFacebookConnections();
+
+	return (
+		<FormControl fullWidth margin="normal" size="small">
+			<InputLabel>Choose Facebook Connection</InputLabel>
+			<Select
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				label="Choose Facebook Connection"
+				disabled={loading}
+			>
+				{loading ? (
+					<MenuItem value="">
+						<Box sx={{ display: "flex", alignItems: "center" }}>
+							<CircularProgress size={20} sx={{ mr: 1 }} />
+							Loading...
+						</Box>
+					</MenuItem>
+				) : error ? (
+					<MenuItem value="">Error: {error}</MenuItem>
+				) : connections.length === 0 ? (
+					<MenuItem value="">No Facebook connections found</MenuItem>
+				) : (
+					connections.map((connection) => (
+						<MenuItem key={connection.profile.id} value={connection.profile.id}>
+							{connection.profile.name}
+						</MenuItem>
+					))
+				)}
+			</Select>
+		</FormControl>
+	);
+};
+
+// Facebook Page Select Component
+interface PageSelectProps {
+	connectionId: string | undefined;
+	value: string;
+	onChange: (value: string) => void;
+	disabled?: boolean;
+}
+
+const PageSelect: React.FC<PageSelectProps> = ({
+	connectionId,
+	value,
+	onChange,
+	disabled,
+}) => {
+	const { pages, loading, error } = useFacebookPages(connectionId || null);
+
+	return (
+		<FormControl fullWidth margin="normal" size="small" disabled={disabled}>
+			<InputLabel>Choose Facebook Page</InputLabel>
+			<Select
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				label="Choose Facebook Page"
+				disabled={loading || disabled}
+			>
+				{loading ? (
+					<MenuItem value="">
+						<Box sx={{ display: "flex", alignItems: "center" }}>
+							<CircularProgress size={20} sx={{ mr: 1 }} />
+							Loading...
+						</Box>
+					</MenuItem>
+				) : error ? (
+					<MenuItem value="">Error: {error}</MenuItem>
+				) : pages.length === 0 ? (
+					<MenuItem value="">No Facebook pages found</MenuItem>
+				) : (
+					pages.map((page) => (
+						<MenuItem key={page.id} value={page.id}>
+							{page.name}
+						</MenuItem>
+					))
+				)}
+			</Select>
+		</FormControl>
+	);
+};
+
+// Facebook Form Select Component
+interface FormSelectProps {
+	pageId: string | undefined;
+	value: string;
+	onChange: (value: string) => void;
+	disabled?: boolean;
+}
+
+const FormSelect: React.FC<FormSelectProps> = ({
+	pageId,
+	value,
+	onChange,
+	disabled,
+}) => {
+	const { forms, loading, error } = useFacebookForms(pageId || null);
+
+	return (
+		<FormControl fullWidth margin="normal" size="small" disabled={disabled}>
+			<InputLabel>Choose Lead Form</InputLabel>
+			<Select
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				label="Choose Lead Form"
+				disabled={loading || disabled}
+			>
+				{loading ? (
+					<MenuItem value="">
+						<Box sx={{ display: "flex", alignItems: "center" }}>
+							<CircularProgress size={20} sx={{ mr: 1 }} />
+							Loading...
+						</Box>
+					</MenuItem>
+				) : error ? (
+					<MenuItem value="">Error: {error}</MenuItem>
+				) : forms.length === 0 ? (
+					<MenuItem value="">No lead forms found</MenuItem>
+				) : (
+					forms.map((form) => (
+						<MenuItem key={form.id} value={form.id}>
+							{form.name}
+						</MenuItem>
+					))
+				)}
+			</Select>
+		</FormControl>
+	);
+};
+
+// Add WebhookDialog component
+interface WebhookDialogProps {
+	open: boolean;
+	onClose: () => void;
+	pageId: string;
+	pageName: string;
+	isSubscribed: boolean;
+	onUpdate: (subscribed: boolean) => void;
+}
+
+const WebhookDialog: React.FC<WebhookDialogProps> = ({
+	open,
+	onClose,
+	pageId,
+	pageName,
+	isSubscribed,
+	onUpdate,
+}) => {
+	const [loading, setLoading] = useState<boolean>(false);
+	const [error, setError] = useState<string | null>(null);
+	const [appId, setAppId] = useState<string>("");
+	const [showUnsubscribeForm, setShowUnsubscribeForm] =
+		useState<boolean>(false);
+
+	const handleSubscribe = async () => {
+		try {
+			setLoading(true);
+			setError(null);
+			const response = await subscribePageToWebhook(pageId);
+			if (response && !response.error) {
+				onUpdate(true);
+				onClose();
+			} else {
+				setError(response.error?.message || "Failed to subscribe to webhook");
+			}
+		} catch (err: any) {
+			setError(err.message || "An unexpected error occurred");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleUnsubscribe = async () => {
+		if (!appId.trim()) {
+			setError("App ID is required for unsubscribing");
+			return;
+		}
+		try {
+			setLoading(true);
+			setError(null);
+			const response = await unsubscribePageFromWebhook(pageId, appId);
+			if (response && !response.error) {
+				onUpdate(false);
+				onClose();
+			} else {
+				setError(
+					response.error?.message || "Failed to unsubscribe from webhook"
+				);
+			}
+		} catch (err: any) {
+			setError(err.message || "An unexpected error occurred");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+			<DialogTitle>
+				{isSubscribed ? "Webhook Subscription" : "Subscribe to Webhook"}
+			</DialogTitle>
+			<DialogContent>
+				{error && (
+					<Alert severity="error" sx={{ mb: 2 }}>
+						{error}
+					</Alert>
+				)}
+				<DialogContentText gutterBottom>
+					{isSubscribed
+						? `Page "${pageName}" is currently subscribed to webhook notifications.`
+						: `Subscribe page "${pageName}" to webhook notifications to receive lead data in real-time.`}
+				</DialogContentText>
+
+				{isSubscribed && (
+					<>
+						<Box sx={{ mt: 2 }}>
+							<Button
+								variant="outlined"
+								color="error"
+								onClick={() => setShowUnsubscribeForm(true)}
+								disabled={loading || showUnsubscribeForm}
+							>
+								Unsubscribe from Webhook
+							</Button>
+						</Box>
+
+						{showUnsubscribeForm && (
+							<Box sx={{ mt: 2 }}>
+								<DialogContentText>
+									To unsubscribe, please enter your Facebook App ID:
+								</DialogContentText>
+								<TextField
+									autoFocus
+									margin="dense"
+									label="Facebook App ID"
+									type="text"
+									fullWidth
+									value={appId}
+									onChange={(e) => setAppId(e.target.value)}
+								/>
+							</Box>
+						)}
+					</>
+				)}
+			</DialogContent>
+			<DialogActions>
+				<Button onClick={onClose} disabled={loading}>
+					Cancel
+				</Button>
+				{isSubscribed ? (
+					showUnsubscribeForm && (
+						<Button
+							onClick={handleUnsubscribe}
+							color="error"
+							variant="contained"
+							disabled={loading || !appId.trim()}
+						>
+							{loading ? <CircularProgress size={24} /> : "Unsubscribe"}
+						</Button>
+					)
+				) : (
+					<Button
+						onClick={handleSubscribe}
+						color="primary"
+						variant="contained"
+						disabled={loading}
+					>
+						{loading ? <CircularProgress size={24} /> : "Subscribe"}
+					</Button>
+				)}
+			</DialogActions>
+		</Dialog>
+	);
+};
+
+// Add new WebhookSection component
+interface WebhookSectionProps {
+	pageId: string;
+	connectionId?: string;
+	isSubscribed: boolean;
+	onUpdate: (subscribed: boolean) => void;
+}
+
+const WebhookSection: React.FC<WebhookSectionProps> = ({
+	pageId,
+	connectionId,
+	isSubscribed,
+	onUpdate,
+}) => {
+	const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+	const { pages } = useFacebookPages(connectionId || null);
+	const page = pages.find((p) => p.id === pageId);
+	const pageName = page?.name || "Selected Page";
+
+	return (
+		<>
+			<Box sx={{ mt: 2, mb: 1 }}>
+				<Divider>
+					<Chip label="Webhook Settings" />
+				</Divider>
+			</Box>
+
+			<Box
+				sx={{
+					mt: 2,
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+				}}
+			>
+				<Box sx={{ display: "flex", alignItems: "center" }}>
+					<Chip
+						size="small"
+						label={isSubscribed ? "Subscribed" : "Not Subscribed"}
+						color={isSubscribed ? "success" : "default"}
+						sx={{ ml: 1 }}
+					/>
+				</Box>
+
+				<Button
+					startIcon={<NotificationImportant />}
+					variant="outlined"
+					size="small"
+					onClick={() => setDialogOpen(true)}
+				>
+					Manage Webhook
+				</Button>
+			</Box>
+
+			<WebhookDialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+				pageId={pageId}
+				pageName={pageName}
+				isSubscribed={isSubscribed}
+				onUpdate={onUpdate}
+			/>
+		</>
+	);
+};
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	selectedNode,
@@ -159,42 +525,51 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			case "facebookLeadAds":
 				return (
 					<>
-						<FormControl fullWidth margin="normal" size="small">
-							<InputLabel>Choose Connection</InputLabel>
-							<Select
-								value={localSettings.connectionId || ""}
-								onChange={handleSelectChange("connectionId")}
-								label="Choose Connection"
-							>
-								<MenuItem value="conn1">Facebook Connection 1</MenuItem>
-								<MenuItem value="conn2">Facebook Connection 2</MenuItem>
-								<MenuItem value="conn3">Facebook Connection 3</MenuItem>
-							</Select>
-						</FormControl>
-						<FormControl fullWidth margin="normal" size="small">
-							<InputLabel>Choose Page</InputLabel>
-							<Select
-								value={localSettings.pageId || ""}
-								onChange={handleSelectChange("pageId")}
-								label="Choose Page"
-							>
-								<MenuItem value="page1">Page 1</MenuItem>
-								<MenuItem value="page2">Page 2</MenuItem>
-								<MenuItem value="page3">Page 3</MenuItem>
-							</Select>
-						</FormControl>
-						<FormControl fullWidth margin="normal" size="small">
-							<InputLabel>Choose Form</InputLabel>
-							<Select
-								value={localSettings.formId || ""}
-								onChange={handleSelectChange("formId")}
-								label="Choose Form"
-							>
-								<MenuItem value="form1">Contact Form</MenuItem>
-								<MenuItem value="form2">Lead Generation Form</MenuItem>
-								<MenuItem value="form3">Survey Form</MenuItem>
-							</Select>
-						</FormControl>
+						<TextField
+							fullWidth
+							size="small"
+							label="Input Prompt"
+							variant="outlined"
+							margin="normal"
+							multiline
+							rows={2}
+							value={localSettings.promptTemplate || ""}
+							onChange={handleTextChange("promptTemplate")}
+							placeholder="Enter prompt message"
+						/>
+
+						<ConnectionSelect
+							value={localSettings.connectionId || ""}
+							onChange={(value) => updateSettings("connectionId", value)}
+						/>
+
+						<PageSelect
+							connectionId={localSettings.connectionId}
+							value={localSettings.pageId || ""}
+							onChange={(value) => updateSettings("pageId", value)}
+							disabled={!localSettings.connectionId}
+						/>
+
+						<FormSelect
+							pageId={localSettings.pageId}
+							value={localSettings.formId || ""}
+							onChange={(value) => updateSettings("formId", value)}
+							disabled={!localSettings.pageId}
+						/>
+
+						{localSettings.pageId && (
+							<WebhookSection
+								pageId={localSettings.pageId}
+								connectionId={localSettings.connectionId}
+								isSubscribed={!!selectedNode.data?.webhookSubscribed}
+								onUpdate={(subscribed) => {
+									onChange(selectedNode.id, {
+										...selectedNode.data,
+										webhookSubscribed: subscribed,
+									});
+								}}
+							/>
+						)}
 					</>
 				);
 

@@ -275,7 +275,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			const newEdge: Edge<CustomEdgeData> = {
 				...params,
 				id: `e_${params.source}_${params.target}_${Date.now()}`,
-				data: { label: "Connection" },
 			};
 			setEdges((eds) => addEdge(newEdge, eds));
 		},

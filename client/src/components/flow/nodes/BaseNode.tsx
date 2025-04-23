@@ -15,6 +15,7 @@ type BaseNodeProps = {
 		inputs?: number;
 		outputs?: number;
 		color?: string;
+		webhookSubscribed?: boolean;
 	};
 	selected: boolean;
 	id: string;

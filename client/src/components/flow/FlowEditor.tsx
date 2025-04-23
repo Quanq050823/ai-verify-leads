@@ -72,10 +72,12 @@ const theme = createTheme({
 const nodeTypes = {
 	googleSheets: GoogleSheetsNode,
 	facebookAds: FacebookAdsNode,
+	facebookLeadAds: FacebookAdsNode,
 	aiCall: AICallNode,
 	calendar: CalendarNode,
 	webhook: WebhookNode,
 	condition: ConditionNode,
+	preVerify: ConditionNode,
 	email: EmailNode,
 	sms: SMSNode,
 	config: ConfigNode,
@@ -208,6 +210,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Google Sheets";
 			case "facebookAds":
 				return "Facebook Ads";
+			case "facebookLeadAds":
+				return "Facebook Lead Ads";
 			case "aiCall":
 				return "AI Call";
 			case "calendar":
@@ -216,6 +220,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Webhook";
 			case "condition":
 				return "Condition";
+			case "preVerify":
+				return "Pre-Verify";
 			case "email":
 				return "Send Email";
 			case "sms":
@@ -225,7 +231,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			case "error":
 				return "Error Handler";
 			default:
-				return "Unknown Node";
+				console.warn(`Unknown node type: ${type}`);
+				return type || "Unknown Node";
 		}
 	};
 
@@ -236,6 +243,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Import leads from Google Sheets";
 			case "facebookAds":
 				return "Import leads from Facebook Ads";
+			case "facebookLeadAds":
+				return "Import leads from Facebook Lead Ads";
 			case "aiCall":
 				return "Process data with AI";
 			case "calendar":
@@ -244,6 +253,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Send data to external system";
 			case "condition":
 				return "Branch based on conditions";
+			case "preVerify":
+				return "Pre-verify leads before processing";
 			case "email":
 				return "Send email notification";
 			case "sms":
@@ -253,7 +264,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			case "error":
 				return "Handle errors in the flow";
 			default:
-				return "";
+				return `Node type: ${type}`;
 		}
 	};
 

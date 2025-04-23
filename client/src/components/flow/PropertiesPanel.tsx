@@ -41,6 +41,9 @@ interface NodeSettings {
 	provider?: string;
 	subject?: string;
 	template?: string;
+	connectionId?: string;
+	pageId?: string;
+	formId?: string;
 	[key: string]: string | number | undefined;
 }
 
@@ -153,28 +156,45 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				);
 
 			case "facebookAds":
+			case "facebookLeadAds":
 				return (
 					<>
-						<TextField
-							fullWidth
-							size="small"
-							label="Ad Account ID"
-							variant="outlined"
-							margin="normal"
-							value={localSettings.adAccountId || ""}
-							onChange={handleTextChange("adAccountId")}
-							placeholder="Enter ad account ID"
-						/>
-						<TextField
-							fullWidth
-							size="small"
-							label="Campaign ID"
-							variant="outlined"
-							margin="normal"
-							value={localSettings.campaignId || ""}
-							onChange={handleTextChange("campaignId")}
-							placeholder="Enter campaign ID"
-						/>
+						<FormControl fullWidth margin="normal" size="small">
+							<InputLabel>Choose Connection</InputLabel>
+							<Select
+								value={localSettings.connectionId || ""}
+								onChange={handleSelectChange("connectionId")}
+								label="Choose Connection"
+							>
+								<MenuItem value="conn1">Facebook Connection 1</MenuItem>
+								<MenuItem value="conn2">Facebook Connection 2</MenuItem>
+								<MenuItem value="conn3">Facebook Connection 3</MenuItem>
+							</Select>
+						</FormControl>
+						<FormControl fullWidth margin="normal" size="small">
+							<InputLabel>Choose Page</InputLabel>
+							<Select
+								value={localSettings.pageId || ""}
+								onChange={handleSelectChange("pageId")}
+								label="Choose Page"
+							>
+								<MenuItem value="page1">Page 1</MenuItem>
+								<MenuItem value="page2">Page 2</MenuItem>
+								<MenuItem value="page3">Page 3</MenuItem>
+							</Select>
+						</FormControl>
+						<FormControl fullWidth margin="normal" size="small">
+							<InputLabel>Choose Form</InputLabel>
+							<Select
+								value={localSettings.formId || ""}
+								onChange={handleSelectChange("formId")}
+								label="Choose Form"
+							>
+								<MenuItem value="form1">Contact Form</MenuItem>
+								<MenuItem value="form2">Lead Generation Form</MenuItem>
+								<MenuItem value="form3">Survey Form</MenuItem>
+							</Select>
+						</FormControl>
 					</>
 				);
 
@@ -428,47 +448,13 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 						bgcolor={String(selectedNode.data?.color) || "#94a3b8"}
 					/>
 					<Typography variant="subtitle2">
-						{String(selectedNode.data?.label) || "Unknown Node"}
+						{String(selectedNode.type) || "Unknown Node"}
 					</Typography>
 				</Box>
 				<Typography variant="caption" color="text.secondary">
 					{String(selectedNode.data?.description) || "No description available"}
 				</Typography>
 			</NodeInfoCard>
-
-			<TextField
-				fullWidth
-				size="small"
-				label="Node Name"
-				variant="outlined"
-				margin="normal"
-				value={String(selectedNode.data?.label) || ""}
-				onChange={(e) =>
-					onChange(selectedNode.id, {
-						...selectedNode.data,
-						label: e.target.value,
-					})
-				}
-				placeholder="Enter node name"
-			/>
-
-			<TextField
-				fullWidth
-				size="small"
-				label="Description"
-				variant="outlined"
-				margin="normal"
-				multiline
-				rows={2}
-				value={String(selectedNode.data?.description) || ""}
-				onChange={(e) =>
-					onChange(selectedNode.id, {
-						...selectedNode.data,
-						description: e.target.value,
-					})
-				}
-				placeholder="Enter description"
-			/>
 
 			<Divider sx={{ my: 2 }} />
 

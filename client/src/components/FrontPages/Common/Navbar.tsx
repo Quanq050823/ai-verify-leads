@@ -4,7 +4,11 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+
+import { CheckCookieServices } from "@/services/AuthServices";
 import { Box } from "@mui/material";
+import DarkMode from "@/components/Layout/ControlPanel/DarkMode";
+import ThemeButton from "./ThemeButton/ThemeButton";
 
 const Navbar: React.FC = () => {
 	const pathname = usePathname();
@@ -39,26 +43,21 @@ const Navbar: React.FC = () => {
 								<span className="bottom-bar"></span>
 							</span>
 						</button>
+						<div className="other-options">
+							<Box
+								component="div"
+								onClick={() => CheckCookieServices()}
+								className="fp-outlined-btn"
+							>
+								<i className="material-symbols-outlined">login</i>
+								Login
+							</Box>
 
-						<div
-							className={`collapse navbar-collapse ${
-								isToggleNavbar ? "" : "show"
-							}`}
-						>
-							<div className="other-options">
-								<Link
-									href="/pages/authentication/sign-in/"
-									className="fp-outlined-btn"
-								>
-									<i className="material-symbols-outlined">login</i>
-									Login
-								</Link>
-
-								<Link href="pages/authentication/sign-up/" className="fp-btn">
-									<i className="material-symbols-outlined">person</i>
-									Register
-								</Link>
-							</div>
+							<Link href="/authentication/sign-up/" className="fp-btn">
+								<i className="material-symbols-outlined">person</i>
+								Register
+							</Link>
+							<ThemeButton />
 						</div>
 					</nav>
 				</div>

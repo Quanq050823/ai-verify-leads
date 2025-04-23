@@ -27,6 +27,7 @@ import {
 	enableFlow,
 	disableFlow,
 	deleteFlow,
+	getFlowById,
 } from "@/services/flowServices";
 
 const UploadBox = styled(Paper)(({ theme }) => ({
@@ -118,8 +119,8 @@ const FlowList: React.FC<FlowListProps> = ({
 
 	const handleEditFlow = (flow: Flow) => {
 		console.log(`Editing flow: ${flow.name}`);
-		// Điều hướng đến trang chỉnh sửa luồng, ví dụ:
-		// history.push(`/edit-flow/${flow.id}`);
+		// Chuyển hướng đến trang chỉnh sửa luồng với ID flow
+		window.location.href = `/pages/customflow?id=${flow.id}`;
 	};
 
 	return (
@@ -135,7 +136,6 @@ const FlowList: React.FC<FlowListProps> = ({
 							transition: "background-color 0.3s",
 						}}
 						className="scenario flow-item"
-						onClick={() => handleEditFlow(flow)}
 					>
 						<Grid container alignItems="center">
 							<Grid item xs={2}>
@@ -158,23 +158,21 @@ const FlowList: React.FC<FlowListProps> = ({
 								</Box>
 							</Grid>
 							<Grid item xs={8}>
-								<Link href="/pages/customflow">
-									<Box>
-										<Typography variant="h6">{flow.name}</Typography>
-										<Typography
-											variant="body2"
-											color="textSecondary"
-											style={{ display: "flex", alignItems: "center" }}
-										>
-											<CalendarMonthIcon style={{ marginRight: "5px" }} />
-											{flow.date}
-											<PersonIcon
-												style={{ marginRight: "5px", marginLeft: "10px" }}
-											/>
-											{flow.creator}
-										</Typography>
-									</Box>
-								</Link>
+								<Box onClick={() => handleEditFlow(flow)}>
+									<Typography variant="h6">{flow.name}</Typography>
+									<Typography
+										variant="body2"
+										color="textSecondary"
+										style={{ display: "flex", alignItems: "center" }}
+									>
+										<CalendarMonthIcon style={{ marginRight: "5px" }} />
+										{flow.date}
+										<PersonIcon
+											style={{ marginRight: "5px", marginLeft: "10px" }}
+										/>
+										{flow.creator}
+									</Typography>
+								</Box>
 							</Grid>
 							<Grid item xs={1}>
 								<Tooltip
@@ -281,7 +279,6 @@ const FlowList: React.FC<FlowListProps> = ({
 };
 
 const ImportLeadUI: React.FC = () => {
-	const [open, setOpen] = useState<boolean>(false);
 	const [flows, setFlows] = useState<Flow[]>([]);
 	const [activeFlowId, setActiveFlowId] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -345,14 +342,6 @@ const ImportLeadUI: React.FC = () => {
 		}
 	};
 
-	const handleClickOpen = () => {
-		setOpen(true);
-	};
-
-	const handleClose = () => {
-		setOpen(false);
-	};
-
 	return (
 		<Box
 			style={{ minHeight: "80vh", display: "flex", flexDirection: "column" }}
@@ -366,16 +355,14 @@ const ImportLeadUI: React.FC = () => {
 				}}
 			>
 				<h1>All scenarios</h1>
-				<Button variant="outlined" onClick={handleClickOpen}>
+				<Button variant="outlined" component={Link} href="/pages/customflow">
 					<AddIcon
 						sx={{
 							position: "relative",
 							paddingRight: "5px",
 						}}
-					/>{" "}
-					<Link href="/pages/customflow">
-						<Typography color="primary">Create a new Scenario</Typography>
-					</Link>
+					/>
+					<Typography color="primary">Create a new Scenario</Typography>
 				</Button>
 			</Box>
 			{isLoading ? (

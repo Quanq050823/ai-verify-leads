@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
 	ReactFlow,
 	ReactFlowProvider,
@@ -42,6 +42,7 @@ import {
 	ErrorNode,
 } from "./nodes/NodeTypes";
 import { CustomEdgeData } from "./edges/CustomEdge";
+import { getFlowById, createFlow, updateFlow } from "@/services/flowServices";
 
 // Define theme for MUI
 const theme = createTheme({
@@ -71,10 +72,12 @@ const theme = createTheme({
 const nodeTypes = {
 	googleSheets: GoogleSheetsNode,
 	facebookAds: FacebookAdsNode,
+	facebookLeadAds: FacebookAdsNode,
 	aiCall: AICallNode,
 	calendar: CalendarNode,
 	webhook: WebhookNode,
 	condition: ConditionNode,
+	preVerify: ConditionNode,
 	email: EmailNode,
 	sms: SMSNode,
 	config: ConfigNode,
@@ -104,7 +107,11 @@ interface FlowData {
 	edges: Edge[];
 }
 
-const FlowEditorContent = () => {
+interface FlowEditorProps {
+	flowId: string | null;
+}
+
+const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -115,8 +122,38 @@ const FlowEditorContent = () => {
 	const [progressPercent, setProgressPercent] = useState<number>(0);
 	const [showPropertiesPanel, setShowPropertiesPanel] =
 		useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(false);
+	const [flowName, setFlowName] = useState<string>("New Flow");
 
 	const reactFlowUtil = useReactFlow();
+
+	// Tải dữ liệu flow từ API khi component được mount
+	useEffect(() => {
+		const loadFlowData = async () => {
+			if (!flowId) return;
+
+			try {
+				setLoading(true);
+				const flowData = await getFlowById(flowId);
+
+				if (flowData && flowData.nodeData) {
+					// Cập nhật nodes và edges từ dữ liệu API
+					setNodes(flowData.nodeData.nodes || []);
+					setEdges(flowData.nodeData.edges || []);
+					// Lưu tên flow
+					if (flowData.name) {
+						setFlowName(flowData.name);
+					}
+				}
+			} catch (error) {
+				console.error("Error loading flow data:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		loadFlowData();
+	}, [flowId, setNodes, setEdges]);
 
 	// Handle node drag from sidebar
 	const onDragOver = useCallback((event: React.DragEvent) => {
@@ -173,6 +210,8 @@ const FlowEditorContent = () => {
 				return "Google Sheets";
 			case "facebookAds":
 				return "Facebook Ads";
+			case "facebookLeadAds":
+				return "Facebook Lead Ads";
 			case "aiCall":
 				return "AI Call";
 			case "calendar":
@@ -181,6 +220,8 @@ const FlowEditorContent = () => {
 				return "Webhook";
 			case "condition":
 				return "Condition";
+			case "preVerify":
+				return "Pre-Verify";
 			case "email":
 				return "Send Email";
 			case "sms":
@@ -190,7 +231,8 @@ const FlowEditorContent = () => {
 			case "error":
 				return "Error Handler";
 			default:
-				return "Unknown Node";
+				console.warn(`Unknown node type: ${type}`);
+				return type || "Unknown Node";
 		}
 	};
 
@@ -201,6 +243,8 @@ const FlowEditorContent = () => {
 				return "Import leads from Google Sheets";
 			case "facebookAds":
 				return "Import leads from Facebook Ads";
+			case "facebookLeadAds":
+				return "Import leads from Facebook Lead Ads";
 			case "aiCall":
 				return "Process data with AI";
 			case "calendar":
@@ -209,6 +253,8 @@ const FlowEditorContent = () => {
 				return "Send data to external system";
 			case "condition":
 				return "Branch based on conditions";
+			case "preVerify":
+				return "Pre-verify leads before processing";
 			case "email":
 				return "Send email notification";
 			case "sms":
@@ -218,7 +264,7 @@ const FlowEditorContent = () => {
 			case "error":
 				return "Handle errors in the flow";
 			default:
-				return "";
+				return `Node type: ${type}`;
 		}
 	};
 
@@ -229,7 +275,6 @@ const FlowEditorContent = () => {
 			const newEdge: Edge<CustomEdgeData> = {
 				...params,
 				id: `e_${params.source}_${params.target}_${Date.now()}`,
-				data: { label: "Connection" },
 			};
 			setEdges((eds) => addEdge(newEdge, eds));
 		},
@@ -269,14 +314,80 @@ const FlowEditorContent = () => {
 		event.dataTransfer.effectAllowed = "move";
 	};
 
+	// Xử lý đổi tên flow
+	const handleRenameFlow = (newName: string) => {
+		setFlowName(newName);
+
+		// Cập nhật tên flow nếu đã có flowId
+		if (flowId) {
+			setLoading(true);
+			const flowUpdateData = {
+				name: newName,
+				nodeData: reactFlowInstance ? reactFlowInstance.toObject() : {},
+			};
+
+			updateFlow(flowId, flowUpdateData)
+				.then((response) => {
+					console.log("Flow đã được đổi tên thành công:", response);
+				})
+				.catch((error) => {
+					console.error("Error updating flow name:", error);
+				})
+				.finally(() => {
+					setLoading(false);
+				});
+		}
+	};
+
 	// Save the current flow
 	const onSave = useCallback(() => {
 		if (reactFlowInstance) {
+			setLoading(true);
 			const flowData = reactFlowInstance.toObject();
 			localStorage.setItem("flow-data", JSON.stringify(flowData));
-			// MUI toast equivalent will be added
+
+			// Lưu flow vào cơ sở dữ liệu
+			if (flowId) {
+				// Cập nhật flow hiện tại
+				const flowUpdateData = {
+					name: flowName,
+					nodeData: flowData,
+				};
+
+				updateFlow(flowId, flowUpdateData)
+					.then((response) => {
+						console.log("Flow updated successfully:", response);
+					})
+					.catch((error) => {
+						console.error("Error updating flow:", error);
+					})
+					.finally(() => {
+						setLoading(false);
+					});
+			} else {
+				// Tạo flow mới
+				const newFlowData = {
+					name: flowName,
+					nodeData: flowData,
+				};
+
+				createFlow(newFlowData)
+					.then((response) => {
+						console.log("Flow created successfully:", response);
+						// Redirect to the flow editor with the new flow ID
+						if (response && response._id) {
+							window.location.href = `/pages/customflow?id=${response._id}`;
+						}
+					})
+					.catch((error) => {
+						console.error("Error creating flow:", error);
+					})
+					.finally(() => {
+						setLoading(false);
+					});
+			}
 		}
-	}, [reactFlowInstance]);
+	}, [reactFlowInstance, flowId, flowName]);
 
 	// Load a saved flow
 	const onLoad = useCallback(() => {
@@ -457,6 +568,8 @@ const FlowEditorContent = () => {
 							onExport={onExport}
 							onClear={onClear}
 							onRun={onRun}
+							flowName={flowName}
+							onRename={handleRenameFlow}
 						/>
 					</Panel>
 				</ReactFlow>
@@ -470,12 +583,24 @@ const FlowEditorContent = () => {
 					onClose={() => setShowPropertiesPanel(false)}
 				/>
 			)}
+
+			{loading && (
+				<LinearProgress
+					style={{
+						position: "absolute",
+						top: 0,
+						left: 0,
+						right: 0,
+						zIndex: 1000,
+					}}
+				/>
+			)}
 		</Box>
 	);
 };
 
 // Wrap the component with ReactFlowProvider and ThemeProvider
-const FlowEditor: React.FC = () => {
+const FlowEditor: React.FC<FlowEditorProps> = ({ flowId }) => {
 	return (
 		<ThemeProvider theme={theme}>
 			<CssBaseline />
@@ -488,7 +613,7 @@ const FlowEditor: React.FC = () => {
 				}}
 			>
 				<ReactFlowProvider>
-					<FlowEditorContent />
+					<FlowEditorContent flowId={flowId} />
 				</ReactFlowProvider>
 			</Box>
 		</ThemeProvider>

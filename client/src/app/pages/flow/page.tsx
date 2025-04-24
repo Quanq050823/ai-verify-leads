@@ -21,7 +21,18 @@ import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PersonIcon from "@mui/icons-material/Person";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import TableChart from "@mui/icons-material/TableChart";
+import Facebook from "@mui/icons-material/Facebook";
+import SmartToy from "@mui/icons-material/SmartToy";
+import Webhook from "@mui/icons-material/Webhook";
+import CallSplit from "@mui/icons-material/CallSplit";
+import Email from "@mui/icons-material/Email";
+import Phone from "@mui/icons-material/Phone";
+import Settings from "@mui/icons-material/Settings";
+import ErrorOutline from "@mui/icons-material/ErrorOutline";
+import Layers from "@mui/icons-material/Layers";
 import Link from "next/link";
+import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
 import {
 	fetchAllFlow,
 	enableFlow,
@@ -139,22 +150,64 @@ const FlowList: React.FC<FlowListProps> = ({
 					>
 						<Grid container alignItems="center">
 							<Grid item xs={2}>
-								<Box style={{ display: "flex" }}>
-									{flow.components.map((component, idx) => (
-										<img
-											key={idx}
-											src={component.logo}
-											alt={component.name}
-											width={40}
-											height={40}
-											style={{
+								<Box style={{ display: "flex", alignItems: "center" }}>
+									{flow.components && flow.components.length > 0 ? (
+										<>
+											{flow.components.slice(0, 3).map((component, idx) => (
+												<Box
+													key={idx}
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "center",
+														backgroundColor:
+															component.backgroundColor ||
+															getNodeColor(component.name),
+														color: "white",
+														borderRadius: "7px",
+														width: "40px",
+														height: "40px",
+														marginRight: "5px",
+													}}
+												>
+													{getNodeIcon(component.name)}
+												</Box>
+											))}
+											{flow.components.length > 3 && (
+												<Box
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "center",
+														backgroundColor: "#9E9E9E",
+														color: "white",
+														borderRadius: "7px",
+														width: "40px",
+														height: "40px",
+														fontSize: "14px",
+														fontWeight: "bold",
+													}}
+												>
+													+{flow.components.length - 3}
+												</Box>
+											)}
+										</>
+									) : (
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												backgroundColor: "#9E9E9E",
+												color: "white",
 												borderRadius: "7px",
-												marginInline: "2px",
-												backgroundColor: component.backgroundColor,
-												padding: "4px",
+												width: "40px",
+												height: "40px",
 											}}
-										/>
-									))}
+										>
+											<Layers fontSize="small" />
+										</Box>
+									)}
 								</Box>
 							</Grid>
 							<Grid item xs={8}>
@@ -290,14 +343,29 @@ const ImportLeadUI: React.FC = () => {
 			if (data) {
 				const formattedFlows = data
 					.filter((flow: any) => flow.status !== 0)
-					.map((flow: any) => ({
-						id: flow._id || flow.id,
-						name: flow.name,
-						date: new Date(flow.createdAt).toLocaleDateString(),
-						creator: flow.userId || "Unknown",
-						status: flow.status,
-						components: flow.components || [],
-					}));
+					.map((flow: any) => {
+						// Trích xuất các loại node từ nodeData để tạo thành phần
+						const nodeTypes =
+							flow.nodeData?.nodes?.map((node: any) => ({
+								name: node.type,
+								backgroundColor: getNodeColor(node.type),
+							})) || [];
+
+						// Loại bỏ trùng lặp nếu có
+						const uniqueTypes = Array.from(
+							new Set(nodeTypes.map((t: any) => t.name))
+						).map((name) => nodeTypes.find((t: any) => t.name === name));
+
+						return {
+							id: flow._id || flow.id,
+							name: flow.name,
+							date: new Date(flow.createdAt).toLocaleDateString(),
+							creator: flow.userId || "Unknown",
+							status: flow.status,
+							components:
+								uniqueTypes.length > 0 ? uniqueTypes : flow.components || [],
+						};
+					});
 				setFlows(formattedFlows);
 			}
 		} catch (error) {

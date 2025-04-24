@@ -12,21 +12,9 @@ import {
 	Button,
 	CircularProgress,
 } from "@mui/material";
-import {
-	TableChart,
-	Facebook,
-	SmartToy,
-	CalendarMonth,
-	Webhook,
-	CallSplit,
-	Email,
-	Phone,
-	Settings,
-	ErrorOutline,
-	ArrowBack,
-	Layers,
-} from "@mui/icons-material";
+import { ArrowBack } from "@mui/icons-material";
 import { fetchAllNodeTypes, NodeType } from "@/services/nodetypeServices";
+import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
 
 type NodeCategory = {
 	title: string;
@@ -85,66 +73,6 @@ const SidebarFooter = styled(Box)(({ theme }) => ({
 	paddingTop: theme.spacing(2),
 	borderTop: `1px solid ${theme.palette.divider}`,
 }));
-
-// Function to determine the icon for a node type
-const getNodeIcon = (key: string) => {
-	switch (key) {
-		case "googleSheets":
-			return <TableChart fontSize="small" />;
-		case "facebookAds":
-		case "facebookLeadAds":
-			return <Facebook fontSize="small" />;
-		case "aiCall":
-			return <SmartToy fontSize="small" />;
-		case "calendar":
-			return <CalendarMonth fontSize="small" />;
-		case "webhook":
-			return <Webhook fontSize="small" />;
-		case "condition":
-		case "preVerify":
-			return <CallSplit fontSize="small" />;
-		case "email":
-			return <Email fontSize="small" />;
-		case "sms":
-			return <Phone fontSize="small" />;
-		case "config":
-			return <Settings fontSize="small" />;
-		case "error":
-			return <ErrorOutline fontSize="small" />;
-		default:
-			return <Layers fontSize="small" />;
-	}
-};
-
-// Function to determine the color for a node type
-const getNodeColor = (key: string) => {
-	switch (key) {
-		case "googleSheets":
-			return "#0F9D58";
-		case "facebookAds":
-		case "facebookLeadAds":
-			return "#1877f2";
-		case "aiCall":
-			return "#10b981";
-		case "calendar":
-			return "#FF5722";
-		case "webhook":
-			return "#2196F3";
-		case "condition":
-		case "preVerify":
-			return "#f59e0b";
-		case "email":
-			return "#00BCD4";
-		case "sms":
-			return "#8BC34A";
-		case "config":
-			return "#795548";
-		case "error":
-			return "#F44336";
-		default:
-			return "#9E9E9E";
-	}
-};
 
 // Phân loại node vào từng danh mục
 const categorizeNodes = (nodes: NodeType[]): NodeCategory[] => {
@@ -216,14 +144,14 @@ const fallbackNodeCategories: NodeCategory[] = [
 			{
 				type: "googleSheets",
 				label: "Google Sheets",
-				icon: <TableChart fontSize="small" />,
-				color: "#34A853",
+				icon: getNodeIcon("googleSheets"),
+				color: getNodeColor("googleSheets"),
 			},
 			{
 				type: "facebookAds",
 				label: "Facebook Ads",
-				icon: <Facebook fontSize="small" />,
-				color: "#1877F2",
+				icon: getNodeIcon("facebookAds"),
+				color: getNodeColor("facebookAds"),
 			},
 		],
 	},
@@ -233,26 +161,26 @@ const fallbackNodeCategories: NodeCategory[] = [
 			{
 				type: "aiCall",
 				label: "AI Call",
-				icon: <SmartToy fontSize="small" />,
-				color: "#10B981",
+				icon: getNodeIcon("aiCall"),
+				color: getNodeColor("aiCall"),
 			},
 			{
 				type: "calendar",
 				label: "Google Calendar",
-				icon: <CalendarMonth fontSize="small" />,
-				color: "#4285F4",
+				icon: getNodeIcon("calendar"),
+				color: getNodeColor("calendar"),
 			},
 			{
 				type: "webhook",
 				label: "Webhook",
-				icon: <Webhook fontSize="small" />,
-				color: "#8B5CF6",
+				icon: getNodeIcon("webhook"),
+				color: getNodeColor("webhook"),
 			},
 			{
 				type: "condition",
 				label: "Condition",
-				icon: <CallSplit fontSize="small" />,
-				color: "#F59E0B",
+				icon: getNodeIcon("condition"),
+				color: getNodeColor("condition"),
 			},
 		],
 	},
@@ -262,14 +190,14 @@ const fallbackNodeCategories: NodeCategory[] = [
 			{
 				type: "email",
 				label: "Send Email",
-				icon: <Email fontSize="small" />,
-				color: "#EC4899",
+				icon: getNodeIcon("email"),
+				color: getNodeColor("email"),
 			},
 			{
 				type: "sms",
 				label: "Send SMS",
-				icon: <Phone fontSize="small" />,
-				color: "#6366F1",
+				icon: getNodeIcon("sms"),
+				color: getNodeColor("sms"),
 			},
 		],
 	},
@@ -279,14 +207,14 @@ const fallbackNodeCategories: NodeCategory[] = [
 			{
 				type: "config",
 				label: "Configuration",
-				icon: <Settings fontSize="small" />,
-				color: "#6B7280",
+				icon: getNodeIcon("config"),
+				color: getNodeColor("config"),
 			},
 			{
 				type: "error",
 				label: "Error Handler",
-				icon: <ErrorOutline fontSize="small" />,
-				color: "#EF4444",
+				icon: getNodeIcon("error"),
+				color: getNodeColor("error"),
 			},
 		],
 	},

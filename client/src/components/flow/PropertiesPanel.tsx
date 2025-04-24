@@ -65,7 +65,7 @@ interface NodeSettings {
 const PanelContainer = styled(Paper)(({ theme }) => ({
 	backgroundColor: theme.palette.background.paper,
 	borderLeft: `1px solid ${theme.palette.divider}`,
-	width: "300px",
+	width: "380px",
 	height: "100%",
 	padding: theme.spacing(2),
 	boxShadow: theme.shadows[2],

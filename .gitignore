@@ -25,3 +25,12 @@ celery-worker/env/
 celery-worker/.env
 celery-worker/celery-env
 
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+

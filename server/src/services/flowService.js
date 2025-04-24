@@ -22,7 +22,7 @@ export const checkFlowExists = async (flowId, userId) => {
 
 export const getFlows = async (user) => {
     try {
-        let flows = await Flow.find({ createdBy: user.userId });
+        let flows = await Flow.find({ userId: user.userId });
         return flows ? flows : null;
     } catch (error) {
         throw error;
@@ -31,7 +31,10 @@ export const getFlows = async (user) => {
 
 export const getFlow = async (flowId, user) => {
     try {
-        let flow = await Flow.findOne({ _id: getObjectId(flowId), createdBy: user.userId });
+        let flow = await Flow.findOne({
+            _id: getObjectId(flowId),
+            userId: user.userId,
+        });
         return flow ? flow : null;
     } catch (error) {
         throw error;
@@ -88,7 +91,10 @@ export const updateFlow = async (flowId, data, user) => {
     try {
         let { flowName, nodeData } = data;
 
-        let flow = await Flow.findOne({ _id: getObjectId(flowId), userId: user.userId });
+        let flow = await Flow.findOne({
+            _id: getObjectId(flowId),
+            userId: user.userId,
+        });
         if (!flow) {
             throw new ApiError(StatusCodes.NOT_FOUND, "Flow not found");
         }
@@ -131,7 +137,10 @@ export const updateFlow = async (flowId, data, user) => {
 
 export const updateStatus = async (flowId, status, user) => {
     try {
-        let flow = await Flow.findOne({ _id: getObjectId(flowId), createdBy: user.userId });
+        let flow = await Flow.findOne({
+            _id: getObjectId(flowId),
+            userId: user.userId,
+        });
         if (!flow) {
             throw new ApiError(StatusCodes.NOT_FOUND, "Flow not found");
         }
@@ -188,9 +197,9 @@ export const resetQueue = async () => {
             flow?.nodeData?.nodes?.forEach(async (node) => {
                 await Producer.createExchange(node?.type);
                 await Producer.createQueue(
-                    `${flow.createdBy}.${flow._id}.${node.id}`,
+                    `${flow.userId}.${flow._id}.${node.id}`,
                     node?.type,
-                    `${flow.createdBy}.${flow._id}.${node.id}`
+                    `${flow.userId}.${flow._id}.${node.id}`
                 );
             });
         });

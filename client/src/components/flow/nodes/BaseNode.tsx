@@ -15,6 +15,7 @@ type BaseNodeProps = {
 		inputs?: number;
 		outputs?: number;
 		color?: string;
+		webhookSubscribed?: boolean;
 	};
 	selected: boolean;
 	id: string;
@@ -115,6 +116,8 @@ const getActionName = (type: string): string => {
 	switch (type.toLowerCase()) {
 		case "facebookads":
 			return "Get Hook Ads";
+		case "facebookleadads":
+			return "Get Lead Ads";
 		case "googlesheets":
 			return "Get Lead";
 		case "aicall":
@@ -125,6 +128,8 @@ const getActionName = (type: string): string => {
 			return "HTTP Request";
 		case "condition":
 			return "Branch Logic";
+		case "preverify":
+			return "Pre-Verify";
 		case "email":
 			return "Send Email";
 		case "sms":

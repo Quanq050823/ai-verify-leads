@@ -45,7 +45,7 @@ export const createFlow = async (data, user) => {
         //Check if flow name already exists
         let flowExists = await Flow.findOne({
             name: flowName,
-            createdBy: user.userId,
+            userId: user.userId,
             status: { $ne: 0 },
         });
         if (flowExists) {
@@ -63,7 +63,7 @@ export const createFlow = async (data, user) => {
             name: flowName,
             routeData,
             nodeData,
-            createdBy: getObjectId(user.userId),
+            userId: getObjectId(user.userId),
         });
 
         let result = await flow.save();

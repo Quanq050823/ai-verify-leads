@@ -38,6 +38,12 @@ const UserSchema = mongoose.Schema(
         jobTitle: String,
         department: String,
         organization: String,
+        federatedCredentials: [
+            {
+                _id: String,
+                provider: String,
+            },
+        ],
         adsConnection: [
             {
                 provider: {
@@ -51,10 +57,17 @@ const UserSchema = mongoose.Schema(
                 },
             },
         ],
-        federatedCredentials: [
+        calendarConnection: [
             {
-                _id: String,
-                provider: String,
+                provider: {
+                    type: String,
+                },
+                profile: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
+                tokens: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
             },
         ],
         refreshToken: [String],

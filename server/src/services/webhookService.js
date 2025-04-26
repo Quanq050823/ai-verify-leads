@@ -79,12 +79,15 @@ const processLeadEvent = async (lead) => {
 
     try {
         let flows = await flowService.getFacebookLeadFlow(lead.page_id, lead.form_id);
-        if (!flows) {
+        if (!flows || flows.length === 0) {
+            console.warn("No flow found for the lead.");
             return;
         }
 
-        flows.forEach(async (flow) => {
+        for (const flow of flows) {
             let page = await facebookService.getPageByUserAndPageId(flow.userId, lead.page_id);
+
+            const currentNode = flow.nodeData.nodes.find((node) => node.type === "facebookLeadAds");
 
             const leadData = await fetchLeadData(leadgenId, page.access_token);
             const convertedData = convertLeadData(leadData?.field_data);
@@ -93,16 +96,12 @@ const processLeadEvent = async (lead) => {
                 userId: getObjectId(flow.userId),
                 flowId: getObjectId(flow._id),
                 leadData: convertedData,
-                nodeId: lead.node_id || null,
+                nodeId: currentNode.id,
             });
-
-            const currentNode = flow.nodeData.nodes.find((node) => node.type === "facebookLeadAds");
 
             await importedLeads.save();
             await publishLead(flow.userId, flow._id, currentNode.id, [importedLeads]);
-        });
-
-        // console.log("✅ Converted lead data:", convertedData);
+        }
     } catch (err) {
         throw err;
     }
@@ -110,6 +109,7 @@ const processLeadEvent = async (lead) => {
 
 const fetchLeadData = async (leadgenId, pageAccessToken) => {
     const url = `https://graph.facebook.com/v18.0/${leadgenId}?access_token=${pageAccessToken}`;
+    // console.log("Fetching lead data from URL:", url);
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -117,4 +117,24 @@ const fetchLeadData = async (leadgenId, pageAccessToken) => {
     }
 
     return await response.json();
+};
+
+export const getTranscript = async (data) => {
+    try {
+        const { leadId, transcript } = data;
+        if (!leadId || !transcript) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
+        }
+
+        if (transcript && transcript?.length > 0) {
+            let lead = await Lead.findOneAndUpdate(
+                { _id: getObjectId(leadId) },
+                { $set: { "leadData.transcript": transcript } },
+                { new: true }
+            );
+        }
+    } catch (error) {
+        console.error("❌ Unexpected error in getTranscribe:", error);
+        throw error;
+    }
 };

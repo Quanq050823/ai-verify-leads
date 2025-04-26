@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
 	Box,
 	Typography,
@@ -10,20 +10,11 @@ import {
 	Paper,
 	styled,
 	Button,
+	CircularProgress,
 } from "@mui/material";
-import {
-	TableChart,
-	Facebook,
-	SmartToy,
-	CalendarMonth,
-	Webhook,
-	CallSplit,
-	Email,
-	Phone,
-	Settings,
-	ErrorOutline,
-	ArrowBack,
-} from "@mui/icons-material";
+import { ArrowBack } from "@mui/icons-material";
+import { fetchAllNodeTypes, NodeType } from "@/services/nodetypeServices";
+import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
 
 type NodeCategory = {
 	title: string;
@@ -35,6 +26,7 @@ type NodeItem = {
 	label: string;
 	icon: React.ReactNode;
 	color: string;
+	description?: string;
 };
 
 const SidebarContainer = styled(Paper)(({ theme }) => ({
@@ -82,21 +74,84 @@ const SidebarFooter = styled(Box)(({ theme }) => ({
 	borderTop: `1px solid ${theme.palette.divider}`,
 }));
 
-const nodeCategories: NodeCategory[] = [
+// Phân loại node vào từng danh mục
+const categorizeNodes = (nodes: NodeType[]): NodeCategory[] => {
+	const dataSourcesCategory: NodeItem[] = [];
+	const processingCategory: NodeItem[] = [];
+	const actionsCategory: NodeItem[] = [];
+	const utilitiesCategory: NodeItem[] = [];
+
+	nodes.forEach((node) => {
+		const nodeKey = node.key || "";
+		const nodeItem: NodeItem = {
+			type: nodeKey,
+			label: node.name,
+			icon: getNodeIcon(nodeKey),
+			color: getNodeColor(nodeKey),
+			description: node.description,
+		};
+
+		// Phân loại node dựa trên key hoặc đặc điểm
+		if (
+			nodeKey.includes("facebook") ||
+			nodeKey.includes("google") ||
+			nodeKey.includes("Sheets")
+		) {
+			dataSourcesCategory.push(nodeItem);
+		} else if (
+			nodeKey.includes("Call") ||
+			nodeKey.includes("Verify") ||
+			nodeKey.includes("webhook") ||
+			nodeKey.includes("condition")
+		) {
+			processingCategory.push(nodeItem);
+		} else if (
+			nodeKey.includes("email") ||
+			nodeKey.includes("sms") ||
+			nodeKey.includes("notification")
+		) {
+			actionsCategory.push(nodeItem);
+		} else {
+			utilitiesCategory.push(nodeItem);
+		}
+	});
+
+	return [
+		{
+			title: "Data Sources",
+			items: dataSourcesCategory,
+		},
+		{
+			title: "Processing",
+			items: processingCategory,
+		},
+		{
+			title: "Actions",
+			items: actionsCategory,
+		},
+		{
+			title: "Utilities",
+			items: utilitiesCategory,
+		},
+	].filter((category) => category.items.length > 0); // Lọc các danh mục không có node
+};
+
+// Dữ liệu mẫu dự phòng khi API gặp lỗi
+const fallbackNodeCategories: NodeCategory[] = [
 	{
 		title: "Data Sources",
 		items: [
 			{
 				type: "googleSheets",
 				label: "Google Sheets",
-				icon: <TableChart fontSize="small" />,
-				color: "#34A853",
+				icon: getNodeIcon("googleSheets"),
+				color: getNodeColor("googleSheets"),
 			},
 			{
 				type: "facebookAds",
 				label: "Facebook Ads",
-				icon: <Facebook fontSize="small" />,
-				color: "#1877F2",
+				icon: getNodeIcon("facebookAds"),
+				color: getNodeColor("facebookAds"),
 			},
 		],
 	},
@@ -106,26 +161,26 @@ const nodeCategories: NodeCategory[] = [
 			{
 				type: "aiCall",
 				label: "AI Call",
-				icon: <SmartToy fontSize="small" />,
-				color: "#10B981",
+				icon: getNodeIcon("aiCall"),
+				color: getNodeColor("aiCall"),
 			},
 			{
 				type: "calendar",
 				label: "Google Calendar",
-				icon: <CalendarMonth fontSize="small" />,
-				color: "#4285F4",
+				icon: getNodeIcon("calendar"),
+				color: getNodeColor("calendar"),
 			},
 			{
 				type: "webhook",
 				label: "Webhook",
-				icon: <Webhook fontSize="small" />,
-				color: "#8B5CF6",
+				icon: getNodeIcon("webhook"),
+				color: getNodeColor("webhook"),
 			},
 			{
 				type: "condition",
 				label: "Condition",
-				icon: <CallSplit fontSize="small" />,
-				color: "#F59E0B",
+				icon: getNodeIcon("condition"),
+				color: getNodeColor("condition"),
 			},
 		],
 	},
@@ -135,14 +190,14 @@ const nodeCategories: NodeCategory[] = [
 			{
 				type: "email",
 				label: "Send Email",
-				icon: <Email fontSize="small" />,
-				color: "#EC4899",
+				icon: getNodeIcon("email"),
+				color: getNodeColor("email"),
 			},
 			{
 				type: "sms",
 				label: "Send SMS",
-				icon: <Phone fontSize="small" />,
-				color: "#6366F1",
+				icon: getNodeIcon("sms"),
+				color: getNodeColor("sms"),
 			},
 		],
 	},
@@ -152,14 +207,14 @@ const nodeCategories: NodeCategory[] = [
 			{
 				type: "config",
 				label: "Configuration",
-				icon: <Settings fontSize="small" />,
-				color: "#6B7280",
+				icon: getNodeIcon("config"),
+				color: getNodeColor("config"),
 			},
 			{
 				type: "error",
 				label: "Error Handler",
-				icon: <ErrorOutline fontSize="small" />,
-				color: "#EF4444",
+				icon: getNodeIcon("error"),
+				color: getNodeColor("error"),
 			},
 		],
 	},
@@ -170,6 +225,36 @@ type SidebarProps = {
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
+	const [nodeCategories, setNodeCategories] = useState<NodeCategory[]>([]);
+	const [loading, setLoading] = useState<boolean>(true);
+	const [error, setError] = useState<boolean>(false);
+
+	useEffect(() => {
+		const loadNodeTypes = async () => {
+			try {
+				setLoading(true);
+				const data = await fetchAllNodeTypes();
+
+				if (data && !data.error && Array.isArray(data)) {
+					const categories = categorizeNodes(data);
+					setNodeCategories(categories);
+				} else {
+					console.error("Failed to fetch node types or invalid data format");
+					setNodeCategories(fallbackNodeCategories);
+					setError(true);
+				}
+			} catch (err) {
+				console.error("Error loading node types:", err);
+				setNodeCategories(fallbackNodeCategories);
+				setError(true);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		loadNodeTypes();
+	}, []);
+
 	return (
 		<SidebarContainer elevation={2} sx={{ height: "100vh", overflowY: "auto" }}>
 			<Button
@@ -183,37 +268,46 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 				Flow Components
 			</Typography>
 
-			{nodeCategories.map((category) => (
-				<Box key={category.title} sx={{ mb: 2 }}>
-					<Typography
-						variant="subtitle2"
-						sx={{ mb: 1, color: "text.secondary" }}
-					>
-						{category.title}
-					</Typography>
-
-					<List disablePadding>
-						{category.items.map((item) => (
-							<NodeItem
-								key={item.type}
-								onDragStart={(event) => onDragStart(event, item.type)}
-								draggable
-								disablePadding
-							>
-								<ListItemIcon sx={{ minWidth: 36 }}>
-									<NodeIconContainer bgcolor={item.color}>
-										{item.icon}
-									</NodeIconContainer>
-								</ListItemIcon>
-								<ListItemText
-									primary={item.label}
-									primaryTypographyProps={{ variant: "body2" }}
-								/>
-							</NodeItem>
-						))}
-					</List>
+			{loading ? (
+				<Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+					<CircularProgress size={24} />
 				</Box>
-			))}
+			) : (
+				<>
+					{nodeCategories.map((category) => (
+						<Box key={category.title} sx={{ mb: 2 }}>
+							<Typography
+								variant="subtitle2"
+								sx={{ mb: 1, color: "text.secondary" }}
+							>
+								{category.title}
+							</Typography>
+
+							<List disablePadding>
+								{category.items.map((item) => (
+									<NodeItem
+										key={item.type}
+										onDragStart={(event) => onDragStart(event, item.type)}
+										draggable
+										disablePadding
+										title={item.description || item.label}
+									>
+										<ListItemIcon sx={{ minWidth: 36 }}>
+											<NodeIconContainer bgcolor={item.color}>
+												{item.icon}
+											</NodeIconContainer>
+										</ListItemIcon>
+										<ListItemText
+											primary={item.label}
+											primaryTypographyProps={{ variant: "body2" }}
+										/>
+									</NodeItem>
+								))}
+							</List>
+						</Box>
+					))}
+				</>
+			)}
 
 			<SidebarFooter>
 				<Typography variant="caption" color="text.secondary" paragraph>

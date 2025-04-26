@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -21,7 +21,25 @@ import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PersonIcon from "@mui/icons-material/Person";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import TableChart from "@mui/icons-material/TableChart";
+import Facebook from "@mui/icons-material/Facebook";
+import SmartToy from "@mui/icons-material/SmartToy";
+import Webhook from "@mui/icons-material/Webhook";
+import CallSplit from "@mui/icons-material/CallSplit";
+import Email from "@mui/icons-material/Email";
+import Phone from "@mui/icons-material/Phone";
+import Settings from "@mui/icons-material/Settings";
+import ErrorOutline from "@mui/icons-material/ErrorOutline";
+import Layers from "@mui/icons-material/Layers";
 import Link from "next/link";
+import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
+import {
+	fetchAllFlow,
+	enableFlow,
+	disableFlow,
+	deleteFlow,
+	getFlowById,
+} from "@/services/flowServices";
 
 const UploadBox = styled(Paper)(({ theme }) => ({
 	padding: theme.spacing(3),
@@ -48,24 +66,26 @@ interface Component {
 }
 
 interface Flow {
-	id: number;
+	id: string;
 	name: string;
 	date: string;
 	creator: string;
-	active: boolean;
+	status: number;
 	components: Component[];
 }
 
 interface FlowListProps {
 	flows: Flow[];
-	activeFlowId: number | null;
-	onToggleActive: (id: number) => void;
+	activeFlowId: string | null;
+	onToggleActive: (id: string) => void;
+	onDeleteFlow: (id: string) => void;
 }
 
 const FlowList: React.FC<FlowListProps> = ({
 	flows,
 	activeFlowId,
 	onToggleActive,
+	onDeleteFlow,
 }) => {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
@@ -91,20 +111,27 @@ const FlowList: React.FC<FlowListProps> = ({
 		setDialogOpen(false);
 	};
 
-	const handleConfirmAction = () => {
-		if (dialogAction === "clone") {
-			console.log(`Cloning flow: ${selectedFlow?.name}`);
-		} else if (dialogAction === "delete") {
-			console.log(`Deleting flow: ${selectedFlow?.name}`);
+	const handleConfirmAction = async () => {
+		if (!selectedFlow) return;
+
+		try {
+			if (dialogAction === "clone") {
+				console.log(`Cloning flow: ${selectedFlow.name}`);
+			} else if (dialogAction === "delete") {
+				await onDeleteFlow(selectedFlow.id);
+			}
+		} catch (error) {
+			console.error(`Error during ${dialogAction} action:`, error);
 		}
+
 		handleDialogClose();
 		handleMenuClose();
 	};
 
 	const handleEditFlow = (flow: Flow) => {
 		console.log(`Editing flow: ${flow.name}`);
-		// Điều hướng đến trang chỉnh sửa luồng, ví dụ:
-		// history.push(`/edit-flow/${flow.id}`);
+		// Chuyển hướng đến trang chỉnh sửa luồng với ID flow
+		window.location.href = `/pages/customflow?id=${flow.id}`;
 	};
 
 	return (
@@ -120,52 +147,102 @@ const FlowList: React.FC<FlowListProps> = ({
 							transition: "background-color 0.3s",
 						}}
 						className="scenario flow-item"
-						onClick={() => handleEditFlow(flow)}
 					>
 						<Grid container alignItems="center">
 							<Grid item xs={2}>
-								<Box style={{ display: "flex" }}>
-									{flow.components.map((component, idx) => (
-										<img
-											key={idx}
-											src={component.logo}
-											alt={component.name}
-											width={40}
-											height={40}
-											style={{
+								<Box style={{ display: "flex", alignItems: "center" }}>
+									{flow.components && flow.components.length > 0 ? (
+										<>
+											{flow.components.slice(0, 3).map((component, idx) => (
+												<Box
+													key={idx}
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "center",
+														backgroundColor:
+															component.backgroundColor ||
+															getNodeColor(component.name),
+														color: "white",
+														borderRadius: "7px",
+														width: "40px",
+														height: "40px",
+														marginRight: "5px",
+													}}
+												>
+													{getNodeIcon(component.name)}
+												</Box>
+											))}
+											{flow.components.length > 3 && (
+												<Box
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														justifyContent: "center",
+														backgroundColor: "#9E9E9E",
+														color: "white",
+														borderRadius: "7px",
+														width: "40px",
+														height: "40px",
+														fontSize: "14px",
+														fontWeight: "bold",
+													}}
+												>
+													+{flow.components.length - 3}
+												</Box>
+											)}
+										</>
+									) : (
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												backgroundColor: "#9E9E9E",
+												color: "white",
 												borderRadius: "7px",
-												marginInline: "2px",
-												backgroundColor: component.backgroundColor,
-												padding: "4px",
+												width: "40px",
+												height: "40px",
 											}}
-										/>
-									))}
+										>
+											<Layers fontSize="small" />
+										</Box>
+									)}
 								</Box>
 							</Grid>
 							<Grid item xs={8}>
-								<Link href="/pages/customflow">
-									<Box>
-										<Typography variant="h6">{flow.name}</Typography>
-										<Typography
-											variant="body2"
-											color="textSecondary"
-											style={{ display: "flex", alignItems: "center" }}
-										>
-											<CalendarMonthIcon style={{ marginRight: "5px" }} />
-											{flow.date}
-											<PersonIcon
-												style={{ marginRight: "5px", marginLeft: "10px" }}
-											/>
-											{flow.creator}
-										</Typography>
-									</Box>
-								</Link>
+								<Box onClick={() => handleEditFlow(flow)}>
+									<Typography variant="h6">{flow.name}</Typography>
+									<Typography
+										variant="body2"
+										color="textSecondary"
+										style={{ display: "flex", alignItems: "center" }}
+									>
+										<CalendarMonthIcon style={{ marginRight: "5px" }} />
+										{flow.date}
+										<PersonIcon
+											style={{ marginRight: "5px", marginLeft: "10px" }}
+										/>
+										{flow.creator}
+									</Typography>
+								</Box>
 							</Grid>
 							<Grid item xs={1}>
-								<Tooltip title="Only one flow can be run" placement="left">
+								<Tooltip
+									title={
+										flow.status === 1
+											? "Click to activate flow"
+											: "Click to disable flow"
+									}
+									placement="left"
+								>
 									<Switch
-										checked={activeFlowId === flow.id}
-										onChange={() => onToggleActive(flow.id)}
+										checked={flow.status === 2}
+										onChange={(e) => {
+											e.stopPropagation();
+											onToggleActive(flow.id);
+										}}
+										onClick={(e) => e.stopPropagation()}
 										color="primary"
 									/>
 								</Tooltip>
@@ -255,97 +332,82 @@ const FlowList: React.FC<FlowListProps> = ({
 };
 
 const ImportLeadUI: React.FC = () => {
-	const [open, setOpen] = useState<boolean>(false);
-	const [flows, setFlows] = useState<Flow[]>([
-		{
-			id: 1,
-			name: "Integration Google Sheets",
-			date: "2023-10-01",
-			creator: "Duc Quang",
-			active: true,
-			components: [
-				{
-					name: "Facebook",
-					logo: "/images/icons/facebook-lead-ads_64.png",
-					backgroundColor: "#1877f2",
-				},
-				{
-					name: "Google Sheets",
-					logo: "/images/icons/google-sheets_64.png",
-					backgroundColor: "#0fa763",
-				},
-			],
-		},
-		{
-			id: 2,
-			name: "Integration Facebook Lead Ads Google Sheets Google Calendar",
-			date: "2023-10-01",
-			creator: "Duc Quang",
-			active: true,
-			components: [
-				{
-					name: "Facebook",
-					logo: "/images/icons/facebook-lead-ads_64.png",
-					backgroundColor: "#1877f2",
-				},
-				{
-					name: "Google Sheets",
-					logo: "/images/icons/google-sheets_64.png",
-					backgroundColor: "#0fa763",
-				},
-				{
-					name: "Google Calendar",
-					logo: "/images/icons/google-calendar_64.png",
-					backgroundColor: "#007ee5",
-				},
-			],
-		},
-		{
-			id: 3,
-			name: "New scenario",
-			date: "2023-10-01",
-			creator: "Binh Phuoc",
-			active: true,
-			components: [
-				{
-					name: "Facebook",
-					logo: "/images/icons/facebook-lead-ads_64.png",
-					backgroundColor: "#1877f2",
-				},
-				{
-					name: "Google Sheets",
-					logo: "/images/icons/google-sheets_64.png",
-					backgroundColor: "#0fa763",
-				},
-				{
-					name: "Google Calendar",
-					logo: "/images/icons/google-calendar_64.png",
-					backgroundColor: "#007ee5",
-				},
-				{
-					name: "Webhook",
-					logo: "/images/icons/gateway_64.png",
-					backgroundColor: "#c73a63",
-				},
-			],
-		},
-	]);
+	const [flows, setFlows] = useState<Flow[]>([]);
+	const [activeFlowId, setActiveFlowId] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 
-	const [activeFlowId, setActiveFlowId] = useState<number | null>(null);
+	const loadFlows = async () => {
+		try {
+			setIsLoading(true);
+			const data = await fetchAllFlow();
+			if (data) {
+				const formattedFlows = data
+					.filter((flow: any) => flow.status !== 0)
+					.map((flow: any) => {
+						// Trích xuất các loại node từ nodeData để tạo thành phần
+						const nodeTypes =
+							flow.nodeData?.nodes?.map((node: any) => ({
+								name: node.type,
+								backgroundColor: getNodeColor(node.type),
+							})) || [];
 
-	const handleClickOpen = () => {
-		setOpen(true);
+						// Loại bỏ trùng lặp nếu có
+						const uniqueTypes = Array.from(
+							new Set(nodeTypes.map((t: any) => t.name))
+						).map((name) => nodeTypes.find((t: any) => t.name === name));
+
+						return {
+							id: flow._id || flow.id,
+							name: flow.name,
+							date: new Date(flow.createdAt).toLocaleDateString(),
+							creator: flow.userId || "Unknown",
+							status: flow.status,
+							components:
+								uniqueTypes.length > 0 ? uniqueTypes : flow.components || [],
+						};
+					});
+				setFlows(formattedFlows);
+			}
+		} catch (error) {
+			console.error("Error loading flows:", error);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
-	const handleClose = () => {
-		setOpen(false);
+	useEffect(() => {
+		loadFlows();
+	}, []);
+
+	const handleToggleActive = async (flowId: string) => {
+		try {
+			const targetFlow = flows.find((flow) => flow.id === flowId);
+			if (!targetFlow) return;
+
+			let response;
+			if (targetFlow.status === 1) {
+				response = await enableFlow(flowId);
+			} else if (targetFlow.status === 2) {
+				response = await disableFlow(flowId);
+			}
+
+			if (!response?.error) {
+				await loadFlows();
+			}
+		} catch (error) {
+			console.error("Error toggling flow status:", error);
+		}
 	};
 
-	const handleToggleActive = (id: number) => {
-		setActiveFlowId((prevActiveFlowId) =>
-			prevActiveFlowId === id ? null : id
-		);
-		console.log(`Toggled active state for flow with id: ${id}`);
+	const handleDeleteFlow = async (flowId: string) => {
+		try {
+			const response = await deleteFlow(flowId);
+			if (!response?.error) {
+				await loadFlows();
+			}
+		} catch (error) {
+			console.error("Error deleting flow:", error);
+		}
 	};
 
 	return (
@@ -361,23 +423,28 @@ const ImportLeadUI: React.FC = () => {
 				}}
 			>
 				<h1>All scenarios</h1>
-				<Button variant="outlined" onClick={handleClickOpen}>
+				<Button variant="outlined" component={Link} href="/pages/customflow">
 					<AddIcon
 						sx={{
 							position: "relative",
 							paddingRight: "5px",
 						}}
-					/>{" "}
-					<Link href="/pages/customflow">
-						<Typography color="primary">Create a new Scenario</Typography>
-					</Link>
+					/>
+					<Typography color="primary">Create a new Scenario</Typography>
 				</Button>
 			</Box>
-			<FlowList
-				flows={flows}
-				activeFlowId={activeFlowId}
-				onToggleActive={handleToggleActive}
-			/>
+			{isLoading ? (
+				<Box display="flex" justifyContent="center" my={4}>
+					<Typography>Loading flows...</Typography>
+				</Box>
+			) : (
+				<FlowList
+					flows={flows}
+					activeFlowId={activeFlowId}
+					onToggleActive={handleToggleActive}
+					onDeleteFlow={handleDeleteFlow}
+				/>
+			)}
 		</Box>
 	);
 };

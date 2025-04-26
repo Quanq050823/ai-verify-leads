@@ -1,0 +1,1 @@
+celery -A celery_app worker --queues=preVerify.consumer --loglevel=info --pool=solo --concurrency=3 

@@ -1,9 +1,9 @@
 from celery import Celery
+from config import Config
 
 app = Celery(
     "lead_verifier",
-    broker="amqps://nwamfqru:gJGB3604woWxdfuNxp5wk9XZ84g_OkOh@chameleon.lmq.cloudamqp.com/nwamfqru",
-    backend="rpc://",  # Optional: use Redis or db if needed
+    broker=Config.RABBITMQ_URL,  # Use RabbitMQ as the broker
 )
 
 app.conf.update(
@@ -13,15 +13,17 @@ app.conf.update(
     timezone='UTC',
     enable_utc=True,
     task_routes={
-        'tasks.ai_call': {'queue': 'aiCall.consumer'},
-        'tasks.pre_verify': {'queue': 'preVerify.consumer'},
-        'tasks.send_webhook': {'queue': 'sendWebhook.consumer'},
-    }
+        'tasks.aiCall': {'queue': 'aiCall.consumer'}, 
+        'tasks.preVerify': {'queue': 'preVerify.consumer'},
+        'tasks.sendWebhook': {'queue': 'sendWebhook.consumer'},
+        'tasks.googleCalendar': {'queue': 'googleCalendar.consumer'}, 
+    },
 )
 
 def _import_tasks():
     import tasks.ai_call
     import tasks.pre_verify
     import tasks.send_webhook
+    import tasks.google_calendar
 
 _import_tasks()

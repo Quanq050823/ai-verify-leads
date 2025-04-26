@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from dotenv import load_dotenv
+from config import Config
 import os
 
 # Singleton pattern to reuse the connection
@@ -8,8 +8,7 @@ _client = None
 def get_mongo_client():
     global _client
     if _client is None:
-        load_dotenv()
-        mongo_uri = os.getenv("MONGO_URI")
+        mongo_uri = Config.MONGO_URI
         if not mongo_uri:
             raise ValueError("MONGO_URI environment variable not found")
         try:

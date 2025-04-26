@@ -32,7 +32,7 @@ export const publishLead = async (userId, flowId, nodeId, leads) => {
                     nodeId: nodeId,
                     targetNode: routing?.target,
                 },
-                "tasks.ai_call"
+                `tasks.${targetNode}`
             );
         });
 

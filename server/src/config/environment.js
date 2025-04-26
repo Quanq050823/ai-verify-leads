@@ -36,6 +36,8 @@ const config = {
     googleAuthConfig: {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        calendarRedirectUri: `${process.env.BE_URL}${process.env.GOOGLE_REDIRECT_URI}`,
+        calendarRedirectUri: `${process.env.BE_URL}${process.env.GOOGLE_CALENDAR_REDIRECT_URI}`,
     },
     facebookAuthConfig: {
         appId: process.env.FACEBOOK_APP_ID,

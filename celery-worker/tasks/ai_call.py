@@ -4,7 +4,7 @@ from bson import ObjectId
 import json
 import requests
 
-@app.task(name="tasks.ai_call")
+@app.task(name="tasks.aiCall")
 def ai_call(message):
     print(f"Received message: {message}")
     

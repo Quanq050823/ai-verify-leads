@@ -16,7 +16,7 @@ const NodeTypeSchema = mongoose.Schema(
                 name: { type: String, required: true },
                 dataType: {
                     type: String,
-                    enum: ["String", "Number", "Boolean", "Date", "Array", "Object"],
+                    enum: ["String", "Number", "Boolean", "Time", "Date", "Array", "Object"],
                     required: true,
                 },
                 advanceData: mongoose.Schema.Types.Mixed,

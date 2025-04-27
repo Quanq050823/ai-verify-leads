@@ -10,7 +10,7 @@ import("../middlewares/facebookAuthMiddleware.js");
 
 const router = express.Router();
 
-router.get("/connect", authenticate, (req, res, next) => {
+router.get("/connect/:userId", (req, res, next) => {
     passport.authenticate("facebook", {
         scope: [
             "email",
@@ -21,7 +21,7 @@ router.get("/connect", authenticate, (req, res, next) => {
             "pages_read_engagement",
             "pages_manage_metadata",
         ],
-        state: req?.user?.userId,
+        state: req?.params?.userId,
     })(req, res, next);
 });
 router.get(

@@ -185,14 +185,42 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 						) : connections.length === 0 ? (
 							<MenuItem value="">No Facebook connections found</MenuItem>
 						) : (
-							connections.map((connection) => (
+							[
+								...connections.map((connection) => (
+									<MenuItem
+										key={connection.profile.id}
+										value={connection.profile.id}
+									>
+										{connection.profile.name}
+									</MenuItem>
+								)),
+								<Divider key="divider" />,
 								<MenuItem
-									key={connection.profile.id}
-									value={connection.profile.id}
+									key="add_new"
+									value="add_new"
+									onClick={(e) => {
+										e.preventDefault(); // Ngăn chặn sự kiện chọn
+										handleAddConnection();
+									}}
+									sx={{
+										color: "primary.main",
+										display: "flex",
+										alignItems: "center",
+									}}
 								>
-									{connection.profile.name}
-								</MenuItem>
-							))
+									{isConnecting ? (
+										<>
+											<CircularProgress size={20} sx={{ mr: 1 }} />
+											Đang kết nối...
+										</>
+									) : (
+										<>
+											<Add fontSize="small" sx={{ mr: 1 }} />
+											Thêm kết nối Facebook mới
+										</>
+									)}
+								</MenuItem>,
+							]
 						)}
 					</Select>
 					<Tooltip title="Refresh connections">
@@ -207,18 +235,6 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 					</Tooltip>
 				</Box>
 			</FormControl>
-
-			<Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
-				<Button
-					startIcon={isConnecting ? <CircularProgress size={16} /> : <Add />}
-					variant="outlined"
-					size="small"
-					onClick={handleAddConnection}
-					disabled={loading || isConnecting}
-				>
-					{isConnecting ? "Đang kết nối..." : "Thêm kết nối Facebook"}
-				</Button>
-			</Box>
 		</>
 	);
 };

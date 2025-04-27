@@ -2,6 +2,7 @@
 
 import express from "express";
 import validate from "../middlewares/validationMiddleware.js";
+import authenticate from "../middlewares/jwtMiddlewares.js";
 import passport from "passport";
 import * as controller from "../controllers/facebookController.js";
 import checkLogin from "../middlewares/checkLoginMiddleware.js";
@@ -9,8 +10,7 @@ import("../middlewares/facebookAuthMiddleware.js");
 
 const router = express.Router();
 
-router.get(
-    "/connect",
+router.get("/connect", authenticate, (req, res, next) => {
     passport.authenticate("facebook", {
         scope: [
             "email",
@@ -21,8 +21,9 @@ router.get(
             "pages_read_engagement",
             "pages_manage_metadata",
         ],
-    })
-);
+        state: req?.user?.userId,
+    })(req, res, next);
+});
 router.get(
     "/callback",
     passport.authenticate("facebook", {
@@ -32,9 +33,9 @@ router.get(
     }),
     controller.connectFacebook
 );
-router.get("/pages/:profileId", controller.getPages);
-router.get("/forms/:pageId", controller.getForm);
-router.post("/subscribePage/:pageId", controller.subscribePage);
-router.delete("/unsubscribePage/:pageId", controller.unsubscribePage);
+router.get("/pages/:profileId", authenticate, controller.getPages);
+router.get("/forms/:pageId", authenticate, controller.getForm);
+router.post("/subscribePage/:pageId", authenticate, controller.subscribePage);
+router.delete("/unsubscribePage/:pageId", authenticate, controller.unsubscribePage);
 
 export default router;

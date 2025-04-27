@@ -23,6 +23,7 @@ passport.use(
                     photo: profile.photos?.[0]?.value || "",
                 };
                 req.facebookProfile = facebookProfile;
+
                 return cb(null, {});
             } catch (err) {
                 return cb(err, null);

@@ -152,12 +152,17 @@ export const getForms = async (pageId, userId) => {
 
         const page = user.adsConnection[0]?.pages.find((p) => p.id === pageId);
 
+        console.log("page", page);
+
         // Step 2: Fetch forms from Facebook API
         const res = await fetch(
             `https://graph.facebook.com/v22.0/${pageId}/leadgen_forms?access_token=${page.access_token}`
         );
 
-        if (!res.ok) throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to fetch forms");
+        if (!res.ok) {
+            const errorData = await res.json().catch((e) => ({ error: res.statusText }));
+            throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, error);
+        }
 
         const resData = await res.json();
         const forms = resData.data.map((form) => ({ ...form }));

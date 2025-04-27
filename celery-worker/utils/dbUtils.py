@@ -79,4 +79,4 @@ def update_lead_status_and_current_node(leadId, status, currentNode):
     if not lead:
         raise ValueError(f"Lead with ID {leadId} not found.")
     
-    collection.update_one({"_id": ObjectId(leadId)}, {"$set": {"status": status, "currentNode": currentNode}})
+    collection.update_one({"_id": ObjectId(leadId)}, {"$set": {"status": status, "nodeId": currentNode}})

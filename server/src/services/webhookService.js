@@ -142,7 +142,7 @@ export const getTranscript = async (data) => {
             throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
         }
 
-        await publishLead(lead.userId, lead._id, lead.nodeId, [lead]);
+        await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead]);
 
         return lead;
     } catch (error) {

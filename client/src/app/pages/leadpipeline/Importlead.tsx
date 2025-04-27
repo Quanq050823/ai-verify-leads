@@ -120,7 +120,7 @@ const ImportLeadUI = () => {
 								<MenuItem value="append">Append</MenuItem>
 								<MenuItem value="overwrite">Overwrite</MenuItem>
 							</Select>
-							<Box display="flex" alignItems="center" mt={2}>
+							<Box display="flex" alignItems="center" mt={2} gap={1}>
 								<Typography variant="body2">Enable Notifications</Typography>
 								<Switch />
 							</Box>

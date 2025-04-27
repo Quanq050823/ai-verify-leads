@@ -44,6 +44,32 @@ const UserSchema = mongoose.Schema(
                 provider: String,
             },
         ],
+        adsConnection: [
+            {
+                provider: {
+                    type: String,
+                },
+                profile: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
+                pages: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
+            },
+        ],
+        calendarConnection: [
+            {
+                provider: {
+                    type: String,
+                },
+                profile: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
+                tokens: {
+                    type: mongoose.Schema.Types.Mixed,
+                },
+            },
+        ],
         refreshToken: [String],
         isVerified: {
             type: Boolean,

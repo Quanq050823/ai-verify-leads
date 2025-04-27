@@ -67,7 +67,7 @@ const LeftSidebarMenu: React.FC<LeftSidebarProps> = ({ toggleActive }) => {
 			<Box className="leftSidebarDark">
 				<Box className="left-sidebar-menu">
 					<Box className="logo">
-						<Link href="/pages/dashboard/">
+						<Link href="/">
 							<Image
 								src="/images/logo-icon.svg"
 								alt="logo-icon"

@@ -1,15 +1,15 @@
 "use strict";
 
 import express from "express";
-import * as userRequest from "../validations/userValidation.js";
-import * as hookController from "../controllers/hookController.js";
 import validate from "../middlewares/validationMiddleware.js";
 import passport from "passport";
+import * as controller from "../controllers/calendarController.js";
 import checkLogin from "../middlewares/checkLoginMiddleware.js";
-import("../middlewares/googleAuthMiddleware.js");
+import authenticate from "../middlewares/jwtMiddlewares.js";
 
 const router = express.Router();
 
-router.post("/", hookController.getHooks);
+router.get("/getUrl", authenticate, controller.getAuthLink);
+router.get("/google/callback", controller.handleAuthCallback);
 
 export default router;

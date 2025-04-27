@@ -1,0 +1,1 @@
+python -m celery -A celery_app worker --queues=aiCall.consumer --loglevel=info --pool=solo --concurrency=5    

@@ -9,7 +9,7 @@ const FlowSchema = mongoose.Schema(
             type: String,
             required: true,
         },
-        createdBy: {
+        userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
@@ -23,9 +23,8 @@ const FlowSchema = mongoose.Schema(
         nodeData: {
             type: mongoose.Schema.Types.Mixed,
         },
-        lastModified: {
-            type: Date,
-            default: Date.now,
+        routeData: {
+            type: mongoose.Schema.Types.Mixed,
         },
     },
     { timestamps: true }

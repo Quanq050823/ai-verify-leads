@@ -1,0 +1,1 @@
+celery -A celery_app worker --queues=sendWebhook.consumer --loglevel=info --pool=solo --concurrency=2 

@@ -8,7 +8,7 @@ const NodeTypeSchema = mongoose.Schema(
             type: String,
             required: true,
         },
-        type: String,
+        key: String,
         img: String,
         description: String,
         fields: [
@@ -16,7 +16,7 @@ const NodeTypeSchema = mongoose.Schema(
                 name: { type: String, required: true },
                 dataType: {
                     type: String,
-                    enum: ["String", "Number", "Boolean", "Date", "Array", "Object"],
+                    enum: ["String", "Number", "Boolean", "Time", "Date", "Array", "Object"],
                     required: true,
                 },
                 advanceData: mongoose.Schema.Types.Mixed,
@@ -31,5 +31,5 @@ const NodeTypeSchema = mongoose.Schema(
     { Timestamp: true }
 );
 
-const NodeType = mongoose.model("User", NodeTypeSchema);
+const NodeType = mongoose.model("NodeType", NodeTypeSchema);
 export default NodeType;

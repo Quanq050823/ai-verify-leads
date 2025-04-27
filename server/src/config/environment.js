@@ -36,6 +36,13 @@ const config = {
     googleAuthConfig: {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        calendarRedirectUri: `${process.env.BE_URL}${process.env.GOOGLE_REDIRECT_URI}`,
+        calendarRedirectUri: `${process.env.BE_URL}${process.env.GOOGLE_CALENDAR_REDIRECT_URI}`,
+    },
+    facebookAuthConfig: {
+        appId: process.env.FACEBOOK_APP_ID,
+        appSecret: process.env.FACEBOOK_APP_SECRET,
+        callBackUrl: process.env.FACEBOOK_CALLBACK_URL,
     },
     env: process.env.ENV,
     rabbitMQConfig: {
@@ -46,6 +53,7 @@ const config = {
         password: "secret",
         vhost: "customers",
     },
+    rabbitMQURL: process.env.RABBITMQ_URL,
 };
 
 export default config;

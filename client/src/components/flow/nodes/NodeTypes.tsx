@@ -78,7 +78,7 @@ export const CalendarNode = memo(({ data, selected, id }: any) => {
 				label: "Google Calendar",
 				icon: <CalendarMonth fontSize="small" />,
 				type: "Process",
-				subType: "Calendar",
+				subType: "googleCalendar",
 				color: "#4285F4",
 			}}
 			selected={selected}

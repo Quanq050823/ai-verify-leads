@@ -713,7 +713,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 					</>
 				);
 
-			case "calendar":
+			case "googleCalendar":
 				return (
 					<>
 						<TextField

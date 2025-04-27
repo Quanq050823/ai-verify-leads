@@ -165,10 +165,10 @@ const fallbackNodeCategories: NodeCategory[] = [
 				color: getNodeColor("aiCall"),
 			},
 			{
-				type: "calendar",
+				type: "googleCalendar",
 				label: "Google Calendar",
-				icon: getNodeIcon("calendar"),
-				color: getNodeColor("calendar"),
+				icon: getNodeIcon("googleCalendar"),
+				color: getNodeColor("googleCalendar"),
 			},
 			{
 				type: "webhook",

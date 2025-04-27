@@ -5,7 +5,7 @@ from config import Config
 import json
 import requests
 
-from utils.dbUtils import get_node_settings, get_user_calendar_conn, update_tokens, get_lead
+from utils.dbUtils import get_node_settings, get_user_calendar_conn, update_tokens, get_lead, update_lead_status_and_current_node
 from datetime import datetime, timedelta
 
 @app.task(name = "tasks.googleCalendar")
@@ -13,10 +13,12 @@ def google_calendar(message):
     try:
         print(f"Received message {message} ...")
 
+
         settings = get_node_settings(message)
         conn = get_user_calendar_conn(message, settings["connection"])
         tokens = conn["tokens"]
         lead = get_lead(message)
+        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
         
         # 2. Create credentials
         credentials = Credentials(

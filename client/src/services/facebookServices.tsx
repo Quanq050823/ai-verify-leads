@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "@/utils/axios";
 import { toast } from "react-toastify";
+import { getAccessTokenFromCookie } from "./CookieServices";
 
 interface FacebookPage {
 	id: string;
@@ -31,6 +32,45 @@ interface UserWithConnections {
 	adsConnection: FacebookConnection[];
 	[key: string]: any;
 }
+
+// Open Facebook Connect popup
+export const openFacebookConnect = () => {
+	try {
+		// Lấy userId từ cookie hoặc local storage
+		const token = getAccessTokenFromCookie();
+		if (!token) {
+			toast.error("Bạn cần đăng nhập để thực hiện thao tác này");
+			return { error: "Unauthorized" };
+		}
+
+		// Decode JWT để lấy userId
+		const base64Url = token.split(".")[1];
+		const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+		const jsonPayload = decodeURIComponent(
+			atob(base64)
+				.split("")
+				.map(function (c) {
+					return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+				})
+				.join("")
+		);
+
+		const { userId } = JSON.parse(jsonPayload);
+
+		// Mở popup để kết nối Facebook
+		const popupWindow = window.open(
+			`http://localhost:3001/api/facebook/connect/${userId}`,
+			"_blank",
+			"width=600,height=700"
+		);
+
+		return { popupWindow };
+	} catch (error: any) {
+		console.error("Error opening Facebook connect popup:", error);
+		toast.error(error?.message || "Lỗi khi mở kết nối Facebook");
+		return { error };
+	}
+};
 
 // Update Facebook connection
 export const updateFacebookConnection = async (profile: any) => {
@@ -78,14 +118,12 @@ export const getFacebookPageForms = async (pageId: string) => {
 // Subscribe a page to webhook
 export const subscribePageToWebhook = async (pageId: string) => {
 	try {
-		const response = await axios.post(`/facebook/subscribe/${pageId}`);
-		toast.success("Successfully subscribed page to webhook");
+		const response = await axios.post(`/facebook/subscribePage/${pageId}`);
+		toast.success("Đã đăng ký webhook thành công");
 		return response.data;
 	} catch (error: any) {
 		console.error("Error subscribing to webhook:", error);
-		toast.error(
-			error?.response?.data?.message || "Error subscribing to webhook"
-		);
+		toast.error(error?.response?.data?.message || "Lỗi khi đăng ký webhook");
 		return { error };
 	}
 };
@@ -96,22 +134,22 @@ export const unsubscribePageFromWebhook = async (
 	appId: string
 ) => {
 	try {
-		const response = await axios.delete(`/facebook/subscribe/${pageId}`, {
+		const response = await axios.delete(`/facebook/unsubscribePage/${pageId}`, {
 			data: { appId },
 		});
-		toast.success("Successfully unsubscribed page from webhook");
+		toast.success("Đã hủy đăng ký webhook thành công");
 		return response.data;
 	} catch (error: any) {
 		console.error("Error unsubscribing from webhook:", error);
 		toast.error(
-			error?.response?.data?.message || "Error unsubscribing from webhook"
+			error?.response?.data?.message || "Lỗi khi hủy đăng ký webhook"
 		);
 		return { error };
 	}
 };
 
 // Hook to get user's Facebook connections
-export const useFacebookConnections = () => {
+export const useFacebookConnections = (refreshKey?: number) => {
 	const [connections, setConnections] = useState<FacebookConnection[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
@@ -137,7 +175,7 @@ export const useFacebookConnections = () => {
 		};
 
 		fetchConnections();
-	}, []);
+	}, [refreshKey]);
 
 	return { connections, loading, error };
 };

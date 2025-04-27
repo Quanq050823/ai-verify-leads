@@ -22,15 +22,23 @@ import {
 	DialogContentText,
 	DialogTitle,
 	Alert,
+	Tooltip,
 } from "@mui/material";
-import { Close, NotificationImportant } from "@mui/icons-material";
+import {
+	Close,
+	NotificationImportant,
+	Refresh,
+	Add,
+} from "@mui/icons-material";
 import {
 	useFacebookConnections,
 	useFacebookPages,
 	useFacebookForms,
 	subscribePageToWebhook,
 	unsubscribePageFromWebhook,
+	openFacebookConnect,
 } from "@/services/facebookServices";
+import { toast } from "react-toastify";
 
 type PropertiesPanelProps = {
 	selectedNode: Node | null;
@@ -105,37 +113,113 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 	value,
 	onChange,
 }) => {
-	const { connections, loading, error } = useFacebookConnections();
+	const [refreshKey, setRefreshKey] = useState<number>(0);
+	const [isConnecting, setIsConnecting] = useState<boolean>(false);
+	const { connections, loading, error } = useFacebookConnections(refreshKey);
+
+	const handleRefresh = () => {
+		setRefreshKey((prevKey) => prevKey + 1);
+		toast.info("Đang tải lại danh sách kết nối...");
+	};
+
+	const handleAddConnection = () => {
+		// Mở cửa sổ mới để kết nối Facebook
+		setIsConnecting(true);
+
+		const { popupWindow, error } = openFacebookConnect();
+
+		if (error) {
+			setIsConnecting(false);
+			return;
+		}
+
+		// Theo dõi trạng thái của cửa sổ popup
+		const checkPopup = setInterval(() => {
+			if (popupWindow?.closed) {
+				clearInterval(checkPopup);
+				setIsConnecting(false);
+				handleRefresh();
+				toast.success("Đã thêm kết nối Facebook mới!");
+			}
+		}, 1000);
+	};
+
+	useEffect(() => {
+		// Lắng nghe sự kiện từ cửa sổ popup khi kết nối hoàn tất
+		const handleConnectionComplete = () => {
+			if (isConnecting) {
+				setTimeout(() => {
+					handleRefresh();
+				}, 1000);
+			}
+		};
+
+		window.addEventListener("focus", handleConnectionComplete);
+
+		return () => {
+			window.removeEventListener("focus", handleConnectionComplete);
+		};
+	}, [isConnecting]);
 
 	return (
-		<FormControl fullWidth margin="normal" size="small">
-			<InputLabel>Choose Facebook Connection</InputLabel>
-			<Select
-				value={value}
-				onChange={(e) => onChange(e.target.value)}
-				label="Choose Facebook Connection"
-				disabled={loading}
-			>
-				{loading ? (
-					<MenuItem value="">
-						<Box sx={{ display: "flex", alignItems: "center" }}>
-							<CircularProgress size={20} sx={{ mr: 1 }} />
-							Loading...
-						</Box>
-					</MenuItem>
-				) : error ? (
-					<MenuItem value="">Error: {error}</MenuItem>
-				) : connections.length === 0 ? (
-					<MenuItem value="">No Facebook connections found</MenuItem>
-				) : (
-					connections.map((connection) => (
-						<MenuItem key={connection.profile.id} value={connection.profile.id}>
-							{connection.profile.name}
-						</MenuItem>
-					))
-				)}
-			</Select>
-		</FormControl>
+		<>
+			<FormControl fullWidth margin="normal" size="small">
+				<InputLabel>Choose Facebook Connection</InputLabel>
+				<Box sx={{ display: "flex", width: "100%" }}>
+					<Select
+						value={value}
+						onChange={(e) => onChange(e.target.value)}
+						label="Choose Facebook Connection"
+						disabled={loading}
+						sx={{ flex: 1 }}
+					>
+						{loading ? (
+							<MenuItem value="">
+								<Box sx={{ display: "flex", alignItems: "center" }}>
+									<CircularProgress size={20} sx={{ mr: 1 }} />
+									Loading...
+								</Box>
+							</MenuItem>
+						) : error ? (
+							<MenuItem value="">Error: {error}</MenuItem>
+						) : connections.length === 0 ? (
+							<MenuItem value="">No Facebook connections found</MenuItem>
+						) : (
+							connections.map((connection) => (
+								<MenuItem
+									key={connection.profile.id}
+									value={connection.profile.id}
+								>
+									{connection.profile.name}
+								</MenuItem>
+							))
+						)}
+					</Select>
+					<Tooltip title="Refresh connections">
+						<IconButton
+							onClick={handleRefresh}
+							size="small"
+							sx={{ ml: 1 }}
+							disabled={loading}
+						>
+							<Refresh fontSize="small" />
+						</IconButton>
+					</Tooltip>
+				</Box>
+			</FormControl>
+
+			<Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
+				<Button
+					startIcon={isConnecting ? <CircularProgress size={16} /> : <Add />}
+					variant="outlined"
+					size="small"
+					onClick={handleAddConnection}
+					disabled={loading || isConnecting}
+				>
+					{isConnecting ? "Đang kết nối..." : "Thêm kết nối Facebook"}
+				</Button>
+			</Box>
+		</>
 	);
 };
 

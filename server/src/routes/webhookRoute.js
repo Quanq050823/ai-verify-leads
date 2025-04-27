@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post("/appScript/:userId/:flowId/:nodeId", controller.getByAppScript);
 router.get("/facebook", controller.verifyWebhook);
-
 router.post("/facebook", controller.retrieveLead);
 
+router.post("/transcribe", controller.transcribe);
 export default router;

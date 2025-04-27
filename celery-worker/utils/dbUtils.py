@@ -69,3 +69,14 @@ def update_tokens(userId, connectionId, tokens):
             break
     
     collection.update_one({"_id": ObjectId(userId)}, {"$set": {"calendarConnection": connections}})
+    
+def update_lead_status_and_current_node(leadId, status, currentNode):
+    client = get_mongo_client()
+    db = client.get_default_database()
+    collection = db["leads"]
+    
+    lead = collection.find_one({"_id": ObjectId(leadId)})
+    if not lead:
+        raise ValueError(f"Lead with ID {leadId} not found.")
+    
+    collection.update_one({"_id": ObjectId(leadId)}, {"$set": {"status": status, "currentNode": currentNode}})

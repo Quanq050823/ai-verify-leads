@@ -36,14 +36,11 @@ interface UserWithConnections {
 // Open Facebook Connect popup
 export const openFacebookConnect = () => {
 	try {
-		// Lấy token từ localStorage
-		const token = localStorage.getItem("token");
+		// Lấy userId từ cookie hoặc local storage
+		const token = getAccessTokenFromCookie();
 		if (!token) {
-			toast.error("Bạn chưa đăng nhập!", {
-				position: "top-right",
-				autoClose: 3000,
-			});
-			return { error: new Error("No token found") };
+			toast.error("Bạn cần đăng nhập để thực hiện thao tác này");
+			return { error: "Unauthorized" };
 		}
 
 		// Decode JWT để lấy userId
@@ -70,10 +67,7 @@ export const openFacebookConnect = () => {
 		return { popupWindow };
 	} catch (error: any) {
 		console.error("Error opening Facebook connect popup:", error);
-		toast.error(error?.message || "Lỗi khi mở kết nối Facebook", {
-			position: "top-right",
-			autoClose: 3000,
-		});
+		toast.error(error?.message || "Lỗi khi mở kết nối Facebook");
 		return { error };
 	}
 };
@@ -82,19 +76,12 @@ export const openFacebookConnect = () => {
 export const updateFacebookConnection = async (profile: any) => {
 	try {
 		const response = await axios.post("/facebook/connection", { profile });
-		toast.success("Facebook connection has been updated", {
-			position: "top-right",
-			autoClose: 2000,
-		});
+		toast.success("Facebook connection has been updated");
 		return response.data;
 	} catch (error: any) {
 		console.error("Error updating Facebook connection:", error);
 		toast.error(
-			error?.response?.data?.message || "Error updating Facebook connection",
-			{
-				position: "top-right",
-				autoClose: 3000,
-			}
+			error?.response?.data?.message || "Error updating Facebook connection"
 		);
 		return { error };
 	}
@@ -108,12 +95,7 @@ export const getUserFacebookPages = async (profileId: string) => {
 	} catch (error: any) {
 		console.error("Error getting pages list:", error);
 		toast.error(
-			error?.response?.data?.message || "Error getting Facebook pages",
-			{
-				position: "top-right",
-				autoClose: 3000,
-				hideProgressBar: false,
-			}
+			error?.response?.data?.message || "Error getting Facebook pages"
 		);
 		return { error };
 	}
@@ -127,12 +109,7 @@ export const getFacebookPageForms = async (pageId: string) => {
 	} catch (error: any) {
 		console.error("Error getting forms list:", error);
 		toast.error(
-			error?.response?.data?.message || "Error getting Facebook forms",
-			{
-				position: "top-right",
-				autoClose: 3000,
-				hideProgressBar: false,
-			}
+			error?.response?.data?.message || "Error getting Facebook forms"
 		);
 		return { error };
 	}
@@ -142,17 +119,11 @@ export const getFacebookPageForms = async (pageId: string) => {
 export const subscribePageToWebhook = async (pageId: string) => {
 	try {
 		const response = await axios.post(`/facebook/subscribePage/${pageId}`);
-		toast.success("Đã đăng ký webhook thành công", {
-			position: "top-right",
-			autoClose: 2000,
-		});
+		toast.success("Đã đăng ký webhook thành công");
 		return response.data;
 	} catch (error: any) {
 		console.error("Error subscribing to webhook:", error);
-		toast.error(error?.response?.data?.message || "Lỗi khi đăng ký webhook", {
-			position: "top-right",
-			autoClose: 3000,
-		});
+		toast.error(error?.response?.data?.message || "Lỗi khi đăng ký webhook");
 		return { error };
 	}
 };
@@ -166,19 +137,12 @@ export const unsubscribePageFromWebhook = async (
 		const response = await axios.delete(`/facebook/unsubscribePage/${pageId}`, {
 			data: { appId },
 		});
-		toast.success("Đã hủy đăng ký webhook thành công", {
-			position: "top-right",
-			autoClose: 2000,
-		});
+		toast.success("Đã hủy đăng ký webhook thành công");
 		return response.data;
 	} catch (error: any) {
 		console.error("Error unsubscribing from webhook:", error);
 		toast.error(
-			error?.response?.data?.message || "Lỗi khi hủy đăng ký webhook",
-			{
-				position: "top-right",
-				autoClose: 3000,
-			}
+			error?.response?.data?.message || "Lỗi khi hủy đăng ký webhook"
 		);
 		return { error };
 	}
@@ -217,10 +181,7 @@ export const useFacebookConnections = (refreshKey?: number) => {
 };
 
 // Hook to get pages for a Facebook connection
-export const useFacebookPages = (
-	profileId: string | null,
-	refreshKey: number = 0
-) => {
+export const useFacebookPages = (profileId: string | null) => {
 	const [pages, setPages] = useState<FacebookPage[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
@@ -252,16 +213,13 @@ export const useFacebookPages = (
 		};
 
 		fetchPages();
-	}, [profileId, refreshKey]);
+	}, [profileId]);
 
 	return { pages, loading, error };
 };
 
 // Hook to get forms for a Facebook page
-export const useFacebookForms = (
-	pageId: string | null,
-	refreshKey: number = 0
-) => {
+export const useFacebookForms = (pageId: string | null) => {
 	const [forms, setForms] = useState<any[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
@@ -292,7 +250,7 @@ export const useFacebookForms = (
 		};
 
 		fetchForms();
-	}, [pageId, refreshKey]);
+	}, [pageId]);
 
 	return { forms, loading, error };
 };

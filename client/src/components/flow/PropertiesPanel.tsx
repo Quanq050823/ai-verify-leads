@@ -38,6 +38,10 @@ import {
 	unsubscribePageFromWebhook,
 	openFacebookConnect,
 } from "@/services/facebookServices";
+import {
+	useGoogleCalendarConnections,
+	openGoogleCalendarConnect,
+} from "@/services/googleCalendarServices";
 import { toast } from "react-toastify";
 
 type PropertiesPanelProps = {
@@ -183,7 +187,31 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 						) : error ? (
 							<MenuItem value="">Error: {error}</MenuItem>
 						) : connections.length === 0 ? (
-							<MenuItem value="">No Facebook connections found</MenuItem>
+							<MenuItem
+								key="add_new"
+								value="add_new"
+								onClick={(e) => {
+									e.preventDefault(); // Ngăn chặn sự kiện chọn
+									handleAddConnection();
+								}}
+								sx={{
+									color: "primary.main",
+									display: "flex",
+									alignItems: "center",
+								}}
+							>
+								{isConnecting ? (
+									<>
+										<CircularProgress size={20} sx={{ mr: 1 }} />
+										Đang kết nối...
+									</>
+								) : (
+									<>
+										<Add fontSize="small" sx={{ mr: 1 }} />
+										Thêm kết nối Facebook mới
+									</>
+								)}
+							</MenuItem>
 						) : (
 							[
 								...connections.map((connection) => (
@@ -546,6 +574,167 @@ const WebhookSection: React.FC<WebhookSectionProps> = ({
 	);
 };
 
+// Google Calendar Connection Select Component
+interface CalendarConnectionSelectProps {
+	value: string;
+	onChange: (value: string) => void;
+}
+
+const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
+	value,
+	onChange,
+}) => {
+	const [refreshKey, setRefreshKey] = useState<number>(0);
+	const [isConnecting, setIsConnecting] = useState<boolean>(false);
+	const { connections, loading, error } =
+		useGoogleCalendarConnections(refreshKey);
+
+	const handleRefresh = () => {
+		setRefreshKey((prevKey) => prevKey + 1);
+		toast.info("Đang tải lại danh sách kết nối...");
+	};
+
+	const handleAddConnection = () => {
+		// Mở cửa sổ mới để kết nối Google Calendar
+		setIsConnecting(true);
+
+		openGoogleCalendarConnect().then(({ popupWindow, error }) => {
+			if (error) {
+				setIsConnecting(false);
+				return;
+			}
+
+			// Theo dõi trạng thái của cửa sổ popup
+			const checkPopup = setInterval(() => {
+				if (popupWindow?.closed) {
+					clearInterval(checkPopup);
+					setIsConnecting(false);
+					handleRefresh();
+					toast.success("Đã thêm kết nối Google Calendar mới!");
+				}
+			}, 1000);
+		});
+	};
+
+	useEffect(() => {
+		// Lắng nghe sự kiện từ cửa sổ popup khi kết nối hoàn tất
+		const handleConnectionComplete = () => {
+			if (isConnecting) {
+				setTimeout(() => {
+					handleRefresh();
+				}, 1000);
+			}
+		};
+
+		window.addEventListener("focus", handleConnectionComplete);
+
+		return () => {
+			window.removeEventListener("focus", handleConnectionComplete);
+		};
+	}, [isConnecting]);
+
+	return (
+		<>
+			<FormControl fullWidth margin="normal" size="small">
+				<InputLabel>Choose Google Calendar Connection</InputLabel>
+				<Box sx={{ display: "flex", width: "100%" }}>
+					<Select
+						value={value}
+						onChange={(e) => onChange(e.target.value)}
+						label="Choose Google Calendar Connection"
+						disabled={loading}
+						sx={{ flex: 1 }}
+					>
+						{loading ? (
+							<MenuItem value="">
+								<Box sx={{ display: "flex", alignItems: "center" }}>
+									<CircularProgress size={20} sx={{ mr: 1 }} />
+									Loading...
+								</Box>
+							</MenuItem>
+						) : error ? (
+							<MenuItem value="">Error: {error}</MenuItem>
+						) : connections.length === 0 ? (
+							<MenuItem
+								key="add_new"
+								value="add_new"
+								onClick={(e) => {
+									e.preventDefault(); // Ngăn chặn sự kiện chọn
+									handleAddConnection();
+								}}
+								sx={{
+									color: "primary.main",
+									display: "flex",
+									alignItems: "center",
+								}}
+							>
+								{isConnecting ? (
+									<>
+										<CircularProgress size={20} sx={{ mr: 1 }} />
+										Đang kết nối...
+									</>
+								) : (
+									<>
+										<Add fontSize="small" sx={{ mr: 1 }} />
+										Thêm kết nối Google Calendar mới
+									</>
+								)}
+							</MenuItem>
+						) : (
+							[
+								...connections.map((connection) => (
+									<MenuItem
+										key={connection.profile.id}
+										value={connection.profile.id}
+									>
+										{connection.profile.name || connection.profile.email}
+									</MenuItem>
+								)),
+								<Divider key="divider" />,
+								<MenuItem
+									key="add_new"
+									value="add_new"
+									onClick={(e) => {
+										e.preventDefault(); // Ngăn chặn sự kiện chọn
+										handleAddConnection();
+									}}
+									sx={{
+										color: "primary.main",
+										display: "flex",
+										alignItems: "center",
+									}}
+								>
+									{isConnecting ? (
+										<>
+											<CircularProgress size={20} sx={{ mr: 1 }} />
+											Đang kết nối...
+										</>
+									) : (
+										<>
+											<Add fontSize="small" sx={{ mr: 1 }} />
+											Thêm kết nối Google Calendar mới
+										</>
+									)}
+								</MenuItem>,
+							]
+						)}
+					</Select>
+					<Tooltip title="Refresh connections">
+						<IconButton
+							onClick={handleRefresh}
+							size="small"
+							sx={{ ml: 1 }}
+							disabled={loading}
+						>
+							<Refresh fontSize="small" />
+						</IconButton>
+					</Tooltip>
+				</Box>
+			</FormControl>
+		</>
+	);
+};
+
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	selectedNode,
 	onChange,
@@ -716,15 +905,31 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			case "googleCalendar":
 				return (
 					<>
+						<CalendarConnectionSelect
+							value={localSettings.connectionId || ""}
+							onChange={(value) => updateSettings("connectionId", value)}
+						/>
 						<TextField
 							fullWidth
 							size="small"
-							label="Calendar ID"
+							label="Event Name"
 							variant="outlined"
 							margin="normal"
-							value={localSettings.calendarId || ""}
-							onChange={handleTextChange("calendarId")}
-							placeholder="Enter calendar ID"
+							value={localSettings.eventName || ""}
+							onChange={handleTextChange("eventName")}
+							placeholder="Enter event name"
+						/>
+						<TextField
+							fullWidth
+							size="small"
+							label="Description"
+							variant="outlined"
+							margin="normal"
+							multiline
+							rows={2}
+							value={localSettings.description || ""}
+							onChange={handleTextChange("description")}
+							placeholder="Enter event description"
 						/>
 						<TextField
 							fullWidth
@@ -737,20 +942,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							value={localSettings.duration || 30}
 							onChange={handleNumberChange("duration")}
 						/>
-						<Select
-							labelId="demo-simple-select-autowidth-label"
-							id="demo-simple-select-autowidth"
-							value={"20"}
-							autoWidth
-							label="Status"
-						>
-							<MenuItem value="">
-								<em>None</em>
-							</MenuItem>
-							<MenuItem value={20}>True</MenuItem>
-							<MenuItem value={21}>False</MenuItem>
-							<MenuItem value={22}>Undefined</MenuItem>
-						</Select>
 					</>
 				);
 

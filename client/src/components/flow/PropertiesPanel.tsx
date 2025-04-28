@@ -29,6 +29,7 @@ import {
 	NotificationImportant,
 	Refresh,
 	Add,
+	Call,
 } from "@mui/icons-material";
 import {
 	useFacebookConnections,
@@ -43,6 +44,7 @@ import {
 	openGoogleCalendarConnect,
 } from "@/services/googleCalendarServices";
 import { toast } from "react-toastify";
+import { callLead, LeadData } from "@/services/flowServices";
 
 type PropertiesPanelProps = {
 	selectedNode: Node | null;
@@ -71,6 +73,9 @@ interface NodeSettings {
 	connectionId?: string;
 	pageId?: string;
 	formId?: string;
+	phoneNumber?: string;
+	callerNumber?: string;
+	attributeJson?: string;
 	[key: string]: string | number | undefined;
 }
 
@@ -610,7 +615,6 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 					clearInterval(checkPopup);
 					setIsConnecting(false);
 					handleRefresh();
-					toast.success("Đã thêm kết nối Google Calendar mới!");
 				}
 			}, 1000);
 		});
@@ -741,6 +745,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	onClose,
 }) => {
 	const [localSettings, setLocalSettings] = useState<NodeSettings>({});
+	const [isTestingCall, setIsTestingCall] = useState<boolean>(false);
+	const [callResult, setCallResult] = useState<any>(null);
+	const [openCallResultDialog, setOpenCallResultDialog] =
+		useState<boolean>(false);
 
 	if (!selectedNode) {
 		return null;
@@ -778,6 +786,51 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 		(key: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
 			updateSettings(key, parseInt(event.target.value) || 0);
 		};
+
+	// Add the function to handle test call
+	const handleTestCall = async () => {
+		if (!localSettings.phoneNumber || !localSettings.callerNumber) {
+			toast.error("Vui lòng nhập số điện thoại và số người gọi!");
+			return;
+		}
+
+		// Parse attribute JSON
+		let attribute = {};
+		if (localSettings.attributeJson) {
+			try {
+				attribute = JSON.parse(localSettings.attributeJson);
+			} catch (error) {
+				toast.error("Lỗi định dạng JSON cho trường attribute!");
+				return;
+			}
+		} else {
+			// Fallback to prompt if no attribute provided
+			attribute = {
+				prompt: localSettings.promptTemplate,
+			};
+		}
+
+		try {
+			setIsTestingCall(true);
+			const leadData: LeadData = {
+				phoneNumber: localSettings.phoneNumber || "",
+				callerId: "",
+				callerNumber: localSettings.callerNumber || "",
+				attribute: attribute,
+				outreachType: "phonecall",
+				ExtendData: {},
+			};
+
+			const result = await callLead(leadData);
+			setCallResult(result);
+			setOpenCallResultDialog(true);
+		} catch (error) {
+			console.error("Error testing call:", error);
+			toast.error("Lỗi khi thực hiện cuộc gọi thử nghiệm!");
+		} finally {
+			setIsTestingCall(false);
+		}
+	};
 
 	const renderSettings = () => {
 		// Different node types have different settings
@@ -865,28 +918,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			case "aiCall":
 				return (
 					<>
-						<FormControl fullWidth margin="normal" size="small">
-							<InputLabel>API Provider</InputLabel>
-							<Select
-								value={localSettings.apiProvider || "openai"}
-								onChange={handleSelectChange("apiProvider")}
-								label="API Provider"
-							>
-								<MenuItem value="openai">OpenAI</MenuItem>
-								<MenuItem value="twilio">Twilio</MenuItem>
-							</Select>
-						</FormControl>
-						<TextField
-							fullWidth
-							size="small"
-							label="API Key"
-							variant="outlined"
-							margin="normal"
-							type="password"
-							value={localSettings.apiKey || ""}
-							onChange={handleTextChange("apiKey")}
-							placeholder="Enter API key"
-						/>
 						<TextField
 							fullWidth
 							size="small"
@@ -899,6 +930,92 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							onChange={handleTextChange("promptTemplate")}
 							placeholder="Enter prompt template"
 						/>
+
+						<TextField
+							fullWidth
+							size="small"
+							label="Attribute (JSON)"
+							variant="outlined"
+							margin="normal"
+							multiline
+							rows={4}
+							value={localSettings.attributeJson || ""}
+							onChange={handleTextChange("attributeJson")}
+							placeholder='{"key1": "value1", "key2": "value2", ...}'
+							helperText="Nhập JSON cho attribute (nếu để trống sẽ sử dụng prompt ở trên)"
+						/>
+
+						<Divider sx={{ my: 2 }}>
+							<Chip label="Test Call Settings" />
+						</Divider>
+
+						<TextField
+							fullWidth
+							size="small"
+							label="Phone Number"
+							variant="outlined"
+							margin="normal"
+							value={localSettings.phoneNumber || ""}
+							onChange={handleTextChange("phoneNumber")}
+							placeholder="Enter phone number to call"
+						/>
+						<TextField
+							fullWidth
+							size="small"
+							label="Caller Number"
+							variant="outlined"
+							margin="normal"
+							value={localSettings.callerNumber || ""}
+							onChange={handleTextChange("callerNumber")}
+							placeholder="Enter caller number"
+						/>
+
+						<Button
+							variant="contained"
+							color="primary"
+							fullWidth
+							startIcon={<Call />}
+							onClick={handleTestCall}
+							disabled={isTestingCall}
+							sx={{ mt: 2 }}
+						>
+							{isTestingCall ? (
+								<CircularProgress size={24} color="inherit" />
+							) : (
+								"Test Call"
+							)}
+						</Button>
+
+						<Dialog
+							open={openCallResultDialog}
+							onClose={() => setOpenCallResultDialog(false)}
+							maxWidth="md"
+							fullWidth
+						>
+							<DialogTitle>Kết quả cuộc gọi thử nghiệm</DialogTitle>
+							<DialogContent>
+								{callResult && (
+									<Box sx={{ mt: 2 }}>
+										<pre
+											style={{
+												backgroundColor: "#f5f5f5",
+												padding: "16px",
+												borderRadius: "4px",
+												overflow: "auto",
+												maxHeight: "300px",
+											}}
+										>
+											{JSON.stringify(callResult, null, 2)}
+										</pre>
+									</Box>
+								)}
+							</DialogContent>
+							<DialogActions>
+								<Button onClick={() => setOpenCallResultDialog(false)}>
+									Đóng
+								</Button>
+							</DialogActions>
+						</Dialog>
 					</>
 				);
 
@@ -908,39 +1025,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 						<CalendarConnectionSelect
 							value={localSettings.connectionId || ""}
 							onChange={(value) => updateSettings("connectionId", value)}
-						/>
-						<TextField
-							fullWidth
-							size="small"
-							label="Event Name"
-							variant="outlined"
-							margin="normal"
-							value={localSettings.eventName || ""}
-							onChange={handleTextChange("eventName")}
-							placeholder="Enter event name"
-						/>
-						<TextField
-							fullWidth
-							size="small"
-							label="Description"
-							variant="outlined"
-							margin="normal"
-							multiline
-							rows={2}
-							value={localSettings.description || ""}
-							onChange={handleTextChange("description")}
-							placeholder="Enter event description"
-						/>
-						<TextField
-							fullWidth
-							size="small"
-							label="Event Duration (minutes)"
-							variant="outlined"
-							margin="normal"
-							type="number"
-							InputProps={{ inputProps: { min: 5, max: 240 } }}
-							value={localSettings.duration || 30}
-							onChange={handleNumberChange("duration")}
 						/>
 					</>
 				);

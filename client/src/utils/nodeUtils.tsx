@@ -23,7 +23,7 @@ export const getNodeIcon = (key: string) => {
 			return <Facebook fontSize="small" />;
 		case "aiCall":
 			return <SmartToy fontSize="small" />;
-		case "calendar":
+		case "googleCalendar":
 			return <CalendarMonth fontSize="small" />;
 		case "webhook":
 			return <Webhook fontSize="small" />;
@@ -53,8 +53,8 @@ export const getNodeColor = (key: string) => {
 			return "#1877f2";
 		case "aiCall":
 			return "#10b981";
-		case "calendar":
-			return "#FF5722";
+		case "googleCalendar":
+			return "#4285f4";
 		case "webhook":
 			return "#2196F3";
 		case "condition":

@@ -8,7 +8,7 @@ passport.use(
         {
             clientID: config.facebookAuthConfig.appId,
             clientSecret: config.facebookAuthConfig.appSecret,
-            callbackURL: `${config.beURL}${config.facebookAuthConfig.callBackUrl}`,
+            callbackURL: `${config.facebookAuthConfig.callBackUrl}`,
             profileFields: ["id", "displayName", "name", "emails", "photos"],
             passReqToCallback: true,
         },

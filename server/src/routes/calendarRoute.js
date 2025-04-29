@@ -4,7 +4,6 @@ import express from "express";
 import validate from "../middlewares/validationMiddleware.js";
 import passport from "passport";
 import * as controller from "../controllers/calendarController.js";
-import checkLogin from "../middlewares/checkLoginMiddleware.js";
 import authenticate from "../middlewares/jwtMiddlewares.js";
 
 const router = express.Router();

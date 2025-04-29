@@ -29,6 +29,7 @@ import {
 	NotificationImportant,
 	Refresh,
 	Add,
+	Call,
 } from "@mui/icons-material";
 import {
 	useFacebookConnections,
@@ -38,7 +39,12 @@ import {
 	unsubscribePageFromWebhook,
 	openFacebookConnect,
 } from "@/services/facebookServices";
+import {
+	useGoogleCalendarConnections,
+	openGoogleCalendarConnect,
+} from "@/services/googleCalendarServices";
 import { toast } from "react-toastify";
+import { callLead, LeadData } from "@/services/flowServices";
 
 type PropertiesPanelProps = {
 	selectedNode: Node | null;
@@ -67,6 +73,9 @@ interface NodeSettings {
 	connectionId?: string;
 	pageId?: string;
 	formId?: string;
+	phoneNumber?: string;
+	callerNumber?: string;
+	attributeJson?: string;
 	[key: string]: string | number | undefined;
 }
 
@@ -183,16 +192,68 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 						) : error ? (
 							<MenuItem value="">Error: {error}</MenuItem>
 						) : connections.length === 0 ? (
-							<MenuItem value="">No Facebook connections found</MenuItem>
+							<MenuItem
+								key="add_new"
+								value="add_new"
+								onClick={(e) => {
+									e.preventDefault(); // Ngăn chặn sự kiện chọn
+									handleAddConnection();
+								}}
+								sx={{
+									color: "primary.main",
+									display: "flex",
+									alignItems: "center",
+								}}
+							>
+								{isConnecting ? (
+									<>
+										<CircularProgress size={20} sx={{ mr: 1 }} />
+										Đang kết nối...
+									</>
+								) : (
+									<>
+										<Add fontSize="small" sx={{ mr: 1 }} />
+										Thêm kết nối Facebook mới
+									</>
+								)}
+							</MenuItem>
 						) : (
-							connections.map((connection) => (
+							[
+								...connections.map((connection) => (
+									<MenuItem
+										key={connection.profile.id}
+										value={connection.profile.id}
+									>
+										{connection.profile.name}
+									</MenuItem>
+								)),
+								<Divider key="divider" />,
 								<MenuItem
-									key={connection.profile.id}
-									value={connection.profile.id}
+									key="add_new"
+									value="add_new"
+									onClick={(e) => {
+										e.preventDefault(); // Ngăn chặn sự kiện chọn
+										handleAddConnection();
+									}}
+									sx={{
+										color: "primary.main",
+										display: "flex",
+										alignItems: "center",
+									}}
 								>
-									{connection.profile.name}
-								</MenuItem>
-							))
+									{isConnecting ? (
+										<>
+											<CircularProgress size={20} sx={{ mr: 1 }} />
+											Đang kết nối...
+										</>
+									) : (
+										<>
+											<Add fontSize="small" sx={{ mr: 1 }} />
+											Thêm kết nối Facebook mới
+										</>
+									)}
+								</MenuItem>,
+							]
 						)}
 					</Select>
 					<Tooltip title="Refresh connections">
@@ -207,18 +268,6 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 					</Tooltip>
 				</Box>
 			</FormControl>
-
-			<Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
-				<Button
-					startIcon={isConnecting ? <CircularProgress size={16} /> : <Add />}
-					variant="outlined"
-					size="small"
-					onClick={handleAddConnection}
-					disabled={loading || isConnecting}
-				>
-					{isConnecting ? "Đang kết nối..." : "Thêm kết nối Facebook"}
-				</Button>
-			</Box>
 		</>
 	);
 };
@@ -530,12 +579,176 @@ const WebhookSection: React.FC<WebhookSectionProps> = ({
 	);
 };
 
+// Google Calendar Connection Select Component
+interface CalendarConnectionSelectProps {
+	value: string;
+	onChange: (value: string) => void;
+}
+
+const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
+	value,
+	onChange,
+}) => {
+	const [refreshKey, setRefreshKey] = useState<number>(0);
+	const [isConnecting, setIsConnecting] = useState<boolean>(false);
+	const { connections, loading, error } =
+		useGoogleCalendarConnections(refreshKey);
+
+	const handleRefresh = () => {
+		setRefreshKey((prevKey) => prevKey + 1);
+		toast.info("Đang tải lại danh sách kết nối...");
+	};
+
+	const handleAddConnection = () => {
+		// Mở cửa sổ mới để kết nối Google Calendar
+		setIsConnecting(true);
+
+		openGoogleCalendarConnect().then(({ popupWindow, error }) => {
+			if (error) {
+				setIsConnecting(false);
+				return;
+			}
+
+			// Theo dõi trạng thái của cửa sổ popup
+			const checkPopup = setInterval(() => {
+				if (popupWindow?.closed) {
+					clearInterval(checkPopup);
+					setIsConnecting(false);
+					handleRefresh();
+				}
+			}, 1000);
+		});
+	};
+
+	useEffect(() => {
+		// Lắng nghe sự kiện từ cửa sổ popup khi kết nối hoàn tất
+		const handleConnectionComplete = () => {
+			if (isConnecting) {
+				setTimeout(() => {
+					handleRefresh();
+				}, 1000);
+			}
+		};
+
+		window.addEventListener("focus", handleConnectionComplete);
+
+		return () => {
+			window.removeEventListener("focus", handleConnectionComplete);
+		};
+	}, [isConnecting]);
+
+	return (
+		<>
+			<FormControl fullWidth margin="normal" size="small">
+				<InputLabel>Choose Google Calendar Connection</InputLabel>
+				<Box sx={{ display: "flex", width: "100%" }}>
+					<Select
+						value={value}
+						onChange={(e) => onChange(e.target.value)}
+						label="Choose Google Calendar Connection"
+						disabled={loading}
+						sx={{ flex: 1 }}
+					>
+						{loading ? (
+							<MenuItem value="">
+								<Box sx={{ display: "flex", alignItems: "center" }}>
+									<CircularProgress size={20} sx={{ mr: 1 }} />
+									Loading...
+								</Box>
+							</MenuItem>
+						) : error ? (
+							<MenuItem value="">Error: {error}</MenuItem>
+						) : connections.length === 0 ? (
+							<MenuItem
+								key="add_new"
+								value="add_new"
+								onClick={(e) => {
+									e.preventDefault(); // Ngăn chặn sự kiện chọn
+									handleAddConnection();
+								}}
+								sx={{
+									color: "primary.main",
+									display: "flex",
+									alignItems: "center",
+								}}
+							>
+								{isConnecting ? (
+									<>
+										<CircularProgress size={20} sx={{ mr: 1 }} />
+										Đang kết nối...
+									</>
+								) : (
+									<>
+										<Add fontSize="small" sx={{ mr: 1 }} />
+										Thêm kết nối Google Calendar mới
+									</>
+								)}
+							</MenuItem>
+						) : (
+							[
+								...connections.map((connection) => (
+									<MenuItem
+										key={connection.profile.id}
+										value={connection.profile.id}
+									>
+										{connection.profile.name || connection.profile.email}
+									</MenuItem>
+								)),
+								<Divider key="divider" />,
+								<MenuItem
+									key="add_new"
+									value="add_new"
+									onClick={(e) => {
+										e.preventDefault(); // Ngăn chặn sự kiện chọn
+										handleAddConnection();
+									}}
+									sx={{
+										color: "primary.main",
+										display: "flex",
+										alignItems: "center",
+									}}
+								>
+									{isConnecting ? (
+										<>
+											<CircularProgress size={20} sx={{ mr: 1 }} />
+											Đang kết nối...
+										</>
+									) : (
+										<>
+											<Add fontSize="small" sx={{ mr: 1 }} />
+											Thêm kết nối Google Calendar mới
+										</>
+									)}
+								</MenuItem>,
+							]
+						)}
+					</Select>
+					<Tooltip title="Refresh connections">
+						<IconButton
+							onClick={handleRefresh}
+							size="small"
+							sx={{ ml: 1 }}
+							disabled={loading}
+						>
+							<Refresh fontSize="small" />
+						</IconButton>
+					</Tooltip>
+				</Box>
+			</FormControl>
+		</>
+	);
+};
+
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	selectedNode,
 	onChange,
 	onClose,
 }) => {
 	const [localSettings, setLocalSettings] = useState<NodeSettings>({});
+	const [isTestingCall, setIsTestingCall] = useState<boolean>(false);
+	const [callResult, setCallResult] = useState<any>(null);
+	const [openCallResultDialog, setOpenCallResultDialog] =
+		useState<boolean>(false);
 
 	if (!selectedNode) {
 		return null;
@@ -573,6 +786,51 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 		(key: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
 			updateSettings(key, parseInt(event.target.value) || 0);
 		};
+
+	// Add the function to handle test call
+	const handleTestCall = async () => {
+		if (!localSettings.phoneNumber || !localSettings.callerNumber) {
+			toast.error("Vui lòng nhập số điện thoại và số người gọi!");
+			return;
+		}
+
+		// Parse attribute JSON
+		let attribute = {};
+		if (localSettings.attributeJson) {
+			try {
+				attribute = JSON.parse(localSettings.attributeJson);
+			} catch (error) {
+				toast.error("Lỗi định dạng JSON cho trường attribute!");
+				return;
+			}
+		} else {
+			// Fallback to prompt if no attribute provided
+			attribute = {
+				prompt: localSettings.promptTemplate,
+			};
+		}
+
+		try {
+			setIsTestingCall(true);
+			const leadData: LeadData = {
+				phoneNumber: localSettings.phoneNumber || "",
+				callerId: "",
+				callerNumber: localSettings.callerNumber || "",
+				attribute: attribute,
+				outreachType: "phonecall",
+				ExtendData: {},
+			};
+
+			const result = await callLead(leadData);
+			setCallResult(result);
+			setOpenCallResultDialog(true);
+		} catch (error) {
+			console.error("Error testing call:", error);
+			toast.error("Lỗi khi thực hiện cuộc gọi thử nghiệm!");
+		} finally {
+			setIsTestingCall(false);
+		}
+	};
 
 	const renderSettings = () => {
 		// Different node types have different settings
@@ -660,28 +918,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			case "aiCall":
 				return (
 					<>
-						<FormControl fullWidth margin="normal" size="small">
-							<InputLabel>API Provider</InputLabel>
-							<Select
-								value={localSettings.apiProvider || "openai"}
-								onChange={handleSelectChange("apiProvider")}
-								label="API Provider"
-							>
-								<MenuItem value="openai">OpenAI</MenuItem>
-								<MenuItem value="twilio">Twilio</MenuItem>
-							</Select>
-						</FormControl>
-						<TextField
-							fullWidth
-							size="small"
-							label="API Key"
-							variant="outlined"
-							margin="normal"
-							type="password"
-							value={localSettings.apiKey || ""}
-							onChange={handleTextChange("apiKey")}
-							placeholder="Enter API key"
-						/>
 						<TextField
 							fullWidth
 							size="small"
@@ -694,47 +930,102 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							onChange={handleTextChange("promptTemplate")}
 							placeholder="Enter prompt template"
 						/>
+
+						<TextField
+							fullWidth
+							size="small"
+							label="Attribute (JSON)"
+							variant="outlined"
+							margin="normal"
+							multiline
+							rows={4}
+							value={localSettings.attributeJson || ""}
+							onChange={handleTextChange("attributeJson")}
+							placeholder='{"key1": "value1", "key2": "value2", ...}'
+							helperText="Nhập JSON cho attribute (nếu để trống sẽ sử dụng prompt ở trên)"
+						/>
+
+						<Divider sx={{ my: 2 }}>
+							<Chip label="Test Call Settings" />
+						</Divider>
+
+						<TextField
+							fullWidth
+							size="small"
+							label="Phone Number"
+							variant="outlined"
+							margin="normal"
+							value={localSettings.phoneNumber || ""}
+							onChange={handleTextChange("phoneNumber")}
+							placeholder="Enter phone number to call"
+						/>
+						<TextField
+							fullWidth
+							size="small"
+							label="Caller Number"
+							variant="outlined"
+							margin="normal"
+							value={localSettings.callerNumber || ""}
+							onChange={handleTextChange("callerNumber")}
+							placeholder="Enter caller number"
+						/>
+
+						<Button
+							variant="contained"
+							color="primary"
+							fullWidth
+							startIcon={<Call />}
+							onClick={handleTestCall}
+							disabled={isTestingCall}
+							sx={{ mt: 2 }}
+						>
+							{isTestingCall ? (
+								<CircularProgress size={24} color="inherit" />
+							) : (
+								"Test Call"
+							)}
+						</Button>
+
+						<Dialog
+							open={openCallResultDialog}
+							onClose={() => setOpenCallResultDialog(false)}
+							maxWidth="md"
+							fullWidth
+						>
+							<DialogTitle>Kết quả cuộc gọi thử nghiệm</DialogTitle>
+							<DialogContent>
+								{callResult && (
+									<Box sx={{ mt: 2 }}>
+										<pre
+											style={{
+												backgroundColor: "#f5f5f5",
+												padding: "16px",
+												borderRadius: "4px",
+												overflow: "auto",
+												maxHeight: "300px",
+											}}
+										>
+											{JSON.stringify(callResult, null, 2)}
+										</pre>
+									</Box>
+								)}
+							</DialogContent>
+							<DialogActions>
+								<Button onClick={() => setOpenCallResultDialog(false)}>
+									Đóng
+								</Button>
+							</DialogActions>
+						</Dialog>
 					</>
 				);
 
-			case "calendar":
+			case "googleCalendar":
 				return (
 					<>
-						<TextField
-							fullWidth
-							size="small"
-							label="Calendar ID"
-							variant="outlined"
-							margin="normal"
-							value={localSettings.calendarId || ""}
-							onChange={handleTextChange("calendarId")}
-							placeholder="Enter calendar ID"
+						<CalendarConnectionSelect
+							value={localSettings.connectionId || ""}
+							onChange={(value) => updateSettings("connectionId", value)}
 						/>
-						<TextField
-							fullWidth
-							size="small"
-							label="Event Duration (minutes)"
-							variant="outlined"
-							margin="normal"
-							type="number"
-							InputProps={{ inputProps: { min: 5, max: 240 } }}
-							value={localSettings.duration || 30}
-							onChange={handleNumberChange("duration")}
-						/>
-						<Select
-							labelId="demo-simple-select-autowidth-label"
-							id="demo-simple-select-autowidth"
-							value={"20"}
-							autoWidth
-							label="Status"
-						>
-							<MenuItem value="">
-								<em>None</em>
-							</MenuItem>
-							<MenuItem value={20}>True</MenuItem>
-							<MenuItem value={21}>False</MenuItem>
-							<MenuItem value={22}>Undefined</MenuItem>
-						</Select>
 					</>
 				);
 

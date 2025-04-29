@@ -4,7 +4,6 @@ import express from "express";
 import * as flowController from "../controllers/flowController.js";
 import validate from "../middlewares/validationMiddleware.js";
 import passport from "passport";
-import checkLogin from "../middlewares/checkLoginMiddleware.js";
 import Producer from "../config/rabbitMQ.js";
 
 const router = express.Router();

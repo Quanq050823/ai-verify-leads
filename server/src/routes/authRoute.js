@@ -40,29 +40,29 @@ router.get(
     authController.loginWithGoogle
 );
 
-router.get(
-    "/facebook",
-    checkLogin(),
-    passport.authenticate("facebook", {
-        scope: [
-            "email",
-            "public_profile",
-            "ads_management",
-            "pages_show_list",
-            "leads_retrieval",
-            "pages_read_engagement",
-            "pages_manage_metadata",
-        ],
-    })
-);
-router.get(
-    "/facebook/callback",
-    passport.authenticate("facebook", {
-        failureRedirect: "/auth/api/login",
-        failureMessage: true,
-        session: false,
-    }),
-    facebookController.connectFacebook
-);
+// router.get(
+//     "/facebook",
+//     checkLogin(),
+//     passport.authenticate("facebook", {
+//         scope: [
+//             "email",
+//             "public_profile",
+//             "ads_management",
+//             "pages_show_list",
+//             "leads_retrieval",
+//             "pages_read_engagement",
+//             "pages_manage_metadata",
+//         ],
+//     })
+// );
+// router.get(
+//     "/facebook/callback",
+//     passport.authenticate("facebook", {
+//         failureRedirect: "/auth/api/login",
+//         failureMessage: true,
+//         session: false,
+//     }),
+//     facebookController.connectFacebook
+// );
 
 export default router;

@@ -8,6 +8,7 @@ const config = {
     feUrl: process.env.FE_URL,
     beURL: process.env.BE_URL,
     port: process.env.PORT,
+    feRedirectUri: process.env.FE_REDIRECT_URI,
     buildMode: process.env.BUILD_MODE,
     salt: process.env.SALT,
     accessTokenPrivateKey: process.env.ACCESS_TOKEN_PRIVATE_KEY,
@@ -36,8 +37,8 @@ const config = {
     googleAuthConfig: {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        calendarRedirectUri: `${process.env.BE_URL}${process.env.GOOGLE_REDIRECT_URI}`,
-        calendarRedirectUri: `${process.env.BE_URL}${process.env.GOOGLE_CALENDAR_REDIRECT_URI}`,
+        googleRedirectUri: `${process.env.GOOGLE_REDIRECT_URI}`,
+        calendarRedirectUri: `${process.env.GOOGLE_CALENDAR_REDIRECT_URI}`,
     },
     facebookAuthConfig: {
         appId: process.env.FACEBOOK_APP_ID,

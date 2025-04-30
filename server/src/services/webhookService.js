@@ -125,14 +125,15 @@ const fetchLeadData = async (leadgenId, pageAccessToken) => {
 
 export const getTranscript = async (data) => {
     try {
-        const { leadId, transcript } = data;
+        let { leadId, transcript } = data;
+        leadId = getObjectId(leadId);
         if (!leadId || !transcript) {
             throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
         }
         let lead;
         if (transcript && transcript?.length > 0) {
             lead = await Lead.findOneAndUpdate(
-                { _id: getObjectId(leadId) },
+                { _id: leadId },
                 { $set: { "leadData.transcript": transcript } },
                 { new: true }
             );
@@ -146,7 +147,6 @@ export const getTranscript = async (data) => {
 
         return lead;
     } catch (error) {
-        console.error("❌ Unexpected error in getTranscribe:", error);
         throw error;
     }
 };

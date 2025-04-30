@@ -67,7 +67,7 @@ apiClient.interceptors.response.use(
                     // Redirect to login if refresh fails
                     failedRequestsQueue.forEach((req) => req.reject(refreshError));
                     failedRequestsQueue = [];
-                    window.location.href = "/authentication/sign-in/";
+                    window.location.href = "/pages/authentication/sign-in/";
                     return Promise.reject(refreshError);
                 } finally {
                     isRefreshing = false;

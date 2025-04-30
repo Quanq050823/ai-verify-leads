@@ -510,7 +510,7 @@ const SignUpForm: React.FC = () => {
 									>
 										Already have an account.{" "}
 										<Link
-											href="/authentication/sign-in/"
+											href="/pages/authentication/sign-in/"
 											className="text-primary"
 											style={{
 												fontWeight: "500",

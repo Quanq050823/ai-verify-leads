@@ -26,7 +26,14 @@ export const getFlowById = async (flowId: string) => {
 
 export const createFlow = async (flowData: any) => {
 	try {
-		const response = await axios.post("/flow/createFlow", flowData);
+		// Map flowData to match backend expectations if needed
+		const dataToSend = {
+			...flowData,
+			// Make sure name field is properly set if flowName is passed
+			flowName: flowData.name,
+		};
+
+		const response = await axios.post("/flow/createFlow", dataToSend);
 		toast.success("Successfully created flow!");
 		return response.data;
 	} catch (error: any) {
@@ -141,7 +148,7 @@ export const callLead = async (leadData: any) => {
 
 // Types
 export interface FlowData {
-	flowName: string;
+	name: string;
 	nodeData?: {
 		edges?: Array<{
 			source: string;

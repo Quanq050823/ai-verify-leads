@@ -271,12 +271,60 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 	// Handle connection between nodes
 	const onConnect = useCallback(
 		(params: Connection) => {
-			// Create a new edge with CustomEdgeData
+			const newEdgeId = `e_${params.source}_${params.target}_${Date.now()}`;
+			const sourceNodeId = params.source?.split("_")[0].toLowerCase();
+
+			// Xác định loại node nguồn
+			const isConditionNode =
+				sourceNodeId === "condition" || sourceNodeId === "preverify";
+
+			// Tạo nhãn cho cạnh dựa trên loại node và handle
+			let edgeLabel = "";
+			if (isConditionNode) {
+				if (params.sourceHandle === "output-0") {
+					edgeLabel = "Success";
+				} else if (params.sourceHandle === "output-1") {
+					edgeLabel = "Failure";
+				}
+			}
+
+			// Tạo edge mới với CustomEdgeData
 			const newEdge: Edge<CustomEdgeData> = {
 				...params,
-				id: `e_${params.source}_${params.target}_${Date.now()}`,
+				id: newEdgeId,
+				data: {
+					label: edgeLabel,
+				},
 			};
-			setEdges((eds) => addEdge(newEdge, eds));
+
+			setEdges((eds) => {
+				let filteredEdges = [...eds];
+
+				if (isConditionNode) {
+					// Đối với node condition, chỉ xóa các cạnh có cùng sourceHandle
+					// Điều này cho phép mỗi đầu ra của node condition có một kết nối duy nhất
+					filteredEdges = filteredEdges.filter(
+						(edge) =>
+							!(
+								edge.source === params.source &&
+								edge.sourceHandle === params.sourceHandle
+							)
+					);
+				} else {
+					// Đối với các node khác, xóa tất cả kết nối từ source node
+					filteredEdges = filteredEdges.filter(
+						(edge) => edge.source !== params.source
+					);
+				}
+
+				// Luôn xóa kết nối đến target node
+				filteredEdges = filteredEdges.filter(
+					(edge) => edge.target !== params.target
+				);
+
+				// Thêm edge mới vào danh sách đã lọc
+				return [...filteredEdges, newEdge];
+			});
 		},
 		[setEdges]
 	);

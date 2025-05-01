@@ -30,10 +30,10 @@ interface UserWithConnections {
 export const openGoogleCalendarConnect = async () => {
 	try {
 		// Lấy JWT token từ cookie
-		const token = getAccessTokenFromCookie();
+		const token = await getAccessTokenFromCookie();
 		if (!token) {
 			toast.error("Bạn cần đăng nhập để thực hiện thao tác này");
-			return { error: "Unauthorized" };
+			return { error: "Unauthorized", popupWindow: null };
 		}
 
 		// Gọi API để lấy URL xác thực từ backend
@@ -51,7 +51,7 @@ export const openGoogleCalendarConnect = async () => {
 			"width=600,height=700"
 		);
 
-		return { popupWindow };
+		return { popupWindow, error: null };
 	} catch (error: any) {
 		console.error("Error opening Google Calendar connect popup:", error);
 		toast.error(
@@ -59,7 +59,7 @@ export const openGoogleCalendarConnect = async () => {
 				error?.response?.data?.message ||
 				"Lỗi khi mở kết nối Google Calendar"
 		);
-		return { error };
+		return { error, popupWindow: null };
 	}
 };
 

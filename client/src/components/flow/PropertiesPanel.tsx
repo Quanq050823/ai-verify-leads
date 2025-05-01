@@ -73,7 +73,7 @@ interface NodeSettings {
 	provider?: string;
 	subject?: string;
 	template?: string;
-	connectionId?: string;
+	connection?: string;
 	pageId?: string;
 	formId?: string;
 	phoneNumber?: string;
@@ -303,21 +303,21 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 
 // Facebook Page Select Component
 interface PageSelectProps {
-	connectionId: string | undefined;
+	connection: string | undefined;
 	value: string;
 	onChange: (value: string) => void;
 	disabled?: boolean;
 }
 
 const PageSelect: React.FC<PageSelectProps> = ({
-	connectionId,
+	connection,
 	value,
 	onChange,
 	disabled,
 }) => {
 	const [refreshKey, setRefreshKey] = useState<number>(0);
 	const { pages, loading, error } = useFacebookPages(
-		connectionId || null,
+		connection || null,
 		refreshKey
 	);
 
@@ -587,19 +587,19 @@ const WebhookDialog: React.FC<WebhookDialogProps> = ({
 // Add new WebhookSection component
 interface WebhookSectionProps {
 	pageId: string;
-	connectionId?: string;
+	connection?: string;
 	isSubscribed: boolean;
 	onUpdate: (subscribed: boolean) => void;
 }
 
 const WebhookSection: React.FC<WebhookSectionProps> = ({
 	pageId,
-	connectionId,
+	connection,
 	isSubscribed,
 	onUpdate,
 }) => {
 	const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-	const { pages } = useFacebookPages(connectionId || null);
+	const { pages } = useFacebookPages(connection || null);
 	const page = pages.find((p) => p.id === pageId);
 	const pageName = page?.name || "Selected Page";
 
@@ -923,7 +923,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 					endWorkDays: ["Friday"],
 					startTime: "09:00",
 					endTime: "17:00",
-					duration: 0,
+					duration: 30,
 				});
 			}
 			// Khởi tạo giá trị mặc định cho node preVerify mới
@@ -945,9 +945,21 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							type: "phone",
 							operator: "isValid",
 							value: "",
-							mustMet: false,
+							mustMet: true,
 						},
 					],
+				});
+			}
+			// Khởi tạo giá trị mặc định cho node Facebook Lead Ads mới
+			else if (
+				(selectedNode.type === "facebookLeadAds" ||
+					selectedNode.type === "facebookAds") &&
+				Object.keys(nodeSettings).length === 0
+			) {
+				setLocalSettings({
+					connection: "",
+					pageId: "",
+					formId: "",
 				});
 			} else {
 				setLocalSettings(nodeSettings as NodeSettings);
@@ -1067,15 +1079,15 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				return (
 					<>
 						<ConnectionSelect
-							value={localSettings.connectionId || ""}
-							onChange={(value) => updateSettings("connectionId", value)}
+							value={localSettings.connection || ""}
+							onChange={(value) => updateSettings("connection", value)}
 						/>
 
 						<PageSelect
-							connectionId={localSettings.connectionId}
+							connection={localSettings.connection}
 							value={localSettings.pageId || ""}
 							onChange={(value) => updateSettings("pageId", value)}
-							disabled={!localSettings.connectionId}
+							disabled={!localSettings.connection}
 						/>
 
 						<FormSelect
@@ -1228,8 +1240,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				return (
 					<>
 						<CalendarConnectionSelect
-							value={localSettings.connectionId || ""}
-							onChange={(value) => updateSettings("connectionId", value)}
+							value={localSettings.connection || ""}
+							onChange={(value) => updateSettings("connection", value)}
 						/>
 
 						<TextField

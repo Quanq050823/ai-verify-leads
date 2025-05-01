@@ -104,7 +104,7 @@ const isLoggedIn = async (data) => {
         if (!data?.accessToken && !data?.refreshToken) {
             return { isAuthenticated: false };
         }
-        if (data?.accessToken) await jwtUtil.verifyAccessToken(data?.accessToken);
+        // if (data?.accessToken) await jwtUtil.verifyAccessToken(data?.accessToken);
         if (data?.refreshToken) await jwtUtil.verifyRefreshToken(data?.refreshToken);
         return {
             isAuthenticated: true,

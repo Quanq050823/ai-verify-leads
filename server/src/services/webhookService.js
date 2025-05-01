@@ -125,28 +125,28 @@ const fetchLeadData = async (leadgenId, pageAccessToken) => {
 
 export const getTranscript = async (data) => {
     try {
-        const { leadId, transcript } = data;
-        if (!leadId || !transcript) {
-            throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
-        }
+        let { leadId, transcript } = data;
+        leadId = getObjectId(leadId);
+        // if (!leadId || !transcript) {
+        //     throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
+        // }
         let lead;
-        if (transcript && transcript?.length > 0) {
+        if (transcript && transcript?.conversation?.length != 0) {
             lead = await Lead.findOneAndUpdate(
-                { _id: getObjectId(leadId) },
+                { _id: leadId },
                 { $set: { "leadData.transcript": transcript } },
                 { new: true }
             );
         }
 
-        if (!lead) {
-            throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
-        }
+        // if (!lead) {
+        //     throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
+        // }
 
         await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead]);
 
         return lead;
     } catch (error) {
-        console.error("❌ Unexpected error in getTranscribe:", error);
         throw error;
     }
 };

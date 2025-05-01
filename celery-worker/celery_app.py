@@ -18,6 +18,8 @@ app.conf.update(
         'tasks.sendWebhook': {'queue': 'sendWebhook.consumer'},
         'tasks.googleCalendar': {'queue': 'googleCalendar.consumer'}, 
     },
+    broker_connection_timeout = 10,
+    broker_heartbeat = 10  # Adjust heartbeat interval
 )
 
 def _import_tasks():

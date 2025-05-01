@@ -34,12 +34,12 @@ def get_working_days(start_date, startWeekday = 0, endWeekday = 4, num_days=7):
     date = start_date
     tmp = 0
     while tmp < num_days:
-        print(f"{startWeekday} | {endWeekday} | {date.weekday()}")
+        # print(f"{startWeekday} | {endWeekday} | {date.weekday()}")
         if startWeekday <= date.weekday() <= endWeekday:  # Weekdays only (0-4 are Monday to Friday)
             days.append(date)
         date += timedelta(days=1)
         tmp += 1
-    print(f"Working days: {days}")
+    # print(f"Working days: {days}")
     return days
 
 def generate_time_slots(date, start_hour, end_hour, interval):

@@ -34,13 +34,13 @@ interface UserWithConnections {
 }
 
 // Open Facebook Connect popup
-export const openFacebookConnect = () => {
+export const openFacebookConnect = async () => {
 	try {
 		// Lấy userId từ cookie hoặc local storage
-		const token = getAccessTokenFromCookie();
+		const token = await getAccessTokenFromCookie();
 		if (!token) {
 			toast.error("Bạn cần đăng nhập để thực hiện thao tác này");
-			return { error: "Unauthorized" };
+			return { error: "Unauthorized", popupWindow: null };
 		}
 
 		// Decode JWT để lấy userId
@@ -64,11 +64,11 @@ export const openFacebookConnect = () => {
 			"width=600,height=700"
 		);
 
-		return { popupWindow };
+		return { popupWindow, error: null };
 	} catch (error: any) {
 		console.error("Error opening Facebook connect popup:", error);
 		toast.error(error?.message || "Lỗi khi mở kết nối Facebook");
-		return { error };
+		return { error, popupWindow: null };
 	}
 };
 
@@ -181,7 +181,10 @@ export const useFacebookConnections = (refreshKey?: number) => {
 };
 
 // Hook to get pages for a Facebook connection
-export const useFacebookPages = (profileId: string | null) => {
+export const useFacebookPages = (
+	profileId: string | null,
+	refreshKey?: number
+) => {
 	const [pages, setPages] = useState<FacebookPage[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
@@ -213,13 +216,16 @@ export const useFacebookPages = (profileId: string | null) => {
 		};
 
 		fetchPages();
-	}, [profileId]);
+	}, [profileId, refreshKey]);
 
 	return { pages, loading, error };
 };
 
 // Hook to get forms for a Facebook page
-export const useFacebookForms = (pageId: string | null) => {
+export const useFacebookForms = (
+	pageId: string | null,
+	refreshKey?: number
+) => {
 	const [forms, setForms] = useState<any[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
@@ -250,7 +256,7 @@ export const useFacebookForms = (pageId: string | null) => {
 		};
 
 		fetchForms();
-	}, [pageId]);
+	}, [pageId, refreshKey]);
 
 	return { forms, loading, error };
 };

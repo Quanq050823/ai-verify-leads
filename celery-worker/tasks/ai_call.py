@@ -22,7 +22,7 @@ def ai_call(message):
         update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
             
         # Make API request to external calling service
-        url = "https://callflow143.primas.net:1501/system/CallFlow/outreach/195"
+        url = "https://poc.io.vn/system/CallFlow/outreach/2"
         headers = {
             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5MTZjNjgzMi00YjZjLTQ5ZDAtOTA3OC1mMzIxOGUwNjgyNDgiLCJuYW1lIjoiYWRtaW5AcHJpbWFzLm5ldCIsInJvbGUiOiI5OTktU3VwZXJBZG1pbiIsImxhc3Rsb2dpbiI6IjUvMjYvMjAyMyAxMDoxMDo0OSBBTSIsInBpY3R1cmUiOiIiLCJuYmYiOjE2ODUwNzA2NTUsImV4cCI6MjAwMDY4OTg0OSwiaWF0IjoxNjg1MDcwNjU1fQ.dnGhU1U72CI2k_BOS2IU1j1Bk5D8YSfv1ZD505_vUEc",  # Replace 'Token' with actual token if you have one
             "Content-Type": "application/json"

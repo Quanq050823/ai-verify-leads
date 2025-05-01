@@ -127,11 +127,11 @@ export const getTranscript = async (data) => {
     try {
         let { leadId, transcript } = data;
         leadId = getObjectId(leadId);
-        if (!leadId || !transcript) {
-            throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
-        }
+        // if (!leadId || !transcript) {
+        //     throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
+        // }
         let lead;
-        if (transcript && transcript?.length > 0) {
+        if (transcript && transcript?.conversation?.length != 0) {
             lead = await Lead.findOneAndUpdate(
                 { _id: leadId },
                 { $set: { "leadData.transcript": transcript } },
@@ -139,9 +139,9 @@ export const getTranscript = async (data) => {
             );
         }
 
-        if (!lead) {
-            throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
-        }
+        // if (!lead) {
+        //     throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
+        // }
 
         await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead]);
 

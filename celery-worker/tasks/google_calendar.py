@@ -1,6 +1,7 @@
 from celery_app import app
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from google.auth.transport.requests import Request
 from config import Config
 import json
 import requests
@@ -114,4 +115,4 @@ def google_calendar(message):
         }
     except Exception as e:
         print(f"Error creating calendar event: {e}")
-        raise
+        self.retry(exc=e, countdown=5, max_retries=3)

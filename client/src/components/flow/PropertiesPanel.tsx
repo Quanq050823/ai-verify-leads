@@ -23,6 +23,8 @@ import {
 	DialogTitle,
 	Alert,
 	Tooltip,
+	FormControlLabel,
+	Checkbox,
 } from "@mui/material";
 import {
 	Close,
@@ -71,7 +73,7 @@ interface NodeSettings {
 	provider?: string;
 	subject?: string;
 	template?: string;
-	connectionId?: string;
+	connection?: string;
 	pageId?: string;
 	formId?: string;
 	phoneNumber?: string;
@@ -84,11 +86,23 @@ interface NodeSettings {
 	goodByeMessage?: string;
 	calendarName?: string;
 	eventName?: string;
-	startWorkDays?: Array<string>;
-	endWorkDays?: Array<string>;
+	startWorkDays?: string;
+	endWorkDays?: string;
 	startTime?: string;
 	endTime?: string;
-	[key: string]: string | number | Array<string> | undefined;
+	criteria?: Array<{
+		field: string;
+		type: string;
+		operator: string;
+		value: string | boolean | number;
+		mustMet: boolean;
+	}>;
+	[key: string]:
+		| string
+		| number
+		| Array<string>
+		| Array<{ [key: string]: any }>
+		| undefined;
 }
 
 const PanelContainer = styled(Paper)(({ theme }) => ({
@@ -289,21 +303,21 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 
 // Facebook Page Select Component
 interface PageSelectProps {
-	connectionId: string | undefined;
+	connection: string | undefined;
 	value: string;
 	onChange: (value: string) => void;
 	disabled?: boolean;
 }
 
 const PageSelect: React.FC<PageSelectProps> = ({
-	connectionId,
+	connection,
 	value,
 	onChange,
 	disabled,
 }) => {
 	const [refreshKey, setRefreshKey] = useState<number>(0);
 	const { pages, loading, error } = useFacebookPages(
-		connectionId || null,
+		connection || null,
 		refreshKey
 	);
 
@@ -573,19 +587,19 @@ const WebhookDialog: React.FC<WebhookDialogProps> = ({
 // Add new WebhookSection component
 interface WebhookSectionProps {
 	pageId: string;
-	connectionId?: string;
+	connection?: string;
 	isSubscribed: boolean;
 	onUpdate: (subscribed: boolean) => void;
 }
 
 const WebhookSection: React.FC<WebhookSectionProps> = ({
 	pageId,
-	connectionId,
+	connection,
 	isSubscribed,
 	onUpdate,
 }) => {
 	const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-	const { pages } = useFacebookPages(connectionId || null);
+	const { pages } = useFacebookPages(connection || null);
 	const page = pages.find((p) => p.id === pageId);
 	const pageName = page?.name || "Selected Page";
 
@@ -800,6 +814,70 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 	);
 };
 
+// Function to get operators based on type
+const getOperatorsForType = (type: string) => {
+	switch (type) {
+		case "string":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "contains", label: "Contains" },
+				{ value: "startsWith", label: "Starts With" },
+				{ value: "endsWith", label: "Ends With" },
+				{ value: "isEmpty", label: "Is Empty" },
+				{ value: "isNotEmpty", label: "Is Not Empty" },
+			];
+		case "number":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "greaterThan", label: "Greater Than" },
+				{ value: "greaterThanOrEqual", label: "Greater Than or Equal" },
+				{ value: "lessThan", label: "Less Than" },
+				{ value: "lessThanOrEqual", label: "Less Than or Equal" },
+				{ value: "between", label: "Between" },
+			];
+		case "email":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "contains", label: "Contains" },
+				{ value: "domainEquals", label: "Domain Equals" },
+				{ value: "isValid", label: "Is Valid Email" },
+			];
+		case "phone":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "startsWith", label: "Starts With" },
+				{ value: "isValid", label: "Is Valid Phone" },
+				{ value: "countryCode", label: "Has Country Code" },
+			];
+		case "date":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "before", label: "Before" },
+				{ value: "after", label: "After" },
+				{ value: "between", label: "Between" },
+			];
+		case "boolean":
+			return [
+				{ value: "isTrue", label: "Is True" },
+				{ value: "isFalse", label: "Is False" },
+			];
+		default:
+			return [{ value: "equals", label: "Equals" }];
+	}
+};
+
+// Function to determine if value input should be shown
+const shouldShowValueInput = (operator: string) => {
+	return !["isEmpty", "isNotEmpty", "isValid", "isTrue", "isFalse"].includes(
+		operator
+	);
+};
+
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	selectedNode,
 	onChange,
@@ -841,11 +919,47 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				setLocalSettings({
 					calendarName: "",
 					eventName: "",
-					startWorkDays: ["Monday"],
-					endWorkDays: ["Friday"],
+					startWorkDays: "Monday",
+					endWorkDays: "Friday",
 					startTime: "09:00",
 					endTime: "17:00",
 					duration: 30,
+				});
+			}
+			// Khởi tạo giá trị mặc định cho node preVerify mới
+			else if (
+				selectedNode.type === "preVerify" &&
+				Object.keys(nodeSettings).length === 0
+			) {
+				setLocalSettings({
+					criteria: [
+						{
+							field: "email",
+							type: "email",
+							operator: "isValid",
+							value: "",
+							mustMet: true,
+						},
+						{
+							field: "phone",
+							type: "phone",
+							operator: "isValid",
+							value: "",
+							mustMet: true,
+						},
+					],
+				});
+			}
+			// Khởi tạo giá trị mặc định cho node Facebook Lead Ads mới
+			else if (
+				(selectedNode.type === "facebookLeadAds" ||
+					selectedNode.type === "facebookAds") &&
+				Object.keys(nodeSettings).length === 0
+			) {
+				setLocalSettings({
+					connection: "",
+					pageId: "",
+					formId: "",
 				});
 			} else {
 				setLocalSettings(nodeSettings as NodeSettings);
@@ -855,7 +969,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
 	const updateSettings = (
 		key: string,
-		value: string | number | Array<string>
+		value: string | number | Array<string> | Array<{ [key: string]: any }>
 	) => {
 		const updatedSettings = { ...localSettings, [key]: value };
 		setLocalSettings(updatedSettings);
@@ -965,15 +1079,15 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				return (
 					<>
 						<ConnectionSelect
-							value={localSettings.connectionId || ""}
-							onChange={(value) => updateSettings("connectionId", value)}
+							value={localSettings.connection || ""}
+							onChange={(value) => updateSettings("connection", value)}
 						/>
 
 						<PageSelect
-							connectionId={localSettings.connectionId}
+							connection={localSettings.connection}
 							value={localSettings.pageId || ""}
 							onChange={(value) => updateSettings("pageId", value)}
-							disabled={!localSettings.connectionId}
+							disabled={!localSettings.connection}
 						/>
 
 						<FormSelect
@@ -1126,8 +1240,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				return (
 					<>
 						<CalendarConnectionSelect
-							value={localSettings.connectionId || ""}
-							onChange={(value) => updateSettings("connectionId", value)}
+							value={localSettings.connection || ""}
+							onChange={(value) => updateSettings("connection", value)}
 						/>
 
 						<TextField
@@ -1433,6 +1547,243 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							onChange={handleTextChange("template")}
 							placeholder="Enter SMS template"
 						/>
+					</>
+				);
+
+			case "preVerify":
+				return (
+					<>
+						<Typography variant="subtitle2" gutterBottom>
+							Configure Pre-verification Criteria
+						</Typography>
+
+						{/* Danh sách các tiêu chí */}
+						{(
+							localSettings.criteria || [
+								{
+									field: "",
+									type: "string",
+									operator: "equals",
+									value: "",
+									mustMet: true,
+								},
+							]
+						).map((criterion, index) => (
+							<Box
+								key={index}
+								sx={{
+									border: "1px solid #e0e0e0",
+									borderRadius: "4px",
+									p: 2,
+									mb: 2,
+									backgroundColor: "#fafafa",
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "space-between",
+										mb: 1,
+									}}
+								>
+									<Typography variant="body2" fontWeight="bold">
+										Criteria #{index + 1}
+									</Typography>
+									{(localSettings.criteria || []).length > 1 && (
+										<IconButton
+											size="small"
+											color="error"
+											onClick={() => {
+												const newCriteria = [...(localSettings.criteria || [])];
+												newCriteria.splice(index, 1);
+												updateSettings("criteria", newCriteria);
+											}}
+										>
+											<Close fontSize="small" />
+										</IconButton>
+									)}
+								</Box>
+
+								<TextField
+									fullWidth
+									size="small"
+									label="Field"
+									variant="outlined"
+									margin="normal"
+									value={criterion.field || ""}
+									onChange={(e) => {
+										const newCriteria = [...(localSettings.criteria || [])];
+										newCriteria[index] = {
+											...newCriteria[index],
+											field: e.target.value,
+										};
+										updateSettings("criteria", newCriteria);
+									}}
+									placeholder="Enter field name (e.g. email, phone)"
+								/>
+
+								<FormControl fullWidth margin="normal" size="small">
+									<InputLabel>Type</InputLabel>
+									<Select
+										value={criterion.type || "string"}
+										onChange={(e) => {
+											const newCriteria = [...(localSettings.criteria || [])];
+											// Update type
+											const newType = e.target.value as string;
+											// Set default operator for this type
+											const defaultOperator =
+												getOperatorsForType(newType)[0].value;
+
+											newCriteria[index] = {
+												...newCriteria[index],
+												type: newType,
+												operator: defaultOperator,
+											};
+											updateSettings("criteria", newCriteria);
+										}}
+										label="Type"
+									>
+										<MenuItem value="string">String</MenuItem>
+										<MenuItem value="number">Number</MenuItem>
+										<MenuItem value="email">Email</MenuItem>
+										<MenuItem value="phone">Phone</MenuItem>
+										<MenuItem value="date">Date</MenuItem>
+										<MenuItem value="boolean">Boolean</MenuItem>
+									</Select>
+								</FormControl>
+
+								<FormControl fullWidth margin="normal" size="small">
+									<InputLabel>Operator</InputLabel>
+									<Select
+										value={criterion.operator || "equals"}
+										onChange={(e) => {
+											const newCriteria = [...(localSettings.criteria || [])];
+											newCriteria[index] = {
+												...newCriteria[index],
+												operator: e.target.value,
+												// Reset value if changing to an operator that doesn't need a value
+												...(shouldShowValueInput(e.target.value as string)
+													? {}
+													: { value: "" }),
+											};
+											updateSettings("criteria", newCriteria);
+										}}
+										label="Operator"
+									>
+										{getOperatorsForType(criterion.type || "string").map(
+											(op) => (
+												<MenuItem key={op.value} value={op.value}>
+													{op.label}
+												</MenuItem>
+											)
+										)}
+									</Select>
+								</FormControl>
+
+								{shouldShowValueInput(criterion.operator || "equals") && (
+									<TextField
+										fullWidth
+										size="small"
+										label="Value"
+										variant="outlined"
+										margin="normal"
+										type={
+											criterion.type === "number"
+												? "number"
+												: criterion.type === "date"
+												? "date"
+												: "text"
+										}
+										value={criterion.value || ""}
+										onChange={(e) => {
+											const newCriteria = [...(localSettings.criteria || [])];
+											let newValue: string | number | boolean = e.target.value;
+
+											// Convert value based on type
+											if (criterion.type === "number" && e.target.value) {
+												newValue = Number(e.target.value);
+											} else if (criterion.type === "boolean") {
+												newValue = e.target.value === "true";
+											}
+
+											newCriteria[index] = {
+												...newCriteria[index],
+												value: newValue,
+											};
+											updateSettings("criteria", newCriteria);
+										}}
+										placeholder={
+											criterion.type === "date"
+												? "Select date"
+												: criterion.type === "number"
+												? "Enter numeric value"
+												: "Enter comparison value"
+										}
+										InputLabelProps={
+											criterion.type === "date" ? { shrink: true } : undefined
+										}
+									/>
+								)}
+
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={criterion.mustMet}
+											onChange={(e) => {
+												const newCriteria = [...(localSettings.criteria || [])];
+												newCriteria[index] = {
+													...newCriteria[index],
+													mustMet: e.target.checked,
+												};
+												updateSettings("criteria", newCriteria);
+											}}
+											size="small"
+										/>
+									}
+									label="Must be met for verification to succeed"
+								/>
+							</Box>
+						))}
+
+						{/* Nút thêm tiêu chí */}
+						<Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<Add />}
+								onClick={() => {
+									const newCriteria = [
+										...(localSettings.criteria || []),
+										{
+											field: "",
+											type: "string",
+											operator: "equals",
+											value: "",
+											mustMet: true,
+										},
+									];
+									updateSettings("criteria", newCriteria);
+								}}
+							>
+								Add Criteria
+							</Button>
+						</Box>
+
+						<Box
+							sx={{
+								mt: 2,
+								p: 2,
+								backgroundColor: "#f5f5f5",
+								borderRadius: "4px",
+							}}
+						>
+							<Typography variant="caption" color="text.secondary">
+								Configure criteria to pre-verify leads before further
+								processing. Each criteria evaluates a field against the
+								specified value based on its data type and chosen operator. You
+								can mark criteria as "must be met" for essential requirements.
+							</Typography>
+						</Box>
 					</>
 				);
 

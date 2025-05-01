@@ -86,8 +86,8 @@ interface NodeSettings {
 	goodByeMessage?: string;
 	calendarName?: string;
 	eventName?: string;
-	startWorkDays?: Array<string>;
-	endWorkDays?: Array<string>;
+	startWorkDays?: string;
+	endWorkDays?: string;
 	startTime?: string;
 	endTime?: string;
 	criteria?: Array<{
@@ -919,8 +919,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				setLocalSettings({
 					calendarName: "",
 					eventName: "",
-					startWorkDays: ["Monday"],
-					endWorkDays: ["Friday"],
+					startWorkDays: "Monday",
+					endWorkDays: "Friday",
 					startTime: "09:00",
 					endTime: "17:00",
 					duration: 30,

@@ -42,30 +42,21 @@ const NodeContainer = styled(Paper, {
 		backgroundColor: nodeColor || theme.palette.grey[300],
 		position: "relative",
 		cursor: "grab",
+		willChange: "transform, box-shadow",
 		boxShadow: selected
-			? `0 0 0 2px ${theme.palette.primary.main}, ${theme.shadows[8]}`
-			: `0 8px 20px -8px ${alpha(
-					nodeColor || theme.palette.grey[500],
-					0.5
-			  )}, 0 6px 10px -6px ${alpha(
-					nodeColor || theme.palette.grey[500],
-					0.3
-			  )}`,
+			? `0 0 0 2px ${theme.palette.primary.main}, 0px 3px 8px rgba(0,0,0,0.15)`
+			: `0px 4px 10px rgba(0,0,0,0.1)`,
 
 		"&:hover": {
-			boxShadow: `0 0 0 5px ${alpha(
+			boxShadow: `0 0 0 3px ${alpha(
 				nodeColor || theme.palette.grey[300],
 				0.3
-			)}, 0 12px 24px -8px ${alpha(
-				nodeColor || theme.palette.grey[600],
-				0.6
-			)}, 0 6px 12px -6px ${alpha(nodeColor || theme.palette.grey[600], 0.4)}`,
+			)}, 0px 6px 14px rgba(0,0,0,0.15)`,
 		},
 
 		"& .MuiSvgIcon-root": {
-			fontSize: "46px",
+			fontSize: "40px",
 			color: "white",
-			filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
 		},
 	})
 );
@@ -76,9 +67,9 @@ const NodeLabel = styled(Box)(({ theme }) => ({
 	left: "50%",
 	transform: "translateX(-50%)",
 	textAlign: "center",
-	marginTop: "10px",
-	width: "140px",
-	transition: "all 0.2s ease",
+	marginTop: "8px",
+	width: "120px",
+	pointerEvents: "none",
 }));
 
 const ActionLabel = styled(Typography)(({ theme }) => ({
@@ -91,64 +82,57 @@ const ActionLabel = styled(Typography)(({ theme }) => ({
 }));
 
 const StyledHandle = styled(Handle)(({ theme }) => ({
-	width: "12px",
-	height: "12px",
+	width: "10px",
+	height: "10px",
 	backgroundColor: "#fff",
 	border: "2px solid #778899",
-	transition: "all 0.2s ease",
 	zIndex: 10,
 	borderRadius: "50%",
-	boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+	boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
 
 	"&:hover": {
 		backgroundColor: theme.palette.primary.main,
 		borderColor: theme.palette.primary.dark,
-		transform: "scale(1.3)",
-		boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+		transform: "scale(1.2)",
 	},
 }));
 
 const HandleLabel = styled(Typography)(({ theme }) => ({
 	position: "absolute",
-	fontSize: "11px",
+	fontSize: "10px",
 	fontWeight: "bold",
 	color: theme.palette.text.secondary,
 	pointerEvents: "none",
 	right: "-4px",
 	transform: "translateX(100%)",
-	marginRight: "10px",
+	marginRight: "8px",
 	whiteSpace: "nowrap",
 	backgroundColor: alpha(theme.palette.background.paper, 0.85),
-	padding: "3px 8px",
-	borderRadius: "6px",
-	boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-	backdropFilter: "blur(8px)",
-	border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+	padding: "2px 6px",
+	borderRadius: "4px",
 }));
 
 const DeleteButton = styled(IconButton)(({ theme }) => ({
 	position: "absolute",
 	top: "-8px",
 	right: "60px",
-	width: "22px",
-	height: "22px",
+	width: "20px",
+	height: "20px",
 	backgroundColor: theme.palette.background.paper,
 	color: theme.palette.grey[600],
 	padding: 0,
 	minWidth: 0,
 	border: `1px solid ${theme.palette.grey[200]}`,
-	boxShadow: theme.shadows[2],
+	boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
 	opacity: 0,
-	transition: "all 0.2s ease",
 	zIndex: 20,
 	"&:hover": {
 		backgroundColor: theme.palette.error.light,
 		color: theme.palette.error.contrastText,
-		transform: "scale(1.1)",
 	},
 }));
 
-const NodeWrapper = styled(Box)({
+const NodeWrapper = styled(Box)(({ theme }) => ({
 	position: "relative",
 	"&:hover .delete-button": {
 		opacity: 1,
@@ -156,23 +140,25 @@ const NodeWrapper = styled(Box)({
 	"&:hover .node-tooltip": {
 		opacity: 1,
 	},
-});
+	"&:active": {
+		cursor: "grabbing",
+	},
+}));
 
 const NodeTooltip = styled(Box)(({ theme }) => ({
 	position: "absolute",
-	top: "-40px",
+	top: "-32px",
 	left: "50%",
 	transform: "translateX(-50%)",
 	backgroundColor: alpha(theme.palette.background.paper, 0.9),
-	backdropFilter: "blur(8px)",
 	color: theme.palette.text.primary,
-	padding: "4px 8px",
+	padding: "3px 6px",
 	borderRadius: "4px",
-	fontSize: "12px",
-	boxShadow: theme.shadows[3],
+	fontSize: "11px",
+	boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
 	zIndex: 30,
 	opacity: 0,
-	transition: "opacity 0.2s ease",
+	pointerEvents: "none",
 	whiteSpace: "nowrap",
 }));
 
@@ -229,6 +215,7 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 
 	const handleDeleteNode = (event: React.MouseEvent) => {
 		event.stopPropagation();
+		event.preventDefault();
 		setNodes((nodes) => nodes.filter((node) => node.id !== id));
 	};
 
@@ -260,8 +247,7 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 					sx={{
 						fontWeight: 600,
 						color: "text.primary",
-						fontSize: "13px",
-						textShadow: "0 1px 2px rgba(0,0,0,0.05)",
+						fontSize: "12px",
 					}}
 				>
 					{data.label}
@@ -270,20 +256,13 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 			</NodeLabel>
 
 			{inputPositions.map((pos, index) => (
-				<Tooltip
-					key={`input-tooltip-${index}`}
-					title="Input Connection"
-					arrow
-					placement="left"
-				>
-					<StyledHandle
-						key={`input-${index}`}
-						type="target"
-						position={Position.Left}
-						id={`input-${index}`}
-						style={{ left: -5, top: `${pos * 100}%` }}
-					/>
-				</Tooltip>
+				<StyledHandle
+					key={`input-${index}`}
+					type="target"
+					position={Position.Left}
+					id={`input-${index}`}
+					style={{ left: -5, top: `${pos * 100}%` }}
+				/>
 			))}
 
 			{outputPositions.map((pos, index) => (

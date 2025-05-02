@@ -71,23 +71,41 @@ const CollapsedSidebar = styled(Paper)(({ theme }) => ({
 const NodeItem = styled(ListItem, {
 	shouldForwardProp: (prop) => prop !== "bgcolor",
 })<{ bgcolor: string }>(({ theme, bgcolor }) => ({
-	padding: theme.spacing(1.2),
-	marginBottom: theme.spacing(0.8),
+	padding: theme.spacing(1.5),
+	marginBottom: theme.spacing(1.2),
 	borderRadius: "12px",
 	cursor: "grab",
-	transition: "all 0.2s ease",
+	transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
 	background: alpha(bgcolor, 0.08),
 	border: `1px solid ${alpha(bgcolor, 0.12)}`,
+	position: "relative",
+	"&::after": {
+		content: '""',
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		borderRadius: "12px",
+		pointerEvents: "none",
+		transition: "all 0.3s ease",
+		opacity: 0,
+		boxShadow: `0 0 0 3px ${alpha(bgcolor, 0.3)}`,
+	},
 	"&:hover": {
-		transform: "translateY(-2px)",
-		boxShadow: `0 4px 12px ${alpha(bgcolor, 0.2)}`,
-		background: alpha(bgcolor, 0.12),
-		border: `1px solid ${alpha(bgcolor, 0.2)}`,
+		transform: "translateY(-3px)",
+		boxShadow: `0 8px 20px ${alpha(bgcolor, 0.3)}`,
+		background: alpha(bgcolor, 0.15),
+		border: `1px solid ${alpha(bgcolor, 0.35)}`,
+		"&::after": {
+			opacity: 1,
+		},
 	},
 	"&:active": {
 		cursor: "grabbing",
-		transform: "translateY(0px)",
+		transform: "translateY(1px) scale(0.98)",
 		boxShadow: `0 2px 8px ${alpha(bgcolor, 0.25)}`,
+		transition: "all 0.1s ease",
 	},
 }));
 
@@ -95,25 +113,43 @@ const CollapsedNodeItem = styled(ListItem, {
 	shouldForwardProp: (prop) => prop !== "bgcolor",
 })<{ bgcolor: string }>(({ theme, bgcolor }) => ({
 	padding: theme.spacing(1),
-	marginBottom: theme.spacing(0.8),
+	marginBottom: theme.spacing(1.2),
 	borderRadius: "10px",
-	width: "42px",
-	height: "42px",
+	width: "48px",
+	height: "48px",
 	cursor: "grab",
-	transition: "all 0.2s ease",
+	transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
 	display: "flex",
 	justifyContent: "center",
 	background: alpha(bgcolor, 0.08),
 	border: `1px solid ${alpha(bgcolor, 0.12)}`,
+	position: "relative",
+	"&::after": {
+		content: '""',
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		borderRadius: "10px",
+		pointerEvents: "none",
+		transition: "all 0.3s ease",
+		opacity: 0,
+		boxShadow: `0 0 0 3px ${alpha(bgcolor, 0.3)}`,
+	},
 	"&:hover": {
-		transform: "translateY(-2px)",
-		boxShadow: `0 4px 12px ${alpha(bgcolor, 0.2)}`,
-		background: alpha(bgcolor, 0.12),
-		border: `1px solid ${alpha(bgcolor, 0.2)}`,
+		transform: "translateY(-3px)",
+		boxShadow: `0 8px 20px ${alpha(bgcolor, 0.3)}`,
+		background: alpha(bgcolor, 0.15),
+		border: `1px solid ${alpha(bgcolor, 0.35)}`,
+		"&::after": {
+			opacity: 1,
+		},
 	},
 	"&:active": {
 		cursor: "grabbing",
-		transform: "translateY(0px)",
+		transform: "translateY(1px) scale(0.98)",
+		transition: "all 0.1s ease",
 	},
 }));
 
@@ -126,12 +162,12 @@ const NodeIconContainer = styled(Box, {
 	backgroundColor: bgcolor,
 	color: "white",
 	borderRadius: "8px",
-	padding: theme.spacing(0.6),
-	width: "28px",
-	height: "28px",
-	boxShadow: `0 2px 5px ${alpha(bgcolor, 0.4)}`,
+	padding: theme.spacing(0.8),
+	width: "32px",
+	height: "32px",
+	boxShadow: `0 3px 6px ${alpha(bgcolor, 0.4)}`,
 	"& .MuiSvgIcon-root": {
-		fontSize: "16px",
+		fontSize: "18px",
 		filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))",
 	},
 }));
@@ -200,7 +236,7 @@ const categorizeNodes = (nodes: NodeType[]): NodeCategory[] => {
 		// Phân loại node dựa trên key hoặc đặc điểm
 		if (
 			nodeKey.includes("facebook") ||
-			nodeKey.includes("google") ||
+			nodeKey.includes("googleSheets") ||
 			nodeKey.includes("Sheets")
 		) {
 			dataSourcesCategory.push(nodeItem);
@@ -208,7 +244,8 @@ const categorizeNodes = (nodes: NodeType[]): NodeCategory[] => {
 			nodeKey.includes("Call") ||
 			nodeKey.includes("Verify") ||
 			nodeKey.includes("webhook") ||
-			nodeKey.includes("condition")
+			nodeKey.includes("condition") ||
+			nodeKey.includes("googleCalendar")
 		) {
 			processingCategory.push(nodeItem);
 		} else if (
@@ -339,6 +376,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 		[key: string]: boolean;
 	}>({});
 
+	// Thêm hàm xử lý kéo thả nâng cao hơn
+	const handleDragStart = (event: React.DragEvent, nodeType: string) => {
+		event.dataTransfer.effectAllowed = "move";
+		event.dataTransfer.setData("application/reactflow", nodeType);
+		event.dataTransfer.setDragImage(event.currentTarget, 20, 20);
+
+		// Gọi hàm onDragStart từ props
+		onDragStart(event, nodeType);
+	};
+
 	useEffect(() => {
 		const loadNodeTypes = async () => {
 			try {
@@ -448,10 +495,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 								</Typography>
 
 								{category.items.map((item) => (
-									<Tooltip key={item.type} title={item.label} placement="right">
+									<Tooltip
+										key={item.type}
+										title={item.label}
+										placement="right"
+										arrow
+										enterDelay={200}
+										leaveDelay={100}
+									>
 										<CollapsedNodeItem
 											bgcolor={item.color}
-											onDragStart={(event) => onDragStart(event, item.type)}
+											onDragStart={(event) => handleDragStart(event, item.type)}
 											draggable
 											disablePadding
 										>
@@ -542,13 +596,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 									{category.items.map((item) => (
 										<Tooltip
 											key={item.type}
-											title={item.description || ""}
+											title={item.description || item.label}
 											placement="right"
 											arrow
+											enterDelay={200}
+											leaveDelay={100}
 										>
 											<NodeItem
 												bgcolor={item.color}
-												onDragStart={(event) => onDragStart(event, item.type)}
+												onDragStart={(event) =>
+													handleDragStart(event, item.type)
+												}
 												draggable
 												disablePadding
 											>

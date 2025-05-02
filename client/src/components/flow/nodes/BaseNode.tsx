@@ -1,8 +1,15 @@
 import React, { memo } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
-import { Box, Paper, Typography, Stack, IconButton } from "@mui/material";
+import {
+	Box,
+	Paper,
+	Typography,
+	Stack,
+	IconButton,
+	Tooltip,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { lighten } from "@mui/material/styles";
+import { lighten, alpha } from "@mui/material/styles";
 import { Close as CloseIcon } from "@mui/icons-material";
 
 type BaseNodeProps = {
@@ -36,19 +43,29 @@ const NodeContainer = styled(Paper, {
 		position: "relative",
 		cursor: "grab",
 		boxShadow: selected
-			? `0 0 0 3px ${theme.palette.primary.main}, ${theme.shadows[4]}`
-			: theme.shadows[2],
+			? `0 0 0 2px ${theme.palette.primary.main}, ${theme.shadows[8]}`
+			: `0 8px 20px -8px ${alpha(
+					nodeColor || theme.palette.grey[500],
+					0.5
+			  )}, 0 6px 10px -6px ${alpha(
+					nodeColor || theme.palette.grey[500],
+					0.3
+			  )}`,
 
 		"&:hover": {
-			boxShadow: `0 0 0 5px ${lighten(
+			boxShadow: `0 0 0 5px ${alpha(
 				nodeColor || theme.palette.grey[300],
 				0.3
-			)}`,
+			)}, 0 12px 24px -8px ${alpha(
+				nodeColor || theme.palette.grey[600],
+				0.6
+			)}, 0 6px 12px -6px ${alpha(nodeColor || theme.palette.grey[600], 0.4)}`,
 		},
 
 		"& .MuiSvgIcon-root": {
-			fontSize: "38px",
+			fontSize: "46px",
 			color: "white",
+			filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
 		},
 	})
 );
@@ -59,29 +76,54 @@ const NodeLabel = styled(Box)(({ theme }) => ({
 	left: "50%",
 	transform: "translateX(-50%)",
 	textAlign: "center",
-	marginTop: "8px",
-	width: "120px",
+	marginTop: "10px",
+	width: "140px",
+	transition: "all 0.2s ease",
 }));
 
 const ActionLabel = styled(Typography)(({ theme }) => ({
 	fontSize: "11px",
+	fontWeight: 500,
 	color: theme.palette.text.secondary,
-	marginTop: "2px",
+	marginTop: "4px",
+	textTransform: "uppercase",
+	letterSpacing: "0.5px",
 }));
 
 const StyledHandle = styled(Handle)(({ theme }) => ({
-	width: "8px",
-	height: "8px",
+	width: "12px",
+	height: "12px",
 	backgroundColor: "#fff",
 	border: "2px solid #778899",
 	transition: "all 0.2s ease",
 	zIndex: 10,
+	borderRadius: "50%",
+	boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
 
 	"&:hover": {
 		backgroundColor: theme.palette.primary.main,
 		borderColor: theme.palette.primary.dark,
-		transform: "scale(1.2)",
+		transform: "scale(1.3)",
+		boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
 	},
+}));
+
+const HandleLabel = styled(Typography)(({ theme }) => ({
+	position: "absolute",
+	fontSize: "11px",
+	fontWeight: "bold",
+	color: theme.palette.text.secondary,
+	pointerEvents: "none",
+	right: "-4px",
+	transform: "translateX(100%)",
+	marginRight: "10px",
+	whiteSpace: "nowrap",
+	backgroundColor: alpha(theme.palette.background.paper, 0.85),
+	padding: "3px 8px",
+	borderRadius: "6px",
+	boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+	backdropFilter: "blur(8px)",
+	border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
 }));
 
 const DeleteButton = styled(IconButton)(({ theme }) => ({
@@ -91,17 +133,18 @@ const DeleteButton = styled(IconButton)(({ theme }) => ({
 	width: "22px",
 	height: "22px",
 	backgroundColor: theme.palette.background.paper,
-	color: theme.palette.grey[500],
+	color: theme.palette.grey[600],
 	padding: 0,
 	minWidth: 0,
-	border: `1px solid ${theme.palette.grey[300]}`,
-	boxShadow: theme.shadows[1],
+	border: `1px solid ${theme.palette.grey[200]}`,
+	boxShadow: theme.shadows[2],
 	opacity: 0,
 	transition: "all 0.2s ease",
 	zIndex: 20,
 	"&:hover": {
 		backgroundColor: theme.palette.error.light,
 		color: theme.palette.error.contrastText,
+		transform: "scale(1.1)",
 	},
 }));
 
@@ -110,7 +153,28 @@ const NodeWrapper = styled(Box)({
 	"&:hover .delete-button": {
 		opacity: 1,
 	},
+	"&:hover .node-tooltip": {
+		opacity: 1,
+	},
 });
+
+const NodeTooltip = styled(Box)(({ theme }) => ({
+	position: "absolute",
+	top: "-40px",
+	left: "50%",
+	transform: "translateX(-50%)",
+	backgroundColor: alpha(theme.palette.background.paper, 0.9),
+	backdropFilter: "blur(8px)",
+	color: theme.palette.text.primary,
+	padding: "4px 8px",
+	borderRadius: "4px",
+	fontSize: "12px",
+	boxShadow: theme.shadows[3],
+	zIndex: 30,
+	opacity: 0,
+	transition: "opacity 0.2s ease",
+	whiteSpace: "nowrap",
+}));
 
 const getActionName = (type: string): string => {
 	switch (type.toLowerCase()) {
@@ -168,8 +232,15 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 		setNodes((nodes) => nodes.filter((node) => node.id !== id));
 	};
 
+	// Hiển thị mô tả khi có
+	const showDescription = data.description && data.description.length > 0;
+
 	return (
 		<NodeWrapper>
+			{showDescription && (
+				<NodeTooltip className="node-tooltip">{data.description}</NodeTooltip>
+			)}
+
 			<DeleteButton
 				className="delete-button"
 				onClick={handleDeleteNode}
@@ -186,7 +257,12 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 			<NodeLabel>
 				<Typography
 					variant="body2"
-					sx={{ fontWeight: 500, color: "text.primary" }}
+					sx={{
+						fontWeight: 600,
+						color: "text.primary",
+						fontSize: "13px",
+						textShadow: "0 1px 2px rgba(0,0,0,0.05)",
+					}}
 				>
 					{data.label}
 				</Typography>
@@ -194,13 +270,20 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 			</NodeLabel>
 
 			{inputPositions.map((pos, index) => (
-				<StyledHandle
-					key={`input-${index}`}
-					type="target"
-					position={Position.Left}
-					id={`input-${index}`}
-					style={{ left: -4, top: `${pos * 100}%` }}
-				/>
+				<Tooltip
+					key={`input-tooltip-${index}`}
+					title="Input Connection"
+					arrow
+					placement="left"
+				>
+					<StyledHandle
+						key={`input-${index}`}
+						type="target"
+						position={Position.Left}
+						id={`input-${index}`}
+						style={{ left: -5, top: `${pos * 100}%` }}
+					/>
+				</Tooltip>
 			))}
 
 			{outputPositions.map((pos, index) => (

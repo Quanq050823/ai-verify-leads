@@ -68,7 +68,6 @@ def update_tokens(userId, connectionId, tokens):
             connection["tokens"]["access_token"] = tokens["access_token"]
             connection["tokens"]["refresh_token"] = tokens["refresh_token"]
             connection["tokens"]["expiry_date"] = tokens["expiry_date"]
-            connection["tokens"]["refresh_token_expire_in"] = tokens["refresh_token_expire_in"]
             break
     
     collection.update_one({"_id": ObjectId(userId)}, {"$set": {"calendarConnection": connections}})

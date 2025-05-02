@@ -370,7 +370,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		if (flowId) {
 			setLoading(true);
 			const flowUpdateData = {
-				name: newName,
+				flowName: newName,
 				nodeData: reactFlowInstance ? reactFlowInstance.toObject() : {},
 			};
 
@@ -398,7 +398,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			if (flowId) {
 				// Cập nhật flow hiện tại
 				const flowUpdateData = {
-					name: flowName,
+					flowName: flowName,
 					nodeData: flowData,
 				};
 

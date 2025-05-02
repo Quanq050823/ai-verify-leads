@@ -86,8 +86,8 @@ interface NodeSettings {
 	goodByeMessage?: string;
 	calendarName?: string;
 	eventName?: string;
-	startWorkDays?: string;
-	endWorkDays?: string;
+	startWorkDays?: number;
+	endWorkDays?: number;
 	startTime?: string;
 	endTime?: string;
 	criteria?: Array<{
@@ -878,6 +878,43 @@ const shouldShowValueInput = (operator: string) => {
 	);
 };
 
+// Add these utility functions before the PropertiesPanel component
+const dayNameToNumber = (dayName: string): number => {
+	const days = [
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday",
+		"Saturday",
+		"Sunday",
+	];
+	return days.indexOf(dayName);
+};
+
+const dayNumberToName = (dayNumber: number): string => {
+	const days = [
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday",
+		"Saturday",
+		"Sunday",
+	];
+	return days[dayNumber];
+};
+
+const daysOfWeek = [
+	{ value: 0, label: "Monday" },
+	{ value: 1, label: "Tuesday" },
+	{ value: 2, label: "Wednesday" },
+	{ value: 3, label: "Thursday" },
+	{ value: 4, label: "Friday" },
+	{ value: 5, label: "Saturday" },
+	{ value: 6, label: "Sunday" },
+];
+
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	selectedNode,
 	onChange,
@@ -919,8 +956,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				setLocalSettings({
 					calendarName: "",
 					eventName: "",
-					startWorkDays: "Monday",
-					endWorkDays: "Friday",
+					startWorkDays: 0,
+					endWorkDays: 4,
 					startTime: "09:00",
 					endTime: "17:00",
 					duration: 30,
@@ -1276,23 +1313,19 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 						<FormControl fullWidth margin="normal" size="small">
 							<InputLabel>Start Work Day</InputLabel>
 							<Select
-								value={localSettings.startWorkDays?.[0] || "Monday"}
+								value={
+									localSettings.startWorkDays !== undefined
+										? localSettings.startWorkDays
+										: 0
+								}
 								onChange={(e) => {
-									updateSettings("startWorkDays", [e.target.value]);
+									updateSettings("startWorkDays", Number(e.target.value));
 								}}
 								label="Start Work Day"
 							>
-								{[
-									"Monday",
-									"Tuesday",
-									"Wednesday",
-									"Thursday",
-									"Friday",
-									"Saturday",
-									"Sunday",
-								].map((day) => (
-									<MenuItem key={day} value={day}>
-										{day}
+								{daysOfWeek.map((day) => (
+									<MenuItem key={day.value} value={day.value}>
+										{day.label}
 									</MenuItem>
 								))}
 							</Select>
@@ -1301,23 +1334,19 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 						<FormControl fullWidth margin="normal" size="small">
 							<InputLabel>End Work Day</InputLabel>
 							<Select
-								value={localSettings.endWorkDays?.[0] || "Friday"}
+								value={
+									localSettings.endWorkDays !== undefined
+										? localSettings.endWorkDays
+										: 4
+								}
 								onChange={(e) => {
-									updateSettings("endWorkDays", [e.target.value]);
+									updateSettings("endWorkDays", Number(e.target.value));
 								}}
 								label="End Work Day"
 							>
-								{[
-									"Monday",
-									"Tuesday",
-									"Wednesday",
-									"Thursday",
-									"Friday",
-									"Saturday",
-									"Sunday",
-								].map((day) => (
-									<MenuItem key={day} value={day}>
-										{day}
+								{daysOfWeek.map((day) => (
+									<MenuItem key={day.value} value={day.value}>
+										{day.label}
 									</MenuItem>
 								))}
 							</Select>

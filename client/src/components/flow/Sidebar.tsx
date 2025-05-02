@@ -43,7 +43,7 @@ const SidebarContainer = styled(Paper)(({ theme }) => ({
 	display: "flex",
 	flexDirection: "column",
 	height: "100%",
-	width: "260px",
+	width: "300px",
 	transition: "width 0.3s ease",
 	padding: theme.spacing(2),
 	borderRight: `1px solid ${theme.palette.divider}`,
@@ -58,7 +58,7 @@ const CollapsedSidebar = styled(Paper)(({ theme }) => ({
 	display: "flex",
 	flexDirection: "column",
 	height: "100%",
-	width: "60px",
+	width: "80px",
 	padding: theme.spacing(1),
 	alignItems: "center",
 	borderRight: `1px solid ${theme.palette.divider}`,
@@ -73,6 +73,8 @@ const NodeItem = styled(ListItem, {
 })<{ bgcolor: string }>(({ theme, bgcolor }) => ({
 	padding: theme.spacing(1.5),
 	marginBottom: theme.spacing(1.2),
+	paddingLeft: theme.spacing(2),
+	marginLeft: theme.spacing(0.5),
 	borderRadius: "12px",
 	cursor: "grab",
 	transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -94,8 +96,7 @@ const NodeItem = styled(ListItem, {
 	},
 	"&:hover": {
 		transform: "translateY(-3px)",
-		boxShadow: `0 8px 20px ${alpha(bgcolor, 0.3)}`,
-		background: alpha(bgcolor, 0.15),
+		boxShadow: `0 4px 10px ${alpha(bgcolor, 0.3)}`,
 		border: `1px solid ${alpha(bgcolor, 0.35)}`,
 		"&::after": {
 			opacity: 1,

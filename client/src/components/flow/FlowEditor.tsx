@@ -321,7 +321,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 
 				if (isMultiOutputNode) {
 					// Đối với node có nhiều đầu ra, chỉ xóa các cạnh có cùng sourceHandle
-					// Điều này cho phép mỗi đầu ra có một kết nối duy nhất
+					// Điều này cho phép mỗi đầu ra của node có một kết nối duy nhất
 					filteredEdges = filteredEdges.filter(
 						(edge) =>
 							!(
@@ -574,17 +574,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			<Sidebar onDragStart={onDragStart} />
 
 			{/* Flow editor */}
-			<Box
-				ref={reactFlowWrapper}
-				sx={{
-					flexGrow: 1,
-					height: "100%",
-					position: "relative",
-					overflow: "hidden",
-					borderRadius: 2,
-					boxShadow: "inset 0 1px 8px rgba(0,0,0,0.05)",
-				}}
-			>
+			<Box ref={reactFlowWrapper} sx={{ flexGrow: 1, height: "100%" }}>
 				<ReactFlow
 					nodes={nodes}
 					edges={edges}

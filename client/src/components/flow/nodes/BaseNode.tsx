@@ -1,15 +1,8 @@
 import React, { memo } from "react";
 import { Handle, Position, useReactFlow } from "@xyflow/react";
-import {
-	Box,
-	Paper,
-	Typography,
-	Stack,
-	IconButton,
-	Tooltip,
-} from "@mui/material";
+import { Box, Paper, Typography, Stack, IconButton } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { lighten, alpha } from "@mui/material/styles";
+import { lighten } from "@mui/material/styles";
 import { Close as CloseIcon } from "@mui/icons-material";
 
 type BaseNodeProps = {
@@ -42,20 +35,19 @@ const NodeContainer = styled(Paper, {
 		backgroundColor: nodeColor || theme.palette.grey[300],
 		position: "relative",
 		cursor: "grab",
-		willChange: "transform, box-shadow",
 		boxShadow: selected
-			? `0 0 0 2px ${theme.palette.primary.main}, 0px 3px 8px rgba(0,0,0,0.15)`
-			: `0px 4px 10px rgba(0,0,0,0.1)`,
+			? `0 0 0 3px ${theme.palette.primary.main}, ${theme.shadows[4]}`
+			: theme.shadows[2],
 
 		"&:hover": {
-			boxShadow: `0 0 0 3px ${alpha(
+			boxShadow: `0 0 0 5px ${lighten(
 				nodeColor || theme.palette.grey[300],
 				0.3
-			)}, 0px 6px 14px rgba(0,0,0,0.15)`,
+			)}`,
 		},
 
 		"& .MuiSvgIcon-root": {
-			fontSize: "40px",
+			fontSize: "38px",
 			color: "white",
 		},
 	})
@@ -69,26 +61,21 @@ const NodeLabel = styled(Box)(({ theme }) => ({
 	textAlign: "center",
 	marginTop: "8px",
 	width: "120px",
-	pointerEvents: "none",
 }));
 
 const ActionLabel = styled(Typography)(({ theme }) => ({
 	fontSize: "11px",
-	fontWeight: 500,
 	color: theme.palette.text.secondary,
-	marginTop: "4px",
-	textTransform: "uppercase",
-	letterSpacing: "0.5px",
+	marginTop: "2px",
 }));
 
 const StyledHandle = styled(Handle)(({ theme }) => ({
-	width: "10px",
-	height: "10px",
+	width: "8px",
+	height: "8px",
 	backgroundColor: "#fff",
 	border: "2px solid #778899",
+	transition: "all 0.2s ease",
 	zIndex: 10,
-	borderRadius: "50%",
-	boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
 
 	"&:hover": {
 		backgroundColor: theme.palette.primary.main,
@@ -97,34 +84,20 @@ const StyledHandle = styled(Handle)(({ theme }) => ({
 	},
 }));
 
-const HandleLabel = styled(Typography)(({ theme }) => ({
-	position: "absolute",
-	fontSize: "10px",
-	fontWeight: "bold",
-	color: theme.palette.text.secondary,
-	pointerEvents: "none",
-	right: "-4px",
-	transform: "translateX(100%)",
-	marginRight: "8px",
-	whiteSpace: "nowrap",
-	backgroundColor: alpha(theme.palette.background.paper, 0.85),
-	padding: "2px 6px",
-	borderRadius: "4px",
-}));
-
 const DeleteButton = styled(IconButton)(({ theme }) => ({
 	position: "absolute",
 	top: "-8px",
 	right: "60px",
-	width: "20px",
-	height: "20px",
+	width: "22px",
+	height: "22px",
 	backgroundColor: theme.palette.background.paper,
-	color: theme.palette.grey[600],
+	color: theme.palette.grey[500],
 	padding: 0,
 	minWidth: 0,
-	border: `1px solid ${theme.palette.grey[200]}`,
-	boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+	border: `1px solid ${theme.palette.grey[300]}`,
+	boxShadow: theme.shadows[1],
 	opacity: 0,
+	transition: "all 0.2s ease",
 	zIndex: 20,
 	"&:hover": {
 		backgroundColor: theme.palette.error.light,
@@ -132,35 +105,12 @@ const DeleteButton = styled(IconButton)(({ theme }) => ({
 	},
 }));
 
-const NodeWrapper = styled(Box)(({ theme }) => ({
+const NodeWrapper = styled(Box)({
 	position: "relative",
 	"&:hover .delete-button": {
 		opacity: 1,
 	},
-	"&:hover .node-tooltip": {
-		opacity: 1,
-	},
-	"&:active": {
-		cursor: "grabbing",
-	},
-}));
-
-const NodeTooltip = styled(Box)(({ theme }) => ({
-	position: "absolute",
-	top: "-32px",
-	left: "50%",
-	transform: "translateX(-50%)",
-	backgroundColor: alpha(theme.palette.background.paper, 0.9),
-	color: theme.palette.text.primary,
-	padding: "3px 6px",
-	borderRadius: "4px",
-	fontSize: "11px",
-	boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
-	zIndex: 30,
-	opacity: 0,
-	pointerEvents: "none",
-	whiteSpace: "nowrap",
-}));
+});
 
 const getActionName = (type: string): string => {
 	switch (type.toLowerCase()) {
@@ -215,19 +165,11 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 
 	const handleDeleteNode = (event: React.MouseEvent) => {
 		event.stopPropagation();
-		event.preventDefault();
 		setNodes((nodes) => nodes.filter((node) => node.id !== id));
 	};
 
-	// Hiển thị mô tả khi có
-	const showDescription = data.description && data.description.length > 0;
-
 	return (
 		<NodeWrapper>
-			{showDescription && (
-				<NodeTooltip className="node-tooltip">{data.description}</NodeTooltip>
-			)}
-
 			<DeleteButton
 				className="delete-button"
 				onClick={handleDeleteNode}
@@ -244,11 +186,7 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 			<NodeLabel>
 				<Typography
 					variant="body2"
-					sx={{
-						fontWeight: 600,
-						color: "text.primary",
-						fontSize: "12px",
-					}}
+					sx={{ fontWeight: 500, color: "text.primary" }}
 				>
 					{data.label}
 				</Typography>
@@ -261,7 +199,7 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 					type="target"
 					position={Position.Left}
 					id={`input-${index}`}
-					style={{ left: -5, top: `${pos * 100}%` }}
+					style={{ left: -4, top: `${pos * 100}%` }}
 				/>
 			))}
 

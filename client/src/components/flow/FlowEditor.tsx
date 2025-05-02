@@ -23,7 +23,18 @@ import {
 	LinearProgress,
 	ThemeProvider,
 	createTheme,
+	Paper,
+	Typography,
+	CircularProgress,
+	Backdrop,
+	Snackbar,
+	Alert,
+	IconButton,
+	Tooltip,
 } from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { alpha } from "@mui/material/styles";
+import { Map as MapIcon, VisibilityOff } from "@mui/icons-material";
 
 import Sidebar from "./Sidebar";
 import PropertiesPanel from "./PropertiesPanel";
@@ -124,6 +135,12 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [flowName, setFlowName] = useState<string>("New Flow");
+	const [showMiniMap, setShowMiniMap] = useState<boolean>(true);
+	const [alertInfo, setAlertInfo] = useState<{
+		open: boolean;
+		severity: "success" | "error";
+		message: string;
+	}>({ open: false, severity: "success", message: "" });
 
 	const reactFlowUtil = useReactFlow();
 
@@ -274,17 +291,19 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			const newEdgeId = `e_${params.source}_${params.target}_${Date.now()}`;
 			const sourceNodeId = params.source?.split("_")[0].toLowerCase();
 
-			// Xác định loại node nguồn
-			const isConditionNode =
-				sourceNodeId === "condition" || sourceNodeId === "preverify";
+			// Xác định loại node nguồn có nhiều đầu ra
+			const isMultiOutputNode =
+				sourceNodeId === "condition" ||
+				sourceNodeId === "preverify" ||
+				sourceNodeId === "aicall";
 
 			// Tạo nhãn cho cạnh dựa trên loại node và handle
 			let edgeLabel = "";
-			if (isConditionNode) {
+			if (isMultiOutputNode) {
 				if (params.sourceHandle === "output-0") {
-					edgeLabel = "Success";
+					edgeLabel = sourceNodeId === "aicall" ? "Positive" : "Success";
 				} else if (params.sourceHandle === "output-1") {
-					edgeLabel = "Failure";
+					edgeLabel = sourceNodeId === "aicall" ? "Negative" : "Failure";
 				}
 			}
 
@@ -300,9 +319,9 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			setEdges((eds) => {
 				let filteredEdges = [...eds];
 
-				if (isConditionNode) {
-					// Đối với node condition, chỉ xóa các cạnh có cùng sourceHandle
-					// Điều này cho phép mỗi đầu ra của node condition có một kết nối duy nhất
+				if (isMultiOutputNode) {
+					// Đối với node có nhiều đầu ra, chỉ xóa các cạnh có cùng sourceHandle
+					// Điều này cho phép mỗi đầu ra có một kết nối duy nhất
 					filteredEdges = filteredEdges.filter(
 						(edge) =>
 							!(
@@ -535,6 +554,10 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		}, 150);
 	}, [nodes]);
 
+	const toggleMiniMap = () => {
+		setShowMiniMap(!showMiniMap);
+	};
+
 	return (
 		<Box
 			sx={{
@@ -542,13 +565,26 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				height: "100vh",
 				display: "flex",
 				position: "relative",
+				overflow: "hidden",
+				background:
+					"linear-gradient(135deg, rgba(240,249,255,0.9), rgba(224,242,254,0.9), rgba(236,254,255,0.8))",
 			}}
 		>
 			{/* Sidebar with node types */}
 			<Sidebar onDragStart={onDragStart} />
 
 			{/* Flow editor */}
-			<Box ref={reactFlowWrapper} sx={{ flexGrow: 1, height: "100%" }}>
+			<Box
+				ref={reactFlowWrapper}
+				sx={{
+					flexGrow: 1,
+					height: "100%",
+					position: "relative",
+					overflow: "hidden",
+					borderRadius: 2,
+					boxShadow: "inset 0 1px 8px rgba(0,0,0,0.05)",
+				}}
+			>
 				<ReactFlow
 					nodes={nodes}
 					edges={edges}
@@ -567,31 +603,90 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 					snapToGrid
 					snapGrid={[10, 10]}
 					attributionPosition="bottom-left"
+					proOptions={{ hideAttribution: true }}
 				>
-					<Background gap={12} size={1} color="#f1f1f1" />
-					<Controls />
-					<MiniMap
-						nodeStrokeWidth={3}
-						nodeColor={(node) => {
-							switch (node.type) {
-								case "googleSheets":
-								case "facebookAds":
-									return "#3B82F6";
-								case "aiCall":
-								case "webhook":
-								case "googleCalendar":
-									return "#10B981";
-								case "condition":
-									return "#F59E0B";
-								case "email":
-								case "sms":
-									return "#EC4899";
-								default:
-									return "#94A3B8";
-							}
+					<Background gap={20} size={1.5} color="#e2e8f0" />
+					<Controls
+						position="bottom-right"
+						style={{
+							marginBottom: 20,
+							marginRight: 20,
+							padding: 5,
+							boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+							borderRadius: 12,
+							background: "rgba(255,255,255,0.8)",
+							backdropFilter: "blur(12px)",
+							border: "1px solid rgba(226, 232, 240, 0.8)",
 						}}
-						maskColor="rgba(240, 240, 240, 0.6)"
 					/>
+
+					{showMiniMap && (
+						<MiniMap
+							nodeStrokeWidth={3}
+							nodeColor={(node) => {
+								switch (node.type) {
+									case "googleSheets":
+									case "facebookAds":
+										return "#3B82F6";
+									case "aiCall":
+									case "webhook":
+									case "googleCalendar":
+										return "#10B981";
+									case "condition":
+										return "#F59E0B";
+									case "email":
+									case "sms":
+										return "#EC4899";
+									default:
+										return "#94A3B8";
+								}
+							}}
+							maskColor="rgba(240, 245, 250, 0.5)"
+							style={{
+								marginBottom: 20,
+								marginRight: 20,
+								borderRadius: 12,
+								boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+								border: "1px solid rgba(226, 232, 240, 0.8)",
+								background: "rgba(255,255,255,0.8)",
+								backdropFilter: "blur(12px)",
+							}}
+						/>
+					)}
+
+					{/* Toggle MiniMap Button */}
+					<Panel
+						position="bottom-right"
+						style={{ marginBottom: 140, marginRight: 20 }}
+					>
+						<Tooltip
+							title={showMiniMap ? "Hide MiniMap" : "Show MiniMap"}
+							placement="left"
+						>
+							<IconButton
+								onClick={toggleMiniMap}
+								sx={{
+									backgroundColor: "rgba(255, 255, 255, 0.9)",
+									backdropFilter: "blur(12px)",
+									border: "1px solid rgba(226, 232, 240, 0.8)",
+									boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+									borderRadius: "10px",
+									width: "40px",
+									height: "40px",
+									"&:hover": {
+										backgroundColor: alpha("#ffffff", 0.95),
+										boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
+									},
+								}}
+							>
+								{showMiniMap ? (
+									<VisibilityOff color="primary" />
+								) : (
+									<MapIcon color="primary" />
+								)}
+							</IconButton>
+						</Tooltip>
+					</Panel>
 
 					{/* Flow execution progress bar */}
 					{isRunning && (
@@ -604,7 +699,18 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 								zIndex: 20,
 							}}
 						>
-							<LinearProgress variant="determinate" value={progressPercent} />
+							<LinearProgress
+								variant="determinate"
+								value={progressPercent}
+								sx={{
+									height: 6,
+									borderRadius: "0 0 4px 4px",
+									"& .MuiLinearProgress-bar": {
+										backgroundImage:
+											"linear-gradient(to right, #3b82f6, #10b981)",
+									},
+								}}
+							/>
 						</Box>
 					)}
 
@@ -632,17 +738,34 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				/>
 			)}
 
-			{loading && (
-				<LinearProgress
-					style={{
-						position: "absolute",
-						top: 0,
-						left: 0,
-						right: 0,
-						zIndex: 1000,
+			{/* Loading indicator */}
+			<Backdrop
+				sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+				open={loading}
+			>
+				<CircularProgress color="inherit" />
+			</Backdrop>
+
+			{/* Alert Messages */}
+			<Snackbar
+				open={alertInfo.open}
+				autoHideDuration={4000}
+				onClose={() => setAlertInfo((prev) => ({ ...prev, open: false }))}
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+			>
+				<Alert
+					onClose={() => setAlertInfo((prev) => ({ ...prev, open: false }))}
+					severity={alertInfo.severity}
+					variant="filled"
+					sx={{
+						borderRadius: 2,
+						boxShadow: 4,
+						width: "100%",
 					}}
-				/>
-			)}
+				>
+					{alertInfo.message}
+				</Alert>
+			</Snackbar>
 		</Box>
 	);
 };

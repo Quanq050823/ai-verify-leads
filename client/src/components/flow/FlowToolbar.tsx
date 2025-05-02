@@ -13,6 +13,10 @@ import {
 	TextField,
 	Typography,
 	IconButton,
+	Paper,
+	InputAdornment,
+	alpha,
+	Slide,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
@@ -25,7 +29,13 @@ import {
 	ZoomOut,
 	CropFree,
 	Edit,
+	Check,
+	Close,
+	Sync,
+	MoreVert,
+	SaveAlt,
 } from "@mui/icons-material";
+import { TransitionProps } from "@mui/material/transitions";
 
 type FlowToolbarProps = {
 	onSave: () => void;
@@ -40,15 +50,22 @@ type FlowToolbarProps = {
 const ToolbarButton = styled(Button)(({ theme }) => ({
 	minWidth: "40px",
 	padding: theme.spacing(1),
+	borderRadius: "8px",
+	margin: "0 2px",
+	"&:hover": {
+		backgroundColor: alpha(theme.palette.primary.main, 0.08),
+	},
 }));
 
-const ToolbarContainer = styled(Box)(({ theme }) => ({
+const ToolbarContainer = styled(Paper)(({ theme }) => ({
 	display: "flex",
-	backgroundColor: theme.palette.background.paper,
-	borderRadius: theme.shape.borderRadius,
-	boxShadow: theme.shadows[1],
-	border: `1px solid ${theme.palette.divider}`,
+	backgroundColor: alpha(theme.palette.background.paper, 0.85),
+	backdropFilter: "blur(12px)",
+	borderRadius: "14px",
+	boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+	border: `1px solid ${alpha(theme.palette.divider, 0.4)}`,
 	overflow: "hidden",
+	padding: theme.spacing(0.75),
 }));
 
 const FlowNameContainer = styled(Box)(({ theme }) => ({
@@ -57,6 +74,31 @@ const FlowNameContainer = styled(Box)(({ theme }) => ({
 	padding: theme.spacing(0, 2),
 	marginRight: theme.spacing(1),
 }));
+
+const ActionButton = styled(Button)(({ theme }) => ({
+	borderRadius: "10px",
+	boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+	padding: theme.spacing(0.8, 2),
+	transition: "all 0.2s",
+	textTransform: "none",
+	fontWeight: 600,
+	"&:hover": {
+		transform: "translateY(-2px)",
+		boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+	},
+	"&:active": {
+		transform: "translateY(0px)",
+	},
+}));
+
+const Transition = React.forwardRef(function Transition(
+	props: TransitionProps & {
+		children: React.ReactElement<any, any>;
+	},
+	ref: React.Ref<unknown>
+) {
+	return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const FlowToolbar: React.FC<FlowToolbarProps> = ({
 	onSave,
@@ -70,6 +112,7 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 	const { zoomIn, zoomOut, fitView } = useReactFlow();
 	const [renameDialogOpen, setRenameDialogOpen] = useState(false);
 	const [newName, setNewName] = useState(flowName);
+	const [isEditing, setIsEditing] = useState(false);
 
 	const handleRenameClick = () => {
 		setNewName(flowName);
@@ -87,26 +130,97 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 		setRenameDialogOpen(false);
 	};
 
+	const handleInlineEdit = () => {
+		setIsEditing(true);
+		setNewName(flowName);
+	};
+
+	const handleInlineEditSave = () => {
+		if (onRename && newName.trim()) {
+			onRename(newName.trim());
+		}
+		setIsEditing(false);
+	};
+
+	const handleInlineEditCancel = () => {
+		setIsEditing(false);
+	};
+
 	return (
 		<>
-			<ToolbarContainer>
+			<ToolbarContainer elevation={2}>
 				{onRename && (
 					<>
 						<FlowNameContainer>
-							<Typography variant="subtitle1" noWrap sx={{ maxWidth: 200 }}>
-								{flowName}
-							</Typography>
-							<Tooltip title="Rename Flow">
-								<IconButton
-									onClick={handleRenameClick}
-									size="small"
-									sx={{ ml: 1 }}
-								>
-									<Edit fontSize="small" />
-								</IconButton>
-							</Tooltip>
+							{isEditing ? (
+								<Box sx={{ display: "flex", alignItems: "center" }}>
+									<TextField
+										size="small"
+										value={newName}
+										onChange={(e) => setNewName(e.target.value)}
+										autoFocus
+										variant="outlined"
+										sx={{
+											width: "170px",
+											"& .MuiOutlinedInput-root": {
+												borderRadius: "8px",
+											},
+										}}
+										InputProps={{
+											endAdornment: (
+												<InputAdornment position="end">
+													<IconButton
+														edge="end"
+														size="small"
+														onClick={handleInlineEditSave}
+														color="primary"
+													>
+														<Check fontSize="small" />
+													</IconButton>
+													<IconButton
+														edge="end"
+														size="small"
+														onClick={handleInlineEditCancel}
+														color="default"
+													>
+														<Close fontSize="small" />
+													</IconButton>
+												</InputAdornment>
+											),
+										}}
+									/>
+								</Box>
+							) : (
+								<>
+									<Typography
+										variant="subtitle1"
+										noWrap
+										sx={{
+											maxWidth: 170,
+											fontWeight: 600,
+											cursor: "pointer",
+											"&:hover": {
+												color: "primary.main",
+											},
+										}}
+										onClick={handleInlineEdit}
+									>
+										{flowName}
+									</Typography>
+									<Tooltip title="Edit Flow Name">
+										<IconButton
+											onClick={handleInlineEdit}
+											size="small"
+											sx={{ ml: 0.5 }}
+											color="primary"
+										>
+											<Edit fontSize="small" />
+										</IconButton>
+									</Tooltip>
+								</>
+							)}
 						</FlowNameContainer>
-						<Divider orientation="vertical" flexItem />
+						<Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 					</>
 				)}
 
@@ -117,68 +231,92 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 						</ToolbarButton>
 					</Tooltip>
 
-					<Tooltip title="Load Flow">
+					{/* <Tooltip title="Load Flow" arrow>
 						<ToolbarButton onClick={onLoad}>
 							<Upload fontSize="small" />
 						</ToolbarButton>
-					</Tooltip>
+					</Tooltip> */}
 
-					<Tooltip title="Export Flow">
+					<Tooltip title="Export Flow" arrow>
 						<ToolbarButton onClick={onExport}>
-							<Download fontSize="small" />
+							<SaveAlt fontSize="small" />
 						</ToolbarButton>
 					</Tooltip>
 				</ButtonGroup>
 
-				<Divider orientation="vertical" flexItem />
+				{/* <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} /> */}
 
-				<ButtonGroup variant="text" color="inherit">
-					<Tooltip title="Zoom In">
-						<ToolbarButton onClick={() => zoomIn()}>
+				{/* <ButtonGroup variant="text" color="inherit">
+					<Tooltip title="Zoom In" arrow>
+						<ToolbarButton onClick={() => zoomIn({ duration: 300 })}>
 							<ZoomIn fontSize="small" />
 						</ToolbarButton>
 					</Tooltip>
 
-					<Tooltip title="Zoom Out">
-						<ToolbarButton onClick={() => zoomOut()}>
+					<Tooltip title="Zoom Out" arrow>
+						<ToolbarButton onClick={() => zoomOut({ duration: 300 })}>
 							<ZoomOut fontSize="small" />
 						</ToolbarButton>
 					</Tooltip>
 
-					<Tooltip title="Fit View">
-						<ToolbarButton onClick={() => fitView()}>
+					<Tooltip title="Fit View" arrow>
+						<ToolbarButton onClick={() => fitView({ duration: 500 })}>
 							<CropFree fontSize="small" />
 						</ToolbarButton>
 					</Tooltip>
-				</ButtonGroup>
+				</ButtonGroup> */}
 
-				<Divider orientation="vertical" flexItem />
+				<Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
 				<ButtonGroup variant="text" color="inherit">
-					<Tooltip title="Clear Flow">
-						<ToolbarButton onClick={onClear}>
+					<Tooltip title="Clear Flow" arrow>
+						<ToolbarButton onClick={onClear} color="error">
 							<Delete fontSize="small" />
 						</ToolbarButton>
 					</Tooltip>
 				</ButtonGroup>
 
-				<Divider orientation="vertical" flexItem />
+				<Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
-				<Tooltip title="Run Flow">
-					<ToolbarButton
+				<Tooltip title="Execute Flow" arrow>
+					<ActionButton
 						onClick={onRun}
-						color="primary"
 						variant="contained"
-						sx={{ borderRadius: 0 }}
+						color="primary"
+						startIcon={<PlayArrow />}
+						sx={{
+							ml: 0.5,
+							backgroundImage: "linear-gradient(45deg, #3b82f6, #10b981)",
+							transition: "all 0.2s ease",
+						}}
 					>
-						<PlayArrow fontSize="small" />
-					</ToolbarButton>
+						Publish
+					</ActionButton>
 				</Tooltip>
 			</ToolbarContainer>
 
-			<Dialog open={renameDialogOpen} onClose={handleRenameClose}>
-				<DialogTitle>Rename Flow</DialogTitle>
-				<DialogContent>
+			<Dialog
+				open={renameDialogOpen}
+				onClose={handleRenameClose}
+				TransitionComponent={Transition}
+				PaperProps={{
+					elevation: 5,
+					sx: {
+						borderRadius: "12px",
+						overflow: "hidden",
+					},
+				}}
+			>
+				<DialogTitle
+					sx={{
+						bgcolor: "primary.main",
+						color: "white",
+						py: 2,
+					}}
+				>
+					Rename Flow
+				</DialogTitle>
+				<DialogContent sx={{ pt: 3, pb: 2, px: 3 }}>
 					<TextField
 						autoFocus
 						margin="dense"
@@ -187,11 +325,29 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 						fullWidth
 						value={newName}
 						onChange={(e) => setNewName(e.target.value)}
+						variant="outlined"
+						sx={{
+							mt: 1,
+							"& .MuiOutlinedInput-root": {
+								borderRadius: "8px",
+							},
+						}}
 					/>
 				</DialogContent>
-				<DialogActions>
-					<Button onClick={handleRenameClose}>Cancel</Button>
-					<Button onClick={handleRenameConfirm} color="primary">
+				<DialogActions sx={{ px: 3, pb: 2 }}>
+					<Button
+						onClick={handleRenameClose}
+						variant="outlined"
+						sx={{ borderRadius: "8px", textTransform: "none" }}
+					>
+						Cancel
+					</Button>
+					<Button
+						onClick={handleRenameConfirm}
+						color="primary"
+						variant="contained"
+						sx={{ borderRadius: "8px", textTransform: "none" }}
+					>
 						Rename
 					</Button>
 				</DialogActions>

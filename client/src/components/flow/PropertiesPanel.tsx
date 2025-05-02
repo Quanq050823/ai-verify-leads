@@ -1144,6 +1144,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 										toast.success("Facebook connection saved!");
 										onChange(selectedNode.id, {
 											...selectedNode.data,
+											settings: localSettings,
 											webhookSubscribed: true,
 										});
 									}}

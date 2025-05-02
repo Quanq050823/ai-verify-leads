@@ -28,13 +28,7 @@ def google_calendar(self, message):
 
         # Create credentials using the tokens - updated to use caching properly
         credentials = create_credentials(tokens)
-    
-        # Handle token refresh
-        if credentials.expired and credentials.refresh_token:
-            # Use Request() from google.auth.transport.requests
-            credentials.refresh(Request())
-            refresh_tokens_if_needed(credentials, tokens, message, settings["connection"])
-            
+                
         # Build service with credentials but without file cache
         service = build('calendar', 'v3', credentials=credentials, cache_discovery=False)
 
@@ -42,7 +36,6 @@ def google_calendar(self, message):
         socket.setdefaulttimeout(30)  # 30 seconds timeout
         
         # Prepare the time for the event
-        now = datetime.now(timezone.utc) 
         duration_minute = int(settings.get('duration', 1))
         time_zone = 'UTC'
 
@@ -175,7 +168,6 @@ def refresh_tokens_if_needed(credentials, tokens, message, connection):
             'access_token': credentials.token,
             'refresh_token': credentials.refresh_token,
             'expiry_date': credentials.expiry,
-            'refresh_token_expires_in': credentials.refresh_token_expires_in
         })
 
 def extract_meet_link(event):

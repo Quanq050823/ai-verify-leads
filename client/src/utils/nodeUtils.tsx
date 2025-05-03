@@ -25,7 +25,7 @@ export const getNodeIcon = (key: string) => {
 			return <SmartToy fontSize="small" />;
 		case "googleCalendar":
 			return <CalendarMonth fontSize="small" />;
-		case "webhook":
+		case "sendWebhook":
 			return <Webhook fontSize="small" />;
 		case "condition":
 		case "preVerify":
@@ -55,8 +55,8 @@ export const getNodeColor = (key: string) => {
 			return "#10b981";
 		case "googleCalendar":
 			return "#4285f4";
-		case "webhook":
-			return "#2196F3";
+		case "sendWebhook":
+			return "#8b5cf6";
 		case "condition":
 		case "preVerify":
 			return "#f59e0b";

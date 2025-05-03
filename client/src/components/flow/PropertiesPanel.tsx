@@ -23,6 +23,8 @@ import {
 	DialogTitle,
 	Alert,
 	Tooltip,
+	FormControlLabel,
+	Checkbox,
 } from "@mui/material";
 import {
 	Close,
@@ -30,6 +32,7 @@ import {
 	Refresh,
 	Add,
 	Call,
+	Remove,
 } from "@mui/icons-material";
 import {
 	useFacebookConnections,
@@ -70,13 +73,36 @@ interface NodeSettings {
 	provider?: string;
 	subject?: string;
 	template?: string;
-	connectionId?: string;
+	connection?: string;
 	pageId?: string;
 	formId?: string;
 	phoneNumber?: string;
 	callerNumber?: string;
 	attributeJson?: string;
-	[key: string]: string | number | undefined;
+	language?: string;
+	prompt?: string;
+	introduction?: string;
+	questions?: Array<string>;
+	goodByeMessage?: string;
+	calendarName?: string;
+	eventName?: string;
+	startWorkDays?: number;
+	endWorkDays?: number;
+	startTime?: string;
+	endTime?: string;
+	criteria?: Array<{
+		field: string;
+		type: string;
+		operator: string;
+		value: string | boolean | number;
+		mustMet: boolean;
+	}>;
+	[key: string]:
+		| string
+		| number
+		| Array<string>
+		| Array<{ [key: string]: any }>
+		| undefined;
 }
 
 const PanelContainer = styled(Paper)(({ theme }) => ({
@@ -128,29 +154,32 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 
 	const handleRefresh = () => {
 		setRefreshKey((prevKey) => prevKey + 1);
-		toast.info("Đang tải lại danh sách kết nối...");
 	};
 
-	const handleAddConnection = () => {
+	const handleAddConnection = async () => {
 		// Mở cửa sổ mới để kết nối Facebook
 		setIsConnecting(true);
 
-		const { popupWindow, error } = openFacebookConnect();
+		try {
+			const { popupWindow, error } = await openFacebookConnect();
 
-		if (error) {
-			setIsConnecting(false);
-			return;
-		}
-
-		// Theo dõi trạng thái của cửa sổ popup
-		const checkPopup = setInterval(() => {
-			if (popupWindow?.closed) {
-				clearInterval(checkPopup);
+			if (error) {
 				setIsConnecting(false);
-				handleRefresh();
-				toast.success("Đã thêm kết nối Facebook mới!");
+				return;
 			}
-		}, 1000);
+
+			// Theo dõi trạng thái của cửa sổ popup
+			const checkPopup = setInterval(() => {
+				if (popupWindow?.closed) {
+					clearInterval(checkPopup);
+					setIsConnecting(false);
+					handleRefresh();
+				}
+			}, 1000);
+		} catch (err) {
+			console.error("Error connecting to Facebook:", err);
+			setIsConnecting(false);
+		}
 	};
 
 	useEffect(() => {
@@ -274,48 +303,69 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 
 // Facebook Page Select Component
 interface PageSelectProps {
-	connectionId: string | undefined;
+	connection: string | undefined;
 	value: string;
 	onChange: (value: string) => void;
 	disabled?: boolean;
 }
 
 const PageSelect: React.FC<PageSelectProps> = ({
-	connectionId,
+	connection,
 	value,
 	onChange,
 	disabled,
 }) => {
-	const { pages, loading, error } = useFacebookPages(connectionId || null);
+	const [refreshKey, setRefreshKey] = useState<number>(0);
+	const { pages, loading, error } = useFacebookPages(
+		connection || null,
+		refreshKey
+	);
+
+	const handleRefresh = () => {
+		setRefreshKey((prevKey) => prevKey + 1);
+	};
 
 	return (
 		<FormControl fullWidth margin="normal" size="small" disabled={disabled}>
 			<InputLabel>Choose Facebook Page</InputLabel>
-			<Select
-				value={value}
-				onChange={(e) => onChange(e.target.value)}
-				label="Choose Facebook Page"
-				disabled={loading || disabled}
-			>
-				{loading ? (
-					<MenuItem value="">
-						<Box sx={{ display: "flex", alignItems: "center" }}>
-							<CircularProgress size={20} sx={{ mr: 1 }} />
-							Loading...
-						</Box>
-					</MenuItem>
-				) : error ? (
-					<MenuItem value="">Error: {error}</MenuItem>
-				) : pages.length === 0 ? (
-					<MenuItem value="">No Facebook pages found</MenuItem>
-				) : (
-					pages.map((page) => (
-						<MenuItem key={page.id} value={page.id}>
-							{page.name}
+			<Box sx={{ display: "flex", width: "100%" }}>
+				<Select
+					value={value}
+					onChange={(e) => onChange(e.target.value)}
+					label="Choose Facebook Page"
+					disabled={loading || disabled}
+					sx={{ flex: 1 }}
+				>
+					{loading ? (
+						<MenuItem value="">
+							<Box sx={{ display: "flex", alignItems: "center" }}>
+								<CircularProgress size={20} sx={{ mr: 1 }} />
+								Loading...
+							</Box>
 						</MenuItem>
-					))
-				)}
-			</Select>
+					) : error ? (
+						<MenuItem value="">Error: {error}</MenuItem>
+					) : pages.length === 0 ? (
+						<MenuItem value="">No Facebook pages found</MenuItem>
+					) : (
+						pages.map((page) => (
+							<MenuItem key={page.id} value={page.id}>
+								{page.name}
+							</MenuItem>
+						))
+					)}
+				</Select>
+				<Tooltip title="Refresh pages">
+					<IconButton
+						onClick={handleRefresh}
+						size="small"
+						sx={{ ml: 1 }}
+						disabled={loading || disabled}
+					>
+						<Refresh fontSize="small" />
+					</IconButton>
+				</Tooltip>
+			</Box>
 		</FormControl>
 	);
 };
@@ -334,36 +384,57 @@ const FormSelect: React.FC<FormSelectProps> = ({
 	onChange,
 	disabled,
 }) => {
-	const { forms, loading, error } = useFacebookForms(pageId || null);
+	const [refreshKey, setRefreshKey] = useState<number>(0);
+	const { forms, loading, error } = useFacebookForms(
+		pageId || null,
+		refreshKey
+	);
+
+	const handleRefresh = () => {
+		setRefreshKey((prevKey) => prevKey + 1);
+	};
 
 	return (
 		<FormControl fullWidth margin="normal" size="small" disabled={disabled}>
 			<InputLabel>Choose Lead Form</InputLabel>
-			<Select
-				value={value}
-				onChange={(e) => onChange(e.target.value)}
-				label="Choose Lead Form"
-				disabled={loading || disabled}
-			>
-				{loading ? (
-					<MenuItem value="">
-						<Box sx={{ display: "flex", alignItems: "center" }}>
-							<CircularProgress size={20} sx={{ mr: 1 }} />
-							Loading...
-						</Box>
-					</MenuItem>
-				) : error ? (
-					<MenuItem value="">Error: {error}</MenuItem>
-				) : forms.length === 0 ? (
-					<MenuItem value="">No lead forms found</MenuItem>
-				) : (
-					forms.map((form) => (
-						<MenuItem key={form.id} value={form.id}>
-							{form.name}
+			<Box sx={{ display: "flex", width: "100%" }}>
+				<Select
+					value={value}
+					onChange={(e) => onChange(e.target.value)}
+					label="Choose Lead Form"
+					disabled={loading || disabled}
+					sx={{ flex: 1 }}
+				>
+					{loading ? (
+						<MenuItem value="">
+							<Box sx={{ display: "flex", alignItems: "center" }}>
+								<CircularProgress size={20} sx={{ mr: 1 }} />
+								Loading...
+							</Box>
 						</MenuItem>
-					))
-				)}
-			</Select>
+					) : error ? (
+						<MenuItem value="">Error: {error}</MenuItem>
+					) : forms.length === 0 ? (
+						<MenuItem value="">No lead forms found</MenuItem>
+					) : (
+						forms.map((form) => (
+							<MenuItem key={form.id} value={form.id}>
+								{form.name}
+							</MenuItem>
+						))
+					)}
+				</Select>
+				<Tooltip title="Refresh forms">
+					<IconButton
+						onClick={handleRefresh}
+						size="small"
+						sx={{ ml: 1 }}
+						disabled={loading || disabled}
+					>
+						<Refresh fontSize="small" />
+					</IconButton>
+				</Tooltip>
+			</Box>
 		</FormControl>
 	);
 };
@@ -516,19 +587,19 @@ const WebhookDialog: React.FC<WebhookDialogProps> = ({
 // Add new WebhookSection component
 interface WebhookSectionProps {
 	pageId: string;
-	connectionId?: string;
+	connection?: string;
 	isSubscribed: boolean;
 	onUpdate: (subscribed: boolean) => void;
 }
 
 const WebhookSection: React.FC<WebhookSectionProps> = ({
 	pageId,
-	connectionId,
+	connection,
 	isSubscribed,
 	onUpdate,
 }) => {
 	const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-	const { pages } = useFacebookPages(connectionId || null);
+	const { pages } = useFacebookPages(connection || null);
 	const page = pages.find((p) => p.id === pageId);
 	const pageName = page?.name || "Selected Page";
 
@@ -596,14 +667,15 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 
 	const handleRefresh = () => {
 		setRefreshKey((prevKey) => prevKey + 1);
-		toast.info("Đang tải lại danh sách kết nối...");
 	};
 
-	const handleAddConnection = () => {
+	const handleAddConnection = async () => {
 		// Mở cửa sổ mới để kết nối Google Calendar
 		setIsConnecting(true);
 
-		openGoogleCalendarConnect().then(({ popupWindow, error }) => {
+		try {
+			const { popupWindow, error } = await openGoogleCalendarConnect();
+
 			if (error) {
 				setIsConnecting(false);
 				return;
@@ -617,7 +689,10 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 					handleRefresh();
 				}
 			}, 1000);
-		});
+		} catch (err) {
+			console.error("Error connecting to Google Calendar:", err);
+			setIsConnecting(false);
+		}
 	};
 
 	useEffect(() => {
@@ -640,12 +715,12 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 	return (
 		<>
 			<FormControl fullWidth margin="normal" size="small">
-				<InputLabel>Choose Google Calendar Connection</InputLabel>
+				<InputLabel>Google Calendar Connection</InputLabel>
 				<Box sx={{ display: "flex", width: "100%" }}>
 					<Select
 						value={value}
 						onChange={(e) => onChange(e.target.value)}
-						label="Choose Google Calendar Connection"
+						label="Google Calendar Connection"
 						disabled={loading}
 						sx={{ flex: 1 }}
 					>
@@ -739,6 +814,107 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 	);
 };
 
+// Function to get operators based on type
+const getOperatorsForType = (type: string) => {
+	switch (type) {
+		case "string":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "contains", label: "Contains" },
+				{ value: "startsWith", label: "Starts With" },
+				{ value: "endsWith", label: "Ends With" },
+				{ value: "isEmpty", label: "Is Empty" },
+				{ value: "isNotEmpty", label: "Is Not Empty" },
+			];
+		case "number":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "greaterThan", label: "Greater Than" },
+				{ value: "greaterThanOrEqual", label: "Greater Than or Equal" },
+				{ value: "lessThan", label: "Less Than" },
+				{ value: "lessThanOrEqual", label: "Less Than or Equal" },
+				{ value: "between", label: "Between" },
+			];
+		case "email":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "contains", label: "Contains" },
+				{ value: "domainEquals", label: "Domain Equals" },
+				{ value: "isValid", label: "Is Valid Email" },
+			];
+		case "phone":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "startsWith", label: "Starts With" },
+				{ value: "isValid", label: "Is Valid Phone" },
+				{ value: "countryCode", label: "Has Country Code" },
+			];
+		case "date":
+			return [
+				{ value: "equals", label: "Equals" },
+				{ value: "notEquals", label: "Not Equals" },
+				{ value: "before", label: "Before" },
+				{ value: "after", label: "After" },
+				{ value: "between", label: "Between" },
+			];
+		case "boolean":
+			return [
+				{ value: "isTrue", label: "Is True" },
+				{ value: "isFalse", label: "Is False" },
+			];
+		default:
+			return [{ value: "equals", label: "Equals" }];
+	}
+};
+
+// Function to determine if value input should be shown
+const shouldShowValueInput = (operator: string) => {
+	return !["isEmpty", "isNotEmpty", "isValid", "isTrue", "isFalse"].includes(
+		operator
+	);
+};
+
+// Add these utility functions before the PropertiesPanel component
+const dayNameToNumber = (dayName: string): number => {
+	const days = [
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday",
+		"Saturday",
+		"Sunday",
+	];
+	return days.indexOf(dayName);
+};
+
+const dayNumberToName = (dayNumber: number): string => {
+	const days = [
+		"Monday",
+		"Tuesday",
+		"Wednesday",
+		"Thursday",
+		"Friday",
+		"Saturday",
+		"Sunday",
+	];
+	return days[dayNumber];
+};
+
+const daysOfWeek = [
+	{ value: 0, label: "Monday" },
+	{ value: 1, label: "Tuesday" },
+	{ value: 2, label: "Wednesday" },
+	{ value: 3, label: "Thursday" },
+	{ value: 4, label: "Friday" },
+	{ value: 5, label: "Saturday" },
+	{ value: 6, label: "Sunday" },
+];
+
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	selectedNode,
 	onChange,
@@ -758,11 +934,80 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	useEffect(() => {
 		if (selectedNode) {
 			const nodeSettings = selectedNode.data?.settings || {};
-			setLocalSettings(nodeSettings as NodeSettings);
+
+			// Khởi tạo giá trị mặc định cho node aiCall mới
+			if (
+				selectedNode.type === "aiCall" &&
+				Object.keys(nodeSettings).length === 0
+			) {
+				setLocalSettings({
+					language: "english",
+					prompt: "",
+					introduction: "",
+					questions: [""],
+					goodByeMessage: "",
+				});
+			}
+			// Khởi tạo giá trị mặc định cho node googleCalendar mới
+			else if (
+				selectedNode.type === "googleCalendar" &&
+				Object.keys(nodeSettings).length === 0
+			) {
+				setLocalSettings({
+					calendarName: "",
+					eventName: "",
+					startWorkDays: 0,
+					endWorkDays: 4,
+					startTime: "09:00",
+					endTime: "17:00",
+					duration: 30,
+				});
+			}
+			// Khởi tạo giá trị mặc định cho node preVerify mới
+			else if (
+				selectedNode.type === "preVerify" &&
+				Object.keys(nodeSettings).length === 0
+			) {
+				setLocalSettings({
+					criteria: [
+						{
+							field: "email",
+							type: "email",
+							operator: "isValid",
+							value: "",
+							mustMet: true,
+						},
+						{
+							field: "phone",
+							type: "phone",
+							operator: "isValid",
+							value: "",
+							mustMet: true,
+						},
+					],
+				});
+			}
+			// Khởi tạo giá trị mặc định cho node Facebook Lead Ads mới
+			else if (
+				(selectedNode.type === "facebookLeadAds" ||
+					selectedNode.type === "facebookAds") &&
+				Object.keys(nodeSettings).length === 0
+			) {
+				setLocalSettings({
+					connection: "",
+					pageId: "",
+					formId: "",
+				});
+			} else {
+				setLocalSettings(nodeSettings as NodeSettings);
+			}
 		}
 	}, [selectedNode]);
 
-	const updateSettings = (key: string, value: string | number) => {
+	const updateSettings = (
+		key: string,
+		value: string | number | Array<string> | Array<{ [key: string]: any }>
+	) => {
 		const updatedSettings = { ...localSettings, [key]: value };
 		setLocalSettings(updatedSettings);
 
@@ -794,8 +1039,16 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			return;
 		}
 
-		// Parse attribute JSON
-		let attribute = {};
+		// Tạo attribute dựa trên các trường mới
+		let attribute = {
+			language: localSettings.language || "vietnamese",
+			prompt: localSettings.prompt || "",
+			introduction: localSettings.introduction || "",
+			questions: localSettings.questions || [""],
+			goodByeMessage: localSettings.goodByeMessage || "",
+		};
+
+		// Nếu có attributeJson, sử dụng nó thay thế
 		if (localSettings.attributeJson) {
 			try {
 				attribute = JSON.parse(localSettings.attributeJson);
@@ -803,11 +1056,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				toast.error("Lỗi định dạng JSON cho trường attribute!");
 				return;
 			}
-		} else {
-			// Fallback to prompt if no attribute provided
-			attribute = {
-				prompt: localSettings.promptTemplate,
-			};
 		}
 
 		try {
@@ -867,29 +1115,16 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			case "facebookLeadAds":
 				return (
 					<>
-						<TextField
-							fullWidth
-							size="small"
-							label="Input Prompt"
-							variant="outlined"
-							margin="normal"
-							multiline
-							rows={2}
-							value={localSettings.promptTemplate || ""}
-							onChange={handleTextChange("promptTemplate")}
-							placeholder="Enter prompt message"
-						/>
-
 						<ConnectionSelect
-							value={localSettings.connectionId || ""}
-							onChange={(value) => updateSettings("connectionId", value)}
+							value={localSettings.connection || ""}
+							onChange={(value) => updateSettings("connection", value)}
 						/>
 
 						<PageSelect
-							connectionId={localSettings.connectionId}
+							connection={localSettings.connection}
 							value={localSettings.pageId || ""}
 							onChange={(value) => updateSettings("pageId", value)}
-							disabled={!localSettings.connectionId}
+							disabled={!localSettings.connection}
 						/>
 
 						<FormSelect
@@ -900,17 +1135,23 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 						/>
 
 						{localSettings.pageId && (
-							<WebhookSection
-								pageId={localSettings.pageId}
-								connectionId={localSettings.connectionId}
-								isSubscribed={!!selectedNode.data?.webhookSubscribed}
-								onUpdate={(subscribed) => {
-									onChange(selectedNode.id, {
-										...selectedNode.data,
-										webhookSubscribed: subscribed,
-									});
-								}}
-							/>
+							<Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+								<Button
+									variant="contained"
+									color="primary"
+									startIcon={<NotificationImportant />}
+									onClick={() => {
+										toast.success("Facebook connection saved!");
+										onChange(selectedNode.id, {
+											...selectedNode.data,
+											settings: localSettings,
+											webhookSubscribed: true,
+										});
+									}}
+								>
+									Save Connection
+								</Button>
+							</Box>
 						)}
 					</>
 				);
@@ -918,104 +1159,118 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			case "aiCall":
 				return (
 					<>
+						<FormControl fullWidth margin="normal" size="small">
+							<InputLabel>Language</InputLabel>
+							<Select
+								value={localSettings.language || "vietnamese"}
+								onChange={handleSelectChange("language")}
+								label="Language"
+							>
+								<MenuItem value="vietnamese">Tiếng Việt</MenuItem>
+								<MenuItem value="english">English</MenuItem>
+							</Select>
+						</FormControl>
+
 						<TextField
 							fullWidth
 							size="small"
-							label="Prompt Template"
+							label="Prompt"
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={3}
-							value={localSettings.promptTemplate || ""}
-							onChange={handleTextChange("promptTemplate")}
-							placeholder="Enter prompt template"
+							rows={2}
+							value={localSettings.prompt || ""}
+							onChange={handleTextChange("prompt")}
+							placeholder="Enter prompt"
 						/>
 
 						<TextField
 							fullWidth
 							size="small"
-							label="Attribute (JSON)"
+							label="Introduction"
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={4}
-							value={localSettings.attributeJson || ""}
-							onChange={handleTextChange("attributeJson")}
-							placeholder='{"key1": "value1", "key2": "value2", ...}'
-							helperText="Nhập JSON cho attribute (nếu để trống sẽ sử dụng prompt ở trên)"
+							rows={2}
+							value={localSettings.introduction || ""}
+							onChange={handleTextChange("introduction")}
+							placeholder="Enter introduction message"
 						/>
 
-						<Divider sx={{ my: 2 }}>
-							<Chip label="Test Call Settings" />
-						</Divider>
+						<Box sx={{ mt: 2, mb: 1 }}>
+							<Divider>
+								<Chip label="Questions" />
+							</Divider>
+						</Box>
 
-						<TextField
-							fullWidth
-							size="small"
-							label="Phone Number"
-							variant="outlined"
-							margin="normal"
-							value={localSettings.phoneNumber || ""}
-							onChange={handleTextChange("phoneNumber")}
-							placeholder="Enter phone number to call"
-						/>
-						<TextField
-							fullWidth
-							size="small"
-							label="Caller Number"
-							variant="outlined"
-							margin="normal"
-							value={localSettings.callerNumber || ""}
-							onChange={handleTextChange("callerNumber")}
-							placeholder="Enter caller number"
-						/>
-
-						<Button
-							variant="contained"
-							color="primary"
-							fullWidth
-							startIcon={<Call />}
-							onClick={handleTestCall}
-							disabled={isTestingCall}
-							sx={{ mt: 2 }}
-						>
-							{isTestingCall ? (
-								<CircularProgress size={24} color="inherit" />
-							) : (
-								"Test Call"
-							)}
-						</Button>
-
-						<Dialog
-							open={openCallResultDialog}
-							onClose={() => setOpenCallResultDialog(false)}
-							maxWidth="md"
-							fullWidth
-						>
-							<DialogTitle>Kết quả cuộc gọi thử nghiệm</DialogTitle>
-							<DialogContent>
-								{callResult && (
-									<Box sx={{ mt: 2 }}>
-										<pre
-											style={{
-												backgroundColor: "#f5f5f5",
-												padding: "16px",
-												borderRadius: "4px",
-												overflow: "auto",
-												maxHeight: "300px",
+						{/* Render questions dynamically */}
+						{(localSettings.questions || [""]).map((question, index) => (
+							<Box
+								key={index}
+								sx={{ display: "flex", mb: 3, alignItems: "center" }}
+							>
+								<TextField
+									fullWidth
+									size="small"
+									label={`Question ${index + 1}`}
+									variant="outlined"
+									value={question}
+									onChange={(e) => {
+										const newQuestions = [...(localSettings.questions || [""])];
+										newQuestions[index] = e.target.value;
+										updateSettings("questions", newQuestions);
+									}}
+								/>
+								<Box sx={{ display: "flex", ml: 1 }}>
+									{(localSettings.questions || [""]).length > 1 && (
+										<IconButton
+											size="small"
+											color="error"
+											onClick={() => {
+												const newQuestions = [
+													...(localSettings.questions || [""]),
+												];
+												newQuestions.splice(index, 1);
+												updateSettings("questions", newQuestions);
 											}}
 										>
-											{JSON.stringify(callResult, null, 2)}
-										</pre>
-									</Box>
-								)}
-							</DialogContent>
-							<DialogActions>
-								<Button onClick={() => setOpenCallResultDialog(false)}>
-									Đóng
-								</Button>
-							</DialogActions>
-						</Dialog>
+											<Close fontSize="small" />
+										</IconButton>
+									)}
+								</Box>
+							</Box>
+						))}
+
+						{/* Add question button */}
+						<Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<Add />}
+								onClick={() => {
+									const newQuestions = [
+										...(localSettings.questions || [""]),
+										"",
+									];
+									updateSettings("questions", newQuestions);
+								}}
+							>
+								Thêm câu hỏi
+							</Button>
+						</Box>
+
+						<TextField
+							fullWidth
+							size="small"
+							label="Goodbye Message"
+							variant="outlined"
+							margin="normal"
+							multiline
+							rows={2}
+							value={localSettings.goodByeMessage || ""}
+							onChange={handleTextChange("goodByeMessage")}
+							placeholder="Enter goodbye message"
+						/>
 					</>
 				);
 
@@ -1023,38 +1278,196 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				return (
 					<>
 						<CalendarConnectionSelect
-							value={localSettings.connectionId || ""}
-							onChange={(value) => updateSettings("connectionId", value)}
+							value={localSettings.connection || ""}
+							onChange={(value) => updateSettings("connection", value)}
 						/>
+
+						<TextField
+							fullWidth
+							size="small"
+							label="Calendar Name"
+							variant="outlined"
+							margin="normal"
+							value={localSettings.calendarName || ""}
+							onChange={handleTextChange("calendarName")}
+							placeholder="Enter calendar name"
+							required
+						/>
+
+						<TextField
+							fullWidth
+							size="small"
+							label="Event Name"
+							variant="outlined"
+							margin="normal"
+							value={localSettings.eventName || ""}
+							onChange={handleTextChange("eventName")}
+							placeholder="Enter event name"
+						/>
+
+						<Box sx={{ mt: 2, mb: 1 }}>
+							<Divider>
+								<Chip label="Working Days" />
+							</Divider>
+						</Box>
+
+						<FormControl fullWidth margin="normal" size="small">
+							<InputLabel>Start Work Day</InputLabel>
+							<Select
+								value={
+									localSettings.startWorkDays !== undefined
+										? localSettings.startWorkDays
+										: 0
+								}
+								onChange={(e) => {
+									updateSettings("startWorkDays", Number(e.target.value));
+								}}
+								label="Start Work Day"
+							>
+								{daysOfWeek.map((day) => (
+									<MenuItem key={day.value} value={day.value}>
+										{day.label}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+
+						<FormControl fullWidth margin="normal" size="small">
+							<InputLabel>End Work Day</InputLabel>
+							<Select
+								value={
+									localSettings.endWorkDays !== undefined
+										? localSettings.endWorkDays
+										: 4
+								}
+								onChange={(e) => {
+									updateSettings("endWorkDays", Number(e.target.value));
+								}}
+								label="End Work Day"
+							>
+								{daysOfWeek.map((day) => (
+									<MenuItem key={day.value} value={day.value}>
+										{day.label}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+
+						<Box sx={{ mt: 2, mb: 1 }}>
+							<Divider>
+								<Chip label="Working Hours" />
+							</Divider>
+						</Box>
+
+						<Box sx={{ display: "flex", gap: 2 }}>
+							<TextField
+								fullWidth
+								size="small"
+								label="Start Time"
+								type="time"
+								variant="outlined"
+								margin="normal"
+								value={localSettings.startTime || "09:00"}
+								onChange={handleTextChange("startTime")}
+								InputLabelProps={{ shrink: true }}
+								inputProps={{ step: 300 }}
+							/>
+
+							<TextField
+								fullWidth
+								size="small"
+								label="End Time"
+								type="time"
+								variant="outlined"
+								margin="normal"
+								value={localSettings.endTime || "17:00"}
+								onChange={handleTextChange("endTime")}
+								InputLabelProps={{ shrink: true }}
+								inputProps={{ step: 300 }}
+							/>
+						</Box>
+
+						<Box sx={{ mt: 2, mb: 2 }}>
+							<Typography variant="subtitle2" gutterBottom>
+								Duration (minutes)
+							</Typography>
+							<Box
+								sx={{
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									gap: 2,
+								}}
+							>
+								<IconButton
+									color="primary"
+									onClick={() => {
+										const currentValue = parseInt(
+											String(localSettings.duration || 30)
+										);
+										if (currentValue >= 10) {
+											// Không cho phép giảm dưới 5 phút
+											updateSettings("duration", currentValue - 5);
+										}
+									}}
+								>
+									<Remove />
+								</IconButton>
+
+								<Box
+									sx={{
+										width: "80px",
+										textAlign: "center",
+										padding: "8px 12px",
+										border: "1px solid #e0e0e0",
+										borderRadius: "4px",
+										fontSize: "16px",
+										fontWeight: "bold",
+										backgroundColor: "#f5f5f5",
+									}}
+								>
+									{localSettings.duration || 30}
+								</Box>
+
+								<IconButton
+									color="primary"
+									onClick={() => {
+										const currentValue = parseInt(
+											String(localSettings.duration || 0)
+										);
+										updateSettings("duration", currentValue + 5);
+									}}
+								>
+									<Add />
+								</IconButton>
+							</Box>
+							<Typography
+								variant="caption"
+								color="text.secondary"
+								align="center"
+								sx={{ display: "block", mt: 1 }}
+							>
+								Meeting Duration (minutes)
+							</Typography>
+						</Box>
 					</>
 				);
 
 			case "webhook":
 				return (
 					<>
-						<TextField
-							fullWidth
-							size="small"
-							label="Webhook URL"
-							variant="outlined"
-							margin="normal"
-							value={localSettings.webhookUrl || ""}
-							onChange={handleTextChange("webhookUrl")}
-							placeholder="Enter webhook URL"
-						/>
-						<FormControl fullWidth margin="normal" size="small">
-							<InputLabel>Method</InputLabel>
-							<Select
-								value={localSettings.method || "POST"}
-								onChange={handleSelectChange("method")}
-								label="Method"
+						<Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+							<Button
+								variant="contained"
+								color="primary"
+								onClick={() => {
+									toast.success("Webhook settings saved!");
+								}}
+								startIcon={<NotificationImportant />}
 							>
-								<MenuItem value="GET">GET</MenuItem>
-								<MenuItem value="POST">POST</MenuItem>
-								<MenuItem value="PUT">PUT</MenuItem>
-								<MenuItem value="DELETE">DELETE</MenuItem>
-							</Select>
-						</FormControl>
+								Save Webhook
+							</Button>
+						</Box>
 					</>
 				);
 
@@ -1164,6 +1577,243 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							onChange={handleTextChange("template")}
 							placeholder="Enter SMS template"
 						/>
+					</>
+				);
+
+			case "preVerify":
+				return (
+					<>
+						<Typography variant="subtitle2" gutterBottom>
+							Configure Pre-verification Criteria
+						</Typography>
+
+						{/* Danh sách các tiêu chí */}
+						{(
+							localSettings.criteria || [
+								{
+									field: "",
+									type: "string",
+									operator: "equals",
+									value: "",
+									mustMet: true,
+								},
+							]
+						).map((criterion, index) => (
+							<Box
+								key={index}
+								sx={{
+									border: "1px solid #e0e0e0",
+									borderRadius: "4px",
+									p: 2,
+									mb: 2,
+									backgroundColor: "#fafafa",
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "space-between",
+										mb: 1,
+									}}
+								>
+									<Typography variant="body2" fontWeight="bold">
+										Criteria #{index + 1}
+									</Typography>
+									{(localSettings.criteria || []).length > 1 && (
+										<IconButton
+											size="small"
+											color="error"
+											onClick={() => {
+												const newCriteria = [...(localSettings.criteria || [])];
+												newCriteria.splice(index, 1);
+												updateSettings("criteria", newCriteria);
+											}}
+										>
+											<Close fontSize="small" />
+										</IconButton>
+									)}
+								</Box>
+
+								<TextField
+									fullWidth
+									size="small"
+									label="Field"
+									variant="outlined"
+									margin="normal"
+									value={criterion.field || ""}
+									onChange={(e) => {
+										const newCriteria = [...(localSettings.criteria || [])];
+										newCriteria[index] = {
+											...newCriteria[index],
+											field: e.target.value,
+										};
+										updateSettings("criteria", newCriteria);
+									}}
+									placeholder="Enter field name (e.g. email, phone)"
+								/>
+
+								<FormControl fullWidth margin="normal" size="small">
+									<InputLabel>Type</InputLabel>
+									<Select
+										value={criterion.type || "string"}
+										onChange={(e) => {
+											const newCriteria = [...(localSettings.criteria || [])];
+											// Update type
+											const newType = e.target.value as string;
+											// Set default operator for this type
+											const defaultOperator =
+												getOperatorsForType(newType)[0].value;
+
+											newCriteria[index] = {
+												...newCriteria[index],
+												type: newType,
+												operator: defaultOperator,
+											};
+											updateSettings("criteria", newCriteria);
+										}}
+										label="Type"
+									>
+										<MenuItem value="string">String</MenuItem>
+										<MenuItem value="number">Number</MenuItem>
+										<MenuItem value="email">Email</MenuItem>
+										<MenuItem value="phone">Phone</MenuItem>
+										<MenuItem value="date">Date</MenuItem>
+										<MenuItem value="boolean">Boolean</MenuItem>
+									</Select>
+								</FormControl>
+
+								<FormControl fullWidth margin="normal" size="small">
+									<InputLabel>Operator</InputLabel>
+									<Select
+										value={criterion.operator || "equals"}
+										onChange={(e) => {
+											const newCriteria = [...(localSettings.criteria || [])];
+											newCriteria[index] = {
+												...newCriteria[index],
+												operator: e.target.value,
+												// Reset value if changing to an operator that doesn't need a value
+												...(shouldShowValueInput(e.target.value as string)
+													? {}
+													: { value: "" }),
+											};
+											updateSettings("criteria", newCriteria);
+										}}
+										label="Operator"
+									>
+										{getOperatorsForType(criterion.type || "string").map(
+											(op) => (
+												<MenuItem key={op.value} value={op.value}>
+													{op.label}
+												</MenuItem>
+											)
+										)}
+									</Select>
+								</FormControl>
+
+								{shouldShowValueInput(criterion.operator || "equals") && (
+									<TextField
+										fullWidth
+										size="small"
+										label="Value"
+										variant="outlined"
+										margin="normal"
+										type={
+											criterion.type === "number"
+												? "number"
+												: criterion.type === "date"
+												? "date"
+												: "text"
+										}
+										value={criterion.value || ""}
+										onChange={(e) => {
+											const newCriteria = [...(localSettings.criteria || [])];
+											let newValue: string | number | boolean = e.target.value;
+
+											// Convert value based on type
+											if (criterion.type === "number" && e.target.value) {
+												newValue = Number(e.target.value);
+											} else if (criterion.type === "boolean") {
+												newValue = e.target.value === "true";
+											}
+
+											newCriteria[index] = {
+												...newCriteria[index],
+												value: newValue,
+											};
+											updateSettings("criteria", newCriteria);
+										}}
+										placeholder={
+											criterion.type === "date"
+												? "Select date"
+												: criterion.type === "number"
+												? "Enter numeric value"
+												: "Enter comparison value"
+										}
+										InputLabelProps={
+											criterion.type === "date" ? { shrink: true } : undefined
+										}
+									/>
+								)}
+
+								<FormControlLabel
+									control={
+										<Checkbox
+											checked={criterion.mustMet}
+											onChange={(e) => {
+												const newCriteria = [...(localSettings.criteria || [])];
+												newCriteria[index] = {
+													...newCriteria[index],
+													mustMet: e.target.checked,
+												};
+												updateSettings("criteria", newCriteria);
+											}}
+											size="small"
+										/>
+									}
+									label="Must be met for verification to succeed"
+								/>
+							</Box>
+						))}
+
+						{/* Nút thêm tiêu chí */}
+						<Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<Add />}
+								onClick={() => {
+									const newCriteria = [
+										...(localSettings.criteria || []),
+										{
+											field: "",
+											type: "string",
+											operator: "equals",
+											value: "",
+											mustMet: true,
+										},
+									];
+									updateSettings("criteria", newCriteria);
+								}}
+							>
+								Add Criteria
+							</Button>
+						</Box>
+
+						<Box
+							sx={{
+								mt: 2,
+								p: 2,
+								backgroundColor: "#f5f5f5",
+								borderRadius: "4px",
+							}}
+						>
+							<Typography variant="caption" color="text.secondary">
+								Configure criteria to pre-verify leads before further
+								processing. Each criteria evaluates a field against the
+								specified value based on its data type and chosen operator. You
+								can mark criteria as "must be met" for essential requirements.
+							</Typography>
+						</Box>
 					</>
 				);
 

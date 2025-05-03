@@ -9,8 +9,8 @@ import { calendar } from "googleapis/build/src/apis/calendar/index.js";
 
 export function getOAuth2Client() {
     return new google.auth.OAuth2(
-        config.googleAuthConfig.clientId,
-        config.googleAuthConfig.clientSecret,
+        config.googleAuthConfig.calendarClientId,
+        config.googleAuthConfig.calendarClientSecret,
         config.googleAuthConfig.calendarRedirectUri
     );
 }

@@ -38,6 +38,9 @@ const config = {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         googleRedirectUri: `${process.env.GOOGLE_REDIRECT_URI}`,
+
+        calendarClientId: process.env.GOOGLE_CALENDAR_CLIENT_ID,
+        calendarClientSecret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
         calendarRedirectUri: `${process.env.GOOGLE_CALENDAR_REDIRECT_URI}`,
     },
     facebookAuthConfig: {

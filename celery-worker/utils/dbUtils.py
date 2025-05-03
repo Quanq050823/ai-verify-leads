@@ -46,7 +46,7 @@ def get_user_calendar_conn(message, connectionId):
     connections = user["calendarConnection"]
     conn = {}
     for connection in connections:
-        if connection["_id"] == ObjectId(connectionId):
+        if connection["profile"]["id"] == connectionId:
             conn = connection
             # print (f"settings: {conn}")
             break
@@ -64,8 +64,10 @@ def update_tokens(userId, connectionId, tokens):
     
     connections = user["calendarConnection"]
     for connection in connections:
-        if connection["_id"] == ObjectId(connectionId):
-            connection["tokens"] = tokens
+        if connection["profile"]["id"] == connectionId:
+            connection["tokens"]["access_token"] = tokens["access_token"]
+            connection["tokens"]["refresh_token"] = tokens["refresh_token"]
+            connection["tokens"]["expiry_date"] = tokens["expiry_date"]
             break
     
     collection.update_one({"_id": ObjectId(userId)}, {"$set": {"calendarConnection": connections}})

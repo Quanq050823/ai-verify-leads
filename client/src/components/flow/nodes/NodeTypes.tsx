@@ -63,6 +63,7 @@ export const AICallNode = memo(({ data, selected, id }: any) => {
 				type: "Process",
 				subType: "AI",
 				color: "#10B981",
+				outputs: 2,
 			}}
 			selected={selected}
 			id={id}

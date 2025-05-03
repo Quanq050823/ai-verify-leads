@@ -212,9 +212,10 @@ export const resetQueue = async () => {
 export const getFacebookLeadFlow = async (pageId, formId) => {
     try {
         const flow = await Flow.find({
+            status: 2,
             "nodeData.nodes.type": "facebookLeadAds",
-            "nodeData.nodes.data.settings.page": pageId,
-            "nodeData.nodes.data.settings.form": formId,
+            "nodeData.nodes.data.settings.pageId": pageId,
+            "nodeData.nodes.data.settings.formId": formId,
         });
         if (!flow) {
             console.log("Flow not found for the given pageId and formId.");

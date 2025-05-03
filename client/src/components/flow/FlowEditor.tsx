@@ -86,7 +86,7 @@ const nodeTypes = {
 	facebookLeadAds: FacebookAdsNode,
 	aiCall: AICallNode,
 	googleCalendar: CalendarNode,
-	webhook: WebhookNode,
+	sendWebhook: WebhookNode,
 	condition: ConditionNode,
 	preVerify: ConditionNode,
 	email: EmailNode,
@@ -233,8 +233,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "AI Call";
 			case "googleCalendar":
 				return "Google Calendar";
-			case "webhook":
-				return "Webhook";
+			case "sendWebhook":
+				return "Send to webhook";
 			case "condition":
 				return "Condition";
 			case "preVerify":
@@ -266,8 +266,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Process data with AI";
 			case "googleCalendar":
 				return "Schedule appointments";
-			case "webhook":
-				return "Send data to external system";
+			case "sendWebhook":
+				return "Send lead data to a webhook";
 			case "condition":
 				return "Branch based on conditions";
 			case "preVerify":
@@ -619,7 +619,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 									case "facebookAds":
 										return "#3B82F6";
 									case "aiCall":
-									case "webhook":
+									case "sendWebhook":
 									case "googleCalendar":
 										return "#10B981";
 									case "condition":

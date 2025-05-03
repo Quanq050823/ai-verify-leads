@@ -244,7 +244,8 @@ const categorizeNodes = (nodes: NodeType[]): NodeCategory[] => {
 		} else if (
 			nodeKey.includes("Call") ||
 			nodeKey.includes("Verify") ||
-			nodeKey.includes("webhook") ||
+			nodeKey.includes("Webhook") ||
+			nodeKey.includes("sendWebhook") ||
 			nodeKey.includes("condition") ||
 			nodeKey.includes("googleCalendar")
 		) {
@@ -315,10 +316,10 @@ const fallbackNodeCategories: NodeCategory[] = [
 				color: getNodeColor("googleCalendar"),
 			},
 			{
-				type: "webhook",
-				label: "Webhook",
-				icon: getNodeIcon("webhook"),
-				color: getNodeColor("webhook"),
+				type: "sendWebhook",
+				label: "Send to webhook",
+				icon: getNodeIcon("sendWebhook"),
+				color: getNodeColor("sendWebhook"),
 			},
 			{
 				type: "condition",

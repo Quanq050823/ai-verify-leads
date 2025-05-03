@@ -122,10 +122,10 @@ const getActionName = (type: string): string => {
 			return "Get Lead";
 		case "aicall":
 			return "Process AI";
-		case "googleCalendar":
+		case "googlecalendar":
 			return "Schedule Event";
-		case "webhook":
-			return "HTTP Request";
+		case "sendwebhook":
+			return "Send to Webhook";
 		case "condition":
 			return "Branch Logic";
 		case "preverify":

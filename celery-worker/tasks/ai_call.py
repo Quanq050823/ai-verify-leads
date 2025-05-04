@@ -28,7 +28,7 @@ def ai_call(message):
             "Content-Type": "application/json"
         }
         body = {
-            "phoneNumber": message.get("phoneNumber", "50001"),  # default for testing
+            "phoneNumber": message.get("phoneNumber", "50002"),  # default for testing
             "callerId": "",
             "callerNumber": message.get("callerNumber", "6545621000"),
             "attribute": json.dumps(data), 

@@ -15,7 +15,7 @@ import backoff
 from utils.dbUtils import *
 from utils.calendarTimeUtil import *
 
-@app.task(name="tasks.googleCalendar", bind=True, max_retries=5)
+@app.task(name="tasks.googleCalendar", bind=True, max_retries=3)
 def google_calendar(self, message):
     try:
         print(f"Received message {message} ...")

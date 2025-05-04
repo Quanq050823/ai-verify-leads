@@ -124,9 +124,24 @@ const fetchLeadData = async (leadgenId, pageAccessToken) => {
 // --------------------------------------------------------------------
 
 export const getTranscript = async (data) => {
+    let { leadId, transcript, error, message } = data;
+    leadId = getObjectId(leadId);
     try {
-        let { leadId, transcript } = data;
-        leadId = getObjectId(leadId);
+        if (error == true || error == "true") {
+            let lead = await Lead.findOneAndUpdate(
+                { _id: leadId },
+                {
+                    $set: {
+                        "error.status": true,
+                        "error.message": message,
+                    },
+                },
+                { new: true }
+            );
+            if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
+            return;
+        }
+
         // if (!leadId || !transcript) {
         //     throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
         // }
@@ -139,14 +154,28 @@ export const getTranscript = async (data) => {
             );
         }
 
-        // if (!lead) {
-        //     throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
-        // }
+        if (!lead) {
+            console.warn("Lead not found or no transcript data provided.");
+            return;
+        }
 
         await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead]);
 
         return lead;
     } catch (error) {
+        let lead = await Lead.findOneAndUpdate(
+            { _id: leadId },
+            {
+                $set: {
+                    "error.status": true,
+                    "error.message": error?.message,
+                    "error.stackTrace": error?.stack,
+                },
+            },
+            { new: true }
+        );
+        if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
+
         throw error;
     }
 };

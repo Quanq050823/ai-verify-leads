@@ -25,6 +25,22 @@ const leadSchema = mongoose.Schema(
         nodeId: {
             type: mongoose.Schema.Types.Mixed,
         },
+        error: {
+            status: {
+                type: Boolean,
+                default: false,
+            },
+            message: {
+                type: String,
+            },
+            stackTrace: {
+                type: String,
+            },
+            retryCount: {
+                type: Number,
+                default: 0,
+            },
+        },
     },
     { timestamps: true }
 );

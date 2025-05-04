@@ -7,7 +7,7 @@ import Producer from "../config/rabbitMQ.js";
 import Flow from "../models/flow.js";
 import * as flowService from "./flowService.js";
 
-export const publishLead = async (userId, flowId, nodeId, leads) => {
+export const publishLead = async (userId, flowId, nodeId, leads, isError = false) => {
     try {
         let flow = await flowService.checkFlowExists(flowId, userId);
         if (!flow) {
@@ -20,11 +20,13 @@ export const publishLead = async (userId, flowId, nodeId, leads) => {
         }
 
         const targetNode = routing.target.split("_")[0];
-
+        const task = isError ? "tasks.deadLead" : `tasks.${targetNode}`;
+        let targetExchange = isError ? "deadLead" : targetNode;
+        let routingKey = isError ? "deadLead.consumer" : `${userId}.${flowId}.${routing?.target}`;
         leads.forEach(async (lead) => {
             await Producer.publishToCelery(
-                targetNode,
-                `${userId}.${flowId}.${routing?.target}`,
+                targetExchange,
+                routingKey,
                 {
                     leadId: lead._id,
                     flowId: flowId,
@@ -32,7 +34,7 @@ export const publishLead = async (userId, flowId, nodeId, leads) => {
                     nodeId: nodeId,
                     targetNode: routing?.target,
                 },
-                `tasks.${targetNode}`
+                task
             );
         });
 

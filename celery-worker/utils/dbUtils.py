@@ -82,3 +82,18 @@ def update_lead_status_and_current_node(leadId, status, currentNode):
         raise ValueError(f"Lead with ID {leadId} not found.")
     
     collection.update_one({"_id": ObjectId(leadId)}, {"$set": {"status": status, "nodeId": currentNode}})
+    
+def update_lead(leadId, data):
+    client = get_mongo_client()
+    db = client.get_default_database()
+    collection = db["leads"]
+    
+    lead = collection.find_one({"_id": ObjectId(leadId)})
+    if not lead:
+        raise ValueError(f"Lead with ID {leadId} not found.")
+    
+    update_fields = {}
+    for key, value in data.items():
+        update_fields[key] = value
+
+    collection.update_one({"_id": ObjectId(leadId)}, {"$set": update_fields})

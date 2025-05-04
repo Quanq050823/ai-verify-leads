@@ -5,9 +5,10 @@ import json
 import requests
 from utils.dbUtils import * 
 
+from tasks.failure_handler import FailureHandler
 
-@app.task(name="tasks.aiCall")
-def ai_call(message):
+@app.task(name="tasks.aiCall", base=FailureHandler, bind=True, max_retries=3)
+def ai_call(self, message):
     try:
         print(f"Received message: {message}")
         
@@ -42,4 +43,8 @@ def ai_call(message):
         return response.json()
     except requests.RequestException as e:
         print("Error calling external API:", str(e))
+        if self.request.retries < self.max_retries:
+            countdown = 5  # Retry after 5 seconds
+            raise self.retry(exc=e, countdown=countdown)
         raise
+

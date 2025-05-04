@@ -7,9 +7,10 @@ import logging
 
 import datetime
 from utils.dbUtils import *
+from tasks.failure_handler import FailureHandler
 
-@app.task(name = "tasks.sendWebhook")
-def send_webhook(message):    
+@app.task(name = "tasks.sendWebhook", base= FailureHandler, bind=True, max_retries=3)
+def send_webhook(self, message):    
     # Set up logging
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
@@ -45,6 +46,9 @@ def send_webhook(message):
         return {'status': response.status_code, 'data': response.text}
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to send webhook: {str(e)}")
+        if self.request.retries < self.max_retries:
+            countdown = 5  # Retry after 5 seconds
+            raise self.retry(exc=e, countdown=countdown)
         raise
     
     

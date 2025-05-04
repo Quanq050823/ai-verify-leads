@@ -12,95 +12,81 @@ import time as time_module
 from datetime import datetime, timedelta, time, timezone
 import backoff
 
+from tasks.failure_handler import FailureHandler
 from utils.dbUtils import *
 from utils.calendarTimeUtil import *
 
-@app.task(name="tasks.googleCalendar", bind=True, max_retries=3)
+@app.task(name="tasks.googleCalendar", base=FailureHandler, bind=True, max_retries=3)
 def google_calendar(self, message):
     try:
         print(f"Received message {message} ...")
-
+        
         # Extract the connection ID from db
         settings = get_node_settings(message)
         conn = get_user_calendar_conn(message, settings["connection"])
         tokens = conn["tokens"]
         lead = get_lead(message)
-
-        # Create credentials using the tokens - updated to use caching properly
+        
+        # Create credentials and build service
         credentials = create_credentials(tokens)
-                
-        # Build service with credentials but without file cache
         service = build('calendar', 'v3', credentials=credentials, cache_discovery=False)
-
-        # Set a custom timeout for HTTP requests
         socket.setdefaulttimeout(30)  # 30 seconds timeout
         
-        # Prepare the time for the event
+        # Prepare event parameters
         duration_minute = int(settings.get('duration', 1))
         time_zone = 'UTC'
-
-        # Get busy slots with retry logic
-        try:
-            busy_slots = get_busy_slots(service)
-        except (socket.timeout, socket.error, TimeoutError, ConnectionError, HttpError) as e:
-            print(f"Network error when fetching busy slots: {e}")
-            # Retry with exponential backoff
-            countdown = 2 ** self.request.retries
-            raise self.retry(exc=e, countdown=countdown)
-            
-        # Convert UTC time to UTC+7 for finding available slots
-        start_str = settings["startTime"]  # e.g., "09:00"
-        end_str = settings["endTime"]      # e.g., "17:00"
-
-        # Convert to datetime with today's date
+        
+        # Get busy slots
+        busy_slots = get_busy_slots(service)
+        
+        # Time conversion for available slots
+        start_str = settings["startTime"]
+        end_str = settings["endTime"]
         start_hour = datetime.strptime(start_str, "%H:%M") - timedelta(hours=7)
         end_hour = datetime.strptime(end_str, "%H:%M") - timedelta(hours=7)
         
-        # Find nearest available slot in UTC+7 timezone
+        # Find available slot
         next_slot = find_nearest_available_slot(busy_slots, 
-            settings["startWorkday"], settings["endWorkday"], 
+            settings["startWorkday"], settings["endWorkday"],
             start_hour.time(), end_hour.time(), duration_minute)
-
-        if next_slot:
-            start_time_str = next_slot.isoformat()
-            end_time_str = (next_slot + timedelta(minutes=duration_minute)).isoformat()
-            event_body = build_event_body(settings, lead, start_time_str, end_time_str, time_zone)
-        else:
+        
+        if not next_slot:
             print("No available time slots found.")
             return None
-
-        # Insert calendar event with retry logic
-        try:
-            event = service.events().insert(
-                calendarId='primary',
-                body=event_body,
-                conferenceDataVersion=1
-            ).execute()
-        except (socket.timeout, socket.error, TimeoutError, ConnectionError, HttpError) as e:
-            print(f"Network error when creating calendar event: {e}")
-            # Retry with exponential backoff
-            countdown = 2 ** self.request.retries
-            raise self.retry(exc=e, countdown=countdown)
-
+            
+        # Create event body
+        start_time_str = next_slot.isoformat()
+        end_time_str = (next_slot + timedelta(minutes=duration_minute)).isoformat()
+        event_body = build_event_body(settings, lead, start_time_str, end_time_str, time_zone)
+        
+        # Insert calendar event
+        event = service.events().insert(
+            calendarId='primary',
+            body=event_body,
+            conferenceDataVersion=1
+        ).execute()
+        
         calendar_link = event.get('htmlLink')
         meet_link = extract_meet_link(event)
-
+        
+        # Cleanup and update
         refresh_tokens_if_needed(credentials, tokens, message, settings["connection"])
         update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
-
+        
         return {
             'calendar_link': calendar_link,
             'meet_link': meet_link
         }
-    except (socket.timeout, socket.error, TimeoutError, ConnectionError) as e:
+    
+    except (socket.timeout, socket.error, TimeoutError, ConnectionError, HttpError) as e:
         print(f"Network error in google_calendar task: {e}")
-        # Retry with exponential backoff
         countdown = 2 ** self.request.retries
         raise self.retry(exc=e, countdown=countdown)
+    
     except Exception as e:
-        print(f"Error creating calendar event: {e}")
+        print(f"Error creating calendar event: {e}\n")
         if self.request.retries < self.max_retries:
-            countdown = 2 ** self.request.retries
+            countdown = 5  # Retry after 5 seconds
             raise self.retry(exc=e, countdown=countdown)
         raise
 

@@ -190,6 +190,37 @@ export const updateStatus = async (flowId, status, user) => {
     }
 };
 
+export const permanentDeleteFlow = async (flowId, user) => {
+    try {
+        const flow = await Flow.findOne({
+            _id: getObjectId(flowId),
+            userId: user.userId,
+        });
+
+        if (!flow) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Flow not found");
+        }
+
+        flow?.nodeData?.nodes?.forEach(async (node) => {
+            await Producer.deleteQueue(`${user.userId}.${flow._id}.${node.id}`, node?.type);
+        });
+
+        // Permanently remove the flow from the database
+        const result = await Flow.deleteOne({ _id: getObjectId(flowId) });
+
+        if (result.deletedCount === 0) {
+            throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to delete flow");
+        }
+
+        return {
+            success: true,
+            message: "Flow permanently deleted",
+        };
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const resetQueue = async () => {
     try {
         let flows = await Flow.find({ status: 2 });

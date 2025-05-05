@@ -28,6 +28,53 @@ export const getLeadById = async (leadId, userId) => {
     }
 };
 
+export const getLeadByNodes = async (userId, flowId) => {
+    try {
+        const flow = await flowService.getFlow(flowId, { userId });
+        const leads = await Lead.find({
+            userId: getObjectId(userId),
+            flowId: getObjectId(flowId),
+        }).sort({ createdAt: -1 });
+
+        let mergeNodes = [];
+
+        if (flow?.nodeData?.nodes?.length) {
+            mergeNodes = flow.nodeData.nodes.map((node) => {
+                const nodesLeads = leads.filter(
+                    (lead) => lead.nodeId === node.id && lead.status !== 9 && lead.status !== 0
+                );
+                return {
+                    id: node.id,
+                    type: node.type,
+                    label: node.data.label,
+                    leads: nodesLeads,
+                };
+            });
+        }
+
+        const deadLeads = leads.filter((lead) => lead.status === 0);
+        const successLeads = leads.filter((lead) => lead.status === 9);
+
+        mergeNodes.push({
+            id: "deadLead",
+            type: "deadLead",
+            label: "Dead Leads",
+            leads: deadLeads,
+        });
+
+        mergeNodes.push({
+            id: "successLead",
+            type: "successLead",
+            label: "Success Leads",
+            leads: successLeads,
+        });
+
+        return mergeNodes;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const publishLead = async (userId, flowId, nodeId, leads, isError = false) => {
     try {
         let flow = await flowService.checkFlowExists(flowId, userId);

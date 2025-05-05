@@ -22,3 +22,12 @@ export const getLeadById = async (req, res, next) => {
         next(err);
     }
 };
+
+export const getLeadByNodes = async (req, res, next) => {
+    try {
+        let result = await services.getLeadByNodes(req.user.userId, req.params.flowId);
+        res.status(StatusCodes.OK).json(result);
+    } catch (err) {
+        next(err);
+    }
+};

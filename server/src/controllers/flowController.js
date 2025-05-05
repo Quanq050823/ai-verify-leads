@@ -62,7 +62,16 @@ export const disableFlow = async (req, res, next) => {
 export const deleteFlow = async (req, res, next) => {
     try {
         let result = await flowService.updateStatus(req.params.flowId, 0, req.user);
-        res.status(201).json(result);
+        res.status(200).json(result);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const permanentDeleteFlow = async (req, res, next) => {
+    try {
+        let result = await flowService.permanentDeleteFlow(req.params.flowId, req.user);
+        res.status(200).json(result);
     } catch (err) {
         next(err);
     }

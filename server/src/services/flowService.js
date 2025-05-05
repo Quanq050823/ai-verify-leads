@@ -221,7 +221,6 @@ export const getFacebookLeadFlow = async (pageId, formId) => {
             console.log("Flow not found for the given pageId and formId.");
             return null;
         }
-        console.log(`Flow found for the given ${pageId} and ${formId}.`, flow);
         return flow ? flow : null;
     } catch (error) {
         throw error;

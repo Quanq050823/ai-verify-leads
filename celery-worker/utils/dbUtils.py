@@ -1,6 +1,17 @@
 from db import get_mongo_client
 from bson import ObjectId
 
+def get_flow(message):
+    client = get_mongo_client()
+    db = client.get_default_database()
+    collection = db["flows"]
+    
+    flow = collection.find_one({"_id": ObjectId(message["flowId"])})
+    if not flow:
+        raise ValueError(f"Flow with ID {message.get("flowId")} not found.")
+    
+    return flow
+
 def get_lead(message):
     client = get_mongo_client()
     db = client.get_default_database()
@@ -83,6 +94,8 @@ def update_lead_status_and_current_node(leadId, status, currentNode):
     
     collection.update_one({"_id": ObjectId(leadId)}, {"$set": {"status": status, "nodeId": currentNode}})
     
+    
+
 def update_lead(leadId, data):
     client = get_mongo_client()
     db = client.get_default_database()

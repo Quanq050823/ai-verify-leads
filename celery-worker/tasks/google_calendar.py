@@ -12,11 +12,11 @@ import time as time_module
 from datetime import datetime, timedelta, time, timezone
 import backoff
 
-from tasks.failure_handler import FailureHandler
+from tasks.base_tasks_handler import BaseTaskHandler
 from utils.dbUtils import *
 from utils.calendarTimeUtil import *
 
-@app.task(name="tasks.googleCalendar", base=FailureHandler, bind=True, max_retries=3)
+@app.task(name="tasks.googleCalendar", base=BaseTaskHandler, bind=True, max_retries=3)
 def google_calendar(self, message):
     try:
         print(f"Received message {message} ...")
@@ -71,7 +71,6 @@ def google_calendar(self, message):
         
         # Cleanup and update
         refresh_tokens_if_needed(credentials, tokens, message, settings["connection"])
-        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
         
         return {
             'calendar_link': calendar_link,

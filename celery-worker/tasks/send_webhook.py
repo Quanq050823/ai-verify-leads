@@ -7,9 +7,9 @@ import logging
 
 import datetime
 from utils.dbUtils import *
-from tasks.failure_handler import FailureHandler
+from tasks.base_tasks_handler import BaseTaskHandler
 
-@app.task(name = "tasks.sendWebhook", base= FailureHandler, bind=True, max_retries=3)
+@app.task(name = "tasks.sendWebhook", base= BaseTaskHandler, bind=True, max_retries=3)
 def send_webhook(self, message):    
     # Set up logging
     logging.basicConfig(level=logging.INFO)
@@ -40,8 +40,6 @@ def send_webhook(self, message):
         # Check if the request was successful
         response.raise_for_status()
         logger.info(f"Successfully sent webhook to {webhook_url}, status code: {response.status_code}")
-        
-        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
         
         return {'status': response.status_code, 'data': response.text}
     except requests.exceptions.RequestException as e:

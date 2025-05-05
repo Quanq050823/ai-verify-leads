@@ -4,6 +4,9 @@ from utils.dbUtils import *
 import traceback
 
 class BaseTaskHandler(Task):
+    def before_start(self, task_id, args, kwargs):
+        message = kwargs["message"]
+        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
     
     def on_success(self, retval, task_id, args, kwargs):
         data = kwargs["message"]

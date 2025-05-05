@@ -20,7 +20,6 @@ def ai_call(self, message):
             "introduction": settings["introduction"],
             "goodByeMessage": settings["goodByeMessage"],
         }
-        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
             
         # Make API request to external calling service
         url = "https://poc.io.vn/system/CallFlow/outreach/2"

@@ -41,8 +41,6 @@ def send_webhook(self, message):
         response.raise_for_status()
         logger.info(f"Successfully sent webhook to {webhook_url}, status code: {response.status_code}")
         
-        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
-        
         return {'status': response.status_code, 'data': response.text}
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to send webhook: {str(e)}")

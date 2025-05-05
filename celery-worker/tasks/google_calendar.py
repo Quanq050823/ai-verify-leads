@@ -71,7 +71,6 @@ def google_calendar(self, message):
         
         # Cleanup and update
         refresh_tokens_if_needed(credentials, tokens, message, settings["connection"])
-        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
         
         return {
             'calendar_link': calendar_link,

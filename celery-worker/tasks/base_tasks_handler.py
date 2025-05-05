@@ -15,13 +15,14 @@ class BaseTaskHandler(Task):
         is_not_finished = any(route["source"] == data["targetNode"] for route in routes)
         
         if is_not_finished:
-            # pushed to next node
-            update_lead_status_and_current_node(data["leadId"], 3, data["targetNode"])
+            if "aiCall" not in self.name:
+                update_lead_status_and_current_node(data["leadId"], 3, data["targetNode"])
             print (f"Task {self.name} succeeded. Flow continue.")
             print("-" * 50)  # Print a horizontal line of 50 dashes
         else: 
+            if "aiCall" not in self.name:
+                update_lead_status_and_current_node(data["leadId"], 9, data["targetNode"])
             print (f"Task {self.name} succeeded. Flow finished.")
-            update_lead_status_and_current_node(data["leadId"], 9, data["targetNode"])
         
         super().on_success(retval, task_id, args, kwargs)
 

@@ -7,9 +7,9 @@ import logging
 
 import datetime
 from utils.dbUtils import *
-from tasks.failure_handler import FailureHandler
+from tasks.base_tasks_handler import BaseTaskHandler
 
-@app.task(name = "tasks.sendWebhook", base= FailureHandler, bind=True, max_retries=3)
+@app.task(name = "tasks.sendWebhook", base= BaseTaskHandler, bind=True, max_retries=3)
 def send_webhook(self, message):    
     # Set up logging
     logging.basicConfig(level=logging.INFO)

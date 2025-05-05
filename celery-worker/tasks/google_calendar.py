@@ -12,11 +12,11 @@ import time as time_module
 from datetime import datetime, timedelta, time, timezone
 import backoff
 
-from tasks.failure_handler import FailureHandler
+from tasks.base_tasks_handler import BaseTaskHandler
 from utils.dbUtils import *
 from utils.calendarTimeUtil import *
 
-@app.task(name="tasks.googleCalendar", base=FailureHandler, bind=True, max_retries=3)
+@app.task(name="tasks.googleCalendar", base=BaseTaskHandler, bind=True, max_retries=3)
 def google_calendar(self, message):
     try:
         print(f"Received message {message} ...")

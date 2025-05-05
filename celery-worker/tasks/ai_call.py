@@ -5,9 +5,9 @@ import json
 import requests
 from utils.dbUtils import * 
 
-from tasks.failure_handler import FailureHandler
+from tasks.base_tasks_handler import BaseTaskHandler
 
-@app.task(name="tasks.aiCall", base=FailureHandler, bind=True, max_retries=3)
+@app.task(name="tasks.aiCall", base=BaseTaskHandler, bind=True, max_retries=3)
 def ai_call(self, message):
     try:
         print(f"Received message: {message}")

@@ -38,6 +38,8 @@ import {
 	enableFlow,
 	disableFlow,
 	deleteFlow,
+	restoreFlow,
+	permanentDeleteFlow,
 } from "@/services/flowServices";
 
 const UploadBox = styled(Paper)(({ theme }) => ({
@@ -78,6 +80,8 @@ interface FlowListProps {
 	activeFlowId: string | null;
 	onToggleActive: (id: string) => void;
 	onDeleteFlow: (id: string) => void;
+	onRestoreFlow: (id: string) => void;
+	loadFlows: () => Promise<void>;
 }
 
 const FlowList: React.FC<FlowListProps> = ({
@@ -85,6 +89,8 @@ const FlowList: React.FC<FlowListProps> = ({
 	activeFlowId,
 	onToggleActive,
 	onDeleteFlow,
+	onRestoreFlow,
+	loadFlows,
 }) => {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
@@ -115,7 +121,15 @@ const FlowList: React.FC<FlowListProps> = ({
 
 		try {
 			if (dialogAction === "delete") {
-				await onDeleteFlow(selectedFlow.id);
+				const response = await permanentDeleteFlow(selectedFlow.id);
+				if (!response?.error) {
+					await loadFlows();
+				}
+			} else if (dialogAction === "restore") {
+				const response = await restoreFlow(selectedFlow.id);
+				if (!response?.error) {
+					await loadFlows();
+				}
 			}
 		} catch (error) {
 			console.error(`Error during ${dialogAction} action:`, error);
@@ -275,9 +289,11 @@ const FlowList: React.FC<FlowListProps> = ({
 									className="for-dark-top-navList"
 								>
 									<MenuItem onClick={() => handleDialogOpen("delete")}>
-										Delete
+										Permanently Delete
 									</MenuItem>
-									<MenuItem>Restore</MenuItem>
+									<MenuItem onClick={() => handleDialogOpen("restore")}>
+										Restore
+									</MenuItem>
 								</Menu>
 							</Grid>
 						</Grid>
@@ -295,7 +311,9 @@ const FlowList: React.FC<FlowListProps> = ({
 				</DialogTitle>
 				<DialogContent>
 					<Typography>
-						{`Are you sure you want to ${dialogAction} the flow "${selectedFlow?.name}"?`}
+						{dialogAction === "delete"
+							? `Are you sure you want to permanently delete the flow "${selectedFlow?.name}"? This action cannot be undone.`
+							: `Are you sure you want to restore the flow "${selectedFlow?.name}"?`}
 					</Typography>
 				</DialogContent>
 				<DialogActions>
@@ -431,6 +449,8 @@ const TrashPage: React.FC = () => {
 					activeFlowId={activeFlowId}
 					onToggleActive={handleToggleActive}
 					onDeleteFlow={handleDeleteFlow}
+					onRestoreFlow={() => {}}
+					loadFlows={loadFlows}
 				/>
 			)}
 		</Box>

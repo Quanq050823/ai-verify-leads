@@ -132,13 +132,14 @@ export const getTranscript = async (data) => {
                 { _id: leadId },
                 {
                     $set: {
+                        status: 0,
                         "error.status": true,
                         "error.message": message,
                     },
                 },
                 { new: true }
             );
-            if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
+            // if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
             return;
         }
 

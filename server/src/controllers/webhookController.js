@@ -58,11 +58,6 @@ export const retrieveLead = async (req, res, next) => {
 
 export const transcribe = async (req, res, next) => {
     try {
-        if (req.body?.error == "false" || req.body?.error == false) {
-            console.log("Received transcription request, wait 10s if any error...");
-            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-            await sleep(10000);
-        }
         const result = await services.getTranscript(req.body);
         res.status(StatusCodes.OK).json({ message: "Transcription request received" });
     } catch (err) {

@@ -10,3 +10,5 @@ const router = express.Router();
 
 router.get("/", controller.getAllLeads);
 router.get("/:leadId", controller.getLeadById);
+
+export default router;

@@ -142,10 +142,10 @@ export const getTranscript = async (data) => {
             // if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
             return;
         }
+        if (!leadId || !transcript) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
+        }
 
-        // if (!leadId || !transcript) {
-        //     throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
-        // }
         let lead;
         if (transcript && transcript?.conversation?.length != 0) {
             lead = await Lead.findOneAndUpdate(
@@ -168,6 +168,7 @@ export const getTranscript = async (data) => {
             { _id: leadId },
             {
                 $set: {
+                    status: 0,
                     "error.status": true,
                     "error.message": error?.message,
                     "error.stackTrace": error?.stack,
@@ -175,8 +176,7 @@ export const getTranscript = async (data) => {
             },
             { new: true }
         );
-        if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
-
+        // if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
         throw error;
     }
 };

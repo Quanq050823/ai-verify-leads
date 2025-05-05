@@ -1,0 +1,24 @@
+"use strict";
+
+import { StatusCodes } from "http-status-codes";
+import ApiError from "../utils/ApiError.js";
+import { uploadBytesResumable } from "firebase/storage";
+import * as services from "../services/leadService.js";
+
+export const getAllLeads = async (req, res, next) => {
+    try {
+        let result = await services.getAllLeads(req.user.userId);
+        res.status(StatusCodes.OK).json(result);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getLeadById = async (req, res, next) => {
+    try {
+        let result = await services.getLeadById(req.params.leadId, req.user.userId);
+        res.status(StatusCodes.OK).json(result);
+    } catch (err) {
+        next(err);
+    }
+};

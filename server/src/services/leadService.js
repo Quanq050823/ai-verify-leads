@@ -7,6 +7,27 @@ import Producer from "../config/rabbitMQ.js";
 import Lead from "../models/lead.js";
 import * as flowService from "./flowService.js";
 
+export const getAllLeads = async (userId) => {
+    try {
+        const leads = await Lead.find({ userId: getObjectId(userId) }).sort({ createdAt: -1 });
+        return leads;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getLeadById = async (leadId, userId) => {
+    try {
+        const lead = await Lead.findOne({ _id: getObjectId(leadId), userId: getObjectId(userId) });
+        if (!lead) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
+        }
+        return lead;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const publishLead = async (userId, flowId, nodeId, leads, isError = false) => {
     try {
         let flow = await flowService.checkFlowExists(flowId, userId);

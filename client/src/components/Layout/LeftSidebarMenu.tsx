@@ -144,6 +144,7 @@ const LeftSidebarMenu: React.FC<LeftSidebarProps> = ({ toggleActive }) => {
 									Analytics
 								</Typography>
 							</Link>
+
 							{/* 
 							<Link
 								href="/pages/settings/"

@@ -15,7 +15,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
-import AddIcon from "@mui/icons-material/Add";
+import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import Menu from "@mui/material/Menu";
 import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -38,7 +38,6 @@ import {
 	enableFlow,
 	disableFlow,
 	deleteFlow,
-	getFlowById,
 } from "@/services/flowServices";
 
 const UploadBox = styled(Paper)(({ theme }) => ({
@@ -115,9 +114,7 @@ const FlowList: React.FC<FlowListProps> = ({
 		if (!selectedFlow) return;
 
 		try {
-			if (dialogAction === "clone") {
-				console.log(`Cloning flow: ${selectedFlow.name}`);
-			} else if (dialogAction === "delete") {
+			if (dialogAction === "delete") {
 				await onDeleteFlow(selectedFlow.id);
 			}
 		} catch (error) {
@@ -145,6 +142,9 @@ const FlowList: React.FC<FlowListProps> = ({
 							alignItems: "center",
 							cursor: "pointer",
 							transition: "background-color 0.3s",
+							boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+							borderRadius: "8px",
+							backgroundColor: "#f9f9f9",
 						}}
 						className="scenario flow-item"
 					>
@@ -212,7 +212,9 @@ const FlowList: React.FC<FlowListProps> = ({
 							</Grid>
 							<Grid item xs={8}>
 								<Box onClick={() => handleEditFlow(flow)}>
-									<Typography variant="h6">{flow.name}</Typography>
+									<Typography variant="h6" style={{ fontWeight: "bold" }}>
+										{flow.name}
+									</Typography>
 									<Typography
 										variant="body2"
 										color="textSecondary"
@@ -226,26 +228,6 @@ const FlowList: React.FC<FlowListProps> = ({
 										{flow.creator}
 									</Typography>
 								</Box>
-							</Grid>
-							<Grid item xs={1}>
-								<Tooltip
-									title={
-										flow.status === 1
-											? "Click to activate flow"
-											: "Click to disable flow"
-									}
-									placement="left"
-								>
-									<Switch
-										checked={flow.status === 2}
-										onChange={(e) => {
-											e.stopPropagation();
-											onToggleActive(flow.id);
-										}}
-										onClick={(e) => e.stopPropagation()}
-										color="primary"
-									/>
-								</Tooltip>
 							</Grid>
 							<Grid item xs={1}>
 								<IconButton
@@ -292,12 +274,10 @@ const FlowList: React.FC<FlowListProps> = ({
 									anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
 									className="for-dark-top-navList"
 								>
-									<MenuItem onClick={() => handleDialogOpen("clone")}>
-										Clone
-									</MenuItem>
 									<MenuItem onClick={() => handleDialogOpen("delete")}>
 										Delete
 									</MenuItem>
+									<MenuItem>Restore</MenuItem>
 								</Menu>
 							</Grid>
 						</Grid>
@@ -331,7 +311,7 @@ const FlowList: React.FC<FlowListProps> = ({
 	);
 };
 
-const ImportLeadUI: React.FC = () => {
+const TrashPage: React.FC = () => {
 	const [flows, setFlows] = useState<Flow[]>([]);
 	const [activeFlowId, setActiveFlowId] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -342,7 +322,7 @@ const ImportLeadUI: React.FC = () => {
 			const data = await fetchAllFlow();
 			if (data) {
 				const formattedFlows = data
-					.filter((flow: any) => flow.status !== 0)
+					.filter((flow: any) => flow.status === 0) // Chỉ lấy các luồng có trạng thái '0'
 					.map((flow: any) => {
 						// Trích xuất các loại node từ nodeData để tạo thành phần
 						const nodeTypes =
@@ -422,46 +402,25 @@ const ImportLeadUI: React.FC = () => {
 					alignItems: "center",
 				}}
 			>
-				<h1>All scenarios</h1>
-
+				<h1>Trash</h1>
 				<Button
 					variant="outlined"
-					startIcon={<i className="ri-delete-bin-fill"></i>}
-					href="/pages/trash/"
-					style={{
-						borderRadius: "8px",
-						boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-					}}
-				>
-					Trash
-				</Button>
-			</Box>
-			<Box
-				style={{
-					display: "flex",
-					justifyContent: "flex-end",
-					marginBottom: "20px",
-				}}
-			>
-				<Button
-					variant="contained"
 					component={Link}
-					href="/pages/customflow"
+					href="/pages/flow"
 					style={{
 						borderRadius: "8px",
 						boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
 					}}
 				>
-					<AddIcon
+					<KeyboardReturnIcon
 						sx={{
 							position: "relative",
 							paddingRight: "5px",
 						}}
 					/>
-					<Typography>Create a new Scenario</Typography>
+					<Typography color="primary">Back to Scenario</Typography>
 				</Button>
 			</Box>
-
 			{isLoading ? (
 				<Box display="flex" justifyContent="center" my={4}>
 					<Typography>Loading flows...</Typography>
@@ -477,4 +436,4 @@ const ImportLeadUI: React.FC = () => {
 		</Box>
 	);
 };
-export default ImportLeadUI;
+export default TrashPage;

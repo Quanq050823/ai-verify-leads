@@ -301,9 +301,9 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			let edgeLabel = "";
 			if (isMultiOutputNode) {
 				if (params.sourceHandle === "output-0") {
-					edgeLabel = sourceNodeId === "aicall" ? "Positive" : "Success";
+					edgeLabel = "success";
 				} else if (params.sourceHandle === "output-1") {
-					edgeLabel = sourceNodeId === "aicall" ? "Negative" : "Failure";
+					edgeLabel = "fail";
 				}
 			}
 

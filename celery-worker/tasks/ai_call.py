@@ -5,9 +5,10 @@ import json
 import requests
 from utils.dbUtils import * 
 
+from tasks.base_tasks_handler import BaseTaskHandler
 
-@app.task(name="tasks.aiCall")
-def ai_call(message):
+@app.task(name="tasks.aiCall", base=BaseTaskHandler, bind=True, max_retries=3)
+def ai_call(self, message):
     try:
         print(f"Received message: {message}")
         
@@ -19,7 +20,6 @@ def ai_call(message):
             "introduction": settings["introduction"],
             "goodByeMessage": settings["goodByeMessage"],
         }
-        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
             
         # Make API request to external calling service
         url = "https://poc.io.vn/system/CallFlow/outreach/2"
@@ -28,7 +28,7 @@ def ai_call(message):
             "Content-Type": "application/json"
         }
         body = {
-            "phoneNumber": message.get("phoneNumber", "50001"),  # default for testing
+            "phoneNumber": message.get("phoneNumber", "50002"),  # default for testing
             "callerId": "",
             "callerNumber": message.get("callerNumber", "6545621000"),
             "attribute": json.dumps(data), 
@@ -42,4 +42,8 @@ def ai_call(message):
         return response.json()
     except requests.RequestException as e:
         print("Error calling external API:", str(e))
+        if self.request.retries < self.max_retries:
+            countdown = 5  # Retry after 5 seconds
+            raise self.retry(exc=e, countdown=countdown)
         raise
+

@@ -5,6 +5,7 @@ import authRoute from "./authRoute.js";
 import webhookRoute from "./webhookRoute.js";
 import flowRoute from "./flowRoute.js";
 import nodeTypeRoute from "./nodeTypeRoute.js";
+import leadRoute from "./leadRoute.js";
 import facebookRoute from "./facebookRoute.js";
 import userRoute from "./userRoute.js";
 import calendarRoute from "./calendarRoute.js";
@@ -20,6 +21,7 @@ export default (app) => {
     app.use("/api/hooks", webhookRoute);
     app.use("/api/flow", authenticate, flowRoute);
     app.use("/api/nodeType", nodeTypeRoute);
+    app.use("/api/lead", authenticate, leadRoute);
     // app.use("/api/facebook", authenticate, facebookRoute);
     app.use("/api/facebook", facebookRoute);
     app.use("/api/user", authenticate, userRoute);

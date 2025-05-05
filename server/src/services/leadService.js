@@ -4,10 +4,31 @@ import { StatusCodes } from "http-status-codes";
 import ApiError from "../utils/ApiError.js";
 import getObjectId from "../utils/getObjectId.js";
 import Producer from "../config/rabbitMQ.js";
-import Flow from "../models/flow.js";
+import Lead from "../models/lead.js";
 import * as flowService from "./flowService.js";
 
-export const publishLead = async (userId, flowId, nodeId, leads) => {
+export const getAllLeads = async (userId) => {
+    try {
+        const leads = await Lead.find({ userId: getObjectId(userId) }).sort({ createdAt: -1 });
+        return leads;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getLeadById = async (leadId, userId) => {
+    try {
+        const lead = await Lead.findOne({ _id: getObjectId(leadId), userId: getObjectId(userId) });
+        if (!lead) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
+        }
+        return lead;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const publishLead = async (userId, flowId, nodeId, leads, isError = false) => {
     try {
         let flow = await flowService.checkFlowExists(flowId, userId);
         if (!flow) {
@@ -16,15 +37,26 @@ export const publishLead = async (userId, flowId, nodeId, leads) => {
 
         const routing = flow.routeData.find((route) => route.source === nodeId);
         if (!routing) {
-            throw new ApiError(StatusCodes.BAD_REQUEST, "Node does not exist in the flow.");
+            leads.forEach(async (lead) => {
+                let result = await Lead.findOneAndUpdate(
+                    { _id: leads[0]._id, userId: getObjectId(userId) },
+                    { $set: { status: 9 } },
+                    { new: true }
+                );
+            });
+
+            console.log("✅ Flow has been completed. Lead stop published.");
+            return;
         }
 
         const targetNode = routing.target.split("_")[0];
-
+        const task = isError ? "tasks.deadLead" : `tasks.${targetNode}`;
+        let targetExchange = isError ? "deadLead" : targetNode;
+        let routingKey = isError ? "deadLead.consumer" : `${userId}.${flowId}.${routing?.target}`;
         leads.forEach(async (lead) => {
             await Producer.publishToCelery(
-                targetNode,
-                `${userId}.${flowId}.${routing?.target}`,
+                targetExchange,
+                routingKey,
                 {
                     leadId: lead._id,
                     flowId: flowId,
@@ -32,7 +64,7 @@ export const publishLead = async (userId, flowId, nodeId, leads) => {
                     nodeId: nodeId,
                     targetNode: routing?.target,
                 },
-                `tasks.${targetNode}`
+                task
             );
         });
 

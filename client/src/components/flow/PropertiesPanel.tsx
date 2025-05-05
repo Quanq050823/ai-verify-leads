@@ -67,6 +67,9 @@ interface NodeSettings {
 	duration?: number;
 	webhookUrl?: string;
 	method?: string;
+	headers?: string;
+	timeout?: number;
+	retryCount?: number;
 	field?: string;
 	operator?: string;
 	value?: string;
@@ -998,6 +1001,19 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 					pageId: "",
 					formId: "",
 				});
+			}
+			// Khởi tạo giá trị mặc định cho node webhook mới
+			else if (
+				selectedNode.type === "sendWebhook" &&
+				Object.keys(nodeSettings).length === 0
+			) {
+				setLocalSettings({
+					webhookUrl: "",
+					method: "POST",
+					headers: "{}",
+					timeout: 30,
+					retryCount: 3,
+				});
 			} else {
 				setLocalSettings(nodeSettings as NodeSettings);
 			}
@@ -1453,21 +1469,59 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 					</>
 				);
 
-			case "webhook":
+			case "sendWebhook":
 				return (
 					<>
-						<Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-							<Button
-								variant="contained"
-								color="primary"
-								onClick={() => {
-									toast.success("Webhook settings saved!");
-								}}
-								startIcon={<NotificationImportant />}
+						<TextField
+							fullWidth
+							size="small"
+							label="Webhook URL"
+							variant="outlined"
+							margin="normal"
+							value={localSettings.webhookUrl || ""}
+							onChange={(e) => {
+								let value = e.target.value;
+								// Nếu URL không có http/https, thêm https://
+								if (
+									value &&
+									!(value.startsWith("http://") || value.startsWith("https://"))
+								) {
+									value = "https://" + value;
+								}
+								updateSettings("webhookUrl", value);
+							}}
+							placeholder="Enter webhook URL"
+							required
+							helperText="The URL where lead data will be sent"
+						/>
+
+						{/* <FormControl fullWidth margin="normal" size="small">
+							<InputLabel>Method</InputLabel>
+							<Select
+								value={localSettings.method || "POST"}
+								onChange={handleSelectChange("method")}
+								label="Method"
 							>
-								Save Webhook
-							</Button>
-						</Box>
+								<MenuItem value="GET">GET</MenuItem>
+								<MenuItem value="POST">POST</MenuItem>
+								<MenuItem value="PUT">PUT</MenuItem>
+								<MenuItem value="PATCH">PATCH</MenuItem>
+							</Select>
+						</FormControl>
+
+						<TextField
+							fullWidth
+							size="small"
+							label="Headers (JSON)"
+							variant="outlined"
+							margin="normal"
+							multiline
+							rows={2}
+							value={localSettings.headers || "{}"}
+							onChange={handleTextChange("headers")}
+							placeholder="Enter headers in JSON format"
+							helperText='Example: {"Content-Type": "application/json", "Authorization": "Bearer token"}'
+						/> */}
 					</>
 				);
 

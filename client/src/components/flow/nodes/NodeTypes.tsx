@@ -31,7 +31,7 @@ export const GoogleSheetsNode = memo(({ data, selected, id }: any) => {
 	);
 });
 
-export const FacebookAdsNode = memo(({ data, selected, id }: any) => {
+export const FacebookLeadAdsNode = memo(({ data, selected, id }: any) => {
 	// Xác định loại Facebook node
 	const nodeType = id.split("_")[0];
 	const isLeadAds = nodeType.toLowerCase() === "facebookleadads";

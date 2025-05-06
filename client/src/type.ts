@@ -32,6 +32,8 @@ export type Lead = {
 
 export type Column = {
 	id: Id;
-	title: string;
+	title: string | React.ReactNode;
 	leads?: Lead[];
+	nodeType?: string;
+	iconColor?: string;
 };

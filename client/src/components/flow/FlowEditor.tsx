@@ -42,7 +42,6 @@ import CustomEdge from "./edges/CustomEdge";
 import FlowToolbar from "./FlowToolbar";
 import {
 	GoogleSheetsNode,
-	FacebookAdsNode,
 	AICallNode,
 	CalendarNode,
 	WebhookNode,
@@ -51,6 +50,7 @@ import {
 	SMSNode,
 	ConfigNode,
 	ErrorNode,
+	FacebookLeadAdsNode,
 } from "./nodes/NodeTypes";
 import { CustomEdgeData } from "./edges/CustomEdge";
 import { getFlowById, createFlow, updateFlow } from "@/services/flowServices";
@@ -82,8 +82,7 @@ const theme = createTheme({
 // Define node types
 const nodeTypes = {
 	googleSheets: GoogleSheetsNode,
-	facebookAds: FacebookAdsNode,
-	facebookLeadAds: FacebookAdsNode,
+	facebookLeadAds: FacebookLeadAdsNode,
 	aiCall: AICallNode,
 	googleCalendar: CalendarNode,
 	sendWebhook: WebhookNode,
@@ -225,8 +224,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		switch (type) {
 			case "googleSheets":
 				return "Google Sheets";
-			case "facebookAds":
-				return "Facebook Ads";
 			case "facebookLeadAds":
 				return "Facebook Lead Ads";
 			case "aiCall":
@@ -258,8 +255,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		switch (type) {
 			case "googleSheets":
 				return "Import leads from Google Sheets";
-			case "facebookAds":
-				return "Import leads from Facebook Ads";
 			case "facebookLeadAds":
 				return "Import leads from Facebook Lead Ads";
 			case "aiCall":
@@ -616,7 +611,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 							nodeColor={(node) => {
 								switch (node.type) {
 									case "googleSheets":
-									case "facebookAds":
+									case "facebookLeadAds":
 										return "#3B82F6";
 									case "aiCall":
 									case "sendWebhook":

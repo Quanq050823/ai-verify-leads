@@ -18,7 +18,6 @@ export const getNodeIcon = (key: string) => {
 	switch (key) {
 		case "googleSheets":
 			return <TableChart fontSize="small" />;
-		case "facebookAds":
 		case "facebookLeadAds":
 			return <Facebook fontSize="small" />;
 		case "aiCall":
@@ -48,7 +47,6 @@ export const getNodeColor = (key: string) => {
 	switch (key) {
 		case "googleSheets":
 			return "#0F9D58";
-		case "facebookAds":
 		case "facebookLeadAds":
 			return "#1877f2";
 		case "aiCall":

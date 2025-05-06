@@ -105,7 +105,9 @@ const processLeadEvent = async (lead) => {
             await publishLead(flow.userId, flow._id, currentNode.id, [importedLeads]);
         }
     } catch (err) {
-        throw err;
+        console.error("Error processing lead event:", err);
+        return;
+        // throw err;
     }
 };
 
@@ -115,7 +117,10 @@ const fetchLeadData = async (leadgenId, pageAccessToken) => {
     const response = await fetch(url);
 
     if (!response.ok) {
-        throw new Error(`Facebook API error: ${response.statusText}`);
+        throw new ApiError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            `Facebook API error: ${response.statusText}`
+        );
     }
 
     return await response.json();
@@ -160,7 +165,7 @@ export const getTranscript = async (data) => {
             return;
         }
 
-        await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead]);
+        await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], false);
 
         return lead;
     } catch (error) {

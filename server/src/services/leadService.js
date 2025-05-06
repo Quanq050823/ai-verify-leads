@@ -75,7 +75,14 @@ export const getLeadByNodes = async (userId, flowId) => {
     }
 };
 
-export const publishLead = async (userId, flowId, nodeId, leads, isError = false) => {
+export const publishLead = async (
+    userId,
+    flowId,
+    nodeId,
+    leads,
+    result = null,
+    isError = false
+) => {
     try {
         let flow = await flowService.checkFlowExists(flowId, userId);
         if (!flow) {
@@ -83,7 +90,22 @@ export const publishLead = async (userId, flowId, nodeId, leads, isError = false
         }
 
         const routing = flow.routeData.find((route) => route.source === nodeId);
-        if (!routing) {
+
+        if (routing?.isSeparate && !isError) {
+            if (result === null) {
+                throw new ApiError(
+                    StatusCodes.BAD_REQUEST,
+                    "Result is required for separate routing."
+                );
+            }
+            routing.target = result ? routing.successTarget : routing.failTarget;
+            if (!routing.target) {
+                routing = null;
+                console.log(`No config target found for ${result} in node ${nodeId}`);
+            }
+        }
+
+        if (!routing && !isError) {
             leads.forEach(async (lead) => {
                 let result = await Lead.findOneAndUpdate(
                     { _id: leads[0]._id, userId: getObjectId(userId) },
@@ -95,6 +117,8 @@ export const publishLead = async (userId, flowId, nodeId, leads, isError = false
             console.log("✅ Flow has been completed. Lead stop published.");
             return;
         }
+
+        console.log("Routing found:", routing);
 
         const targetNode = routing.target.split("_")[0];
         const task = isError ? "tasks.deadLead" : `tasks.${targetNode}`;

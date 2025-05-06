@@ -55,11 +55,27 @@ export const createFlow = async (data, user) => {
             throw new ApiError(StatusCodes.BAD_REQUEST, "Flow name already exists");
         }
 
-        let routeData = nodeData?.edges?.map((edge) => {
-            return {
-                source: edge.source,
-                target: edge.target,
-            };
+        let routeData = [];
+        nodeData?.edges?.forEach((edge) => {
+            const { source, target, data } = edge;
+
+            if (data?.label) {
+                let existing = routeData.find((r) => r.source === source);
+
+                if (!existing) {
+                    existing = { isSeparate: true, source, successTarget: null, failTarget: null };
+                    routeData.push(existing);
+                }
+
+                if (data.label === "success") {
+                    existing.successTarget = target;
+                } else {
+                    existing.failTarget = target;
+                }
+            } else {
+                // No label, push normally
+                routeData.push({ isSeparate: false, source, target });
+            }
         });
 
         let flow = new Flow({
@@ -72,14 +88,14 @@ export const createFlow = async (data, user) => {
         let result = await flow.save();
 
         //Create queue for each nodes in RabbitMQ
-        await nodeData?.nodes?.forEach((node) => {
-            Producer.createExchange(node?.type);
-            Producer.createQueue(
-                `${user.userId}.${flow._id}.${node.id}`,
-                node?.type,
-                `${user.userId}.${flow._id}.${node.id}`
-            );
-        });
+        // await nodeData?.nodes?.forEach((node) => {
+        //     Producer.createExchange(node?.type);
+        //     Producer.createQueue(
+        //         `${user.userId}.${flow._id}.${node.id}`,
+        //         node?.type,
+        //         `${user.userId}.${flow._id}.${node.id}`
+        //     );
+        // });
 
         return result ? result : null;
     } catch (error) {
@@ -103,16 +119,32 @@ export const updateFlow = async (flowId, data, user) => {
 
         flow.name = flowName || flow.name;
         flow.nodeData = nodeData || flow.nodeData;
-        flow.routeData = nodeData?.edges?.map((edge) => {
-            return {
-                source: edge.source,
-                target: edge.target,
-            };
-        });
+        let routeData = [];
+        nodeData?.edges?.forEach((edge) => {
+            const { source, target, data } = edge;
 
+            if (data?.label) {
+                let existing = routeData.find((r) => r.source === source);
+
+                if (!existing) {
+                    existing = { isSeparate: true, source, successTarget: null, failTarget: null };
+                    routeData.push(existing);
+                }
+
+                if (data.label === "success") {
+                    existing.successTarget = target;
+                } else {
+                    existing.failTarget = target;
+                }
+            } else {
+                // No label, push normally
+                routeData.push({ isSeparate: false, source, target });
+            }
+        });
+        flow.routeData = routeData || flow.routeData;
         let result = await flow.save();
 
-        if (oldNodeData) {
+        if (oldNodeData && flow.status == 2) {
             //Delete old queue
             oldNodeData?.nodes?.forEach(async (node) => {
                 await Producer.deleteQueue(`${user.userId}.${flow._id}.${node.id}`, node?.type);

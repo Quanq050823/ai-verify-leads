@@ -103,11 +103,24 @@ function ColumnContainer(props: Props) {
 			type: "Column",
 			column,
 		},
+		disabled: open || openCreateLead,
 	});
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
+	};
+
+	const handleColumnHeaderClick = (e: React.MouseEvent) => {
+		if (
+			e.target instanceof HTMLElement &&
+			(e.target.closest("button") ||
+				e.target.closest(".MuiMenu-root") ||
+				e.target.closest("input") ||
+				e.target.closest("select"))
+		) {
+			e.stopPropagation();
+		}
 	};
 
 	if (isDragging) {
@@ -150,8 +163,6 @@ function ColumnContainer(props: Props) {
 	return (
 		<div ref={setNodeRef} style={style}>
 			<Box
-				{...attributes}
-				{...listeners}
 				style={{
 					minWidth: "320px",
 					minHeight: "700px",
@@ -177,7 +188,12 @@ function ColumnContainer(props: Props) {
 							p: "16px 20px",
 							background: "#FFFFFF",
 							borderBottom: "1px solid #E5E7EB",
+							cursor: "grab",
 						}}
+						className="column-header"
+						{...attributes}
+						{...listeners}
+						onClick={handleColumnHeaderClick}
 					>
 						<Box sx={{ display: "flex", alignItems: "center" }}>
 							<Typography

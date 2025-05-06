@@ -43,6 +43,8 @@ import {
 	PointerSensor,
 	useSensor,
 	useSensors,
+	closestCorners,
+	DragCancelEvent,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
@@ -122,14 +124,95 @@ export default function LeadPipelinePage() {
 	const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 	const [activeColumn, setActiveColumn] = useState<ExtendedColumn | null>(null);
 
-	// Configure sensor for drag operations
+	// Configure sensor with strict constraints
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
-				distance: 3, // 3px
+				distance: 1, // Tăng khoảng cách kích hoạt để tránh kích hoạt vô tình
+				tolerance: 0, // Thêm dung sai để tránh kích hoạt do rung nhẹ
+				delay: 0, // Thêm độ trễ để tránh kích hoạt ngay lập tức
 			},
 		})
 	);
+
+	// Prevent drag operations when dialogs are open
+	useEffect(() => {
+		// Create a CSS class to disable pointer events on drag handles when dialog is open
+		if (typeof document !== "undefined") {
+			const style = document.createElement("style");
+			style.id = "dnd-disable-style";
+
+			if (open) {
+				// Disable drag handles when dialog is open
+				style.innerHTML = `
+					.column-header {
+						cursor: default !important;
+						pointer-events: none !important;
+					}
+					.dndkit-sortable-handle {
+						cursor: default !important;
+						pointer-events: none !important;
+					}
+				`;
+				document.head.appendChild(style);
+			} else {
+				// Remove style if already exists
+				const existingStyle = document.getElementById("dnd-disable-style");
+				if (existingStyle) {
+					existingStyle.remove();
+				}
+			}
+
+			return () => {
+				const existingStyle = document.getElementById("dnd-disable-style");
+				if (existingStyle) {
+					existingStyle.remove();
+				}
+			};
+		}
+	}, [open]);
+
+	// Xử lý huỷ sự kiện kéo thả khi có lỗi
+	const handleDragCancel = (event: DragCancelEvent) => {
+		setActiveColumn(null);
+	};
+
+	// Override default drag behavior
+	const handleDragStart = (event: DragStartEvent) => {
+		// Prevent drag if dialog is open
+		if (open) {
+			// Không thể cancel trực tiếp, nhưng ta đã vô hiệu hóa kéo thả thông qua CSS
+			// và không thiết lập activeColumn nên sẽ không có hiệu ứng kéo thả
+			return;
+		}
+
+		if (event.active.data.current?.type === "Column") {
+			setActiveColumn(event.active.data.current.column);
+		}
+	};
+
+	function onDragEnd(event: DragEndEvent) {
+		setActiveColumn(null);
+
+		const { active, over } = event;
+		if (!over) return;
+
+		const activeColumnId = active.id;
+		const overColumnId = over.id;
+
+		if (activeColumnId === overColumnId) return;
+
+		setColumns((columns) => {
+			const activeColumnIndex = columns.findIndex(
+				(col) => col.id === activeColumnId
+			);
+			const overColumnIndex = columns.findIndex(
+				(col) => col.id === overColumnId
+			);
+
+			return arrayMove(columns, activeColumnIndex, overColumnIndex);
+		});
+	}
 
 	// Fetch leads data and organize by node type
 	useEffect(() => {
@@ -360,35 +443,6 @@ export default function LeadPipelinePage() {
 		setColumns(filteredColumns);
 	}
 
-	function onDragStart(event: DragStartEvent) {
-		if (event.active.data.current?.type === "Column") {
-			setActiveColumn(event.active.data.current.column);
-			return;
-		}
-	}
-
-	function onDragEnd(event: DragEndEvent) {
-		const { active, over } = event;
-
-		if (!over) return;
-
-		const activeColumnId = active.id;
-		const overColumnId = over.id;
-
-		if (activeColumnId === overColumnId) return;
-
-		setColumns((columns) => {
-			const activeColumnIndex = columns.findIndex(
-				(col) => col.id === activeColumnId
-			);
-			const overColumnIndex = columns.findIndex(
-				(col) => col.id === overColumnId
-			);
-
-			return arrayMove(columns, activeColumnIndex, overColumnIndex);
-		});
-	}
-
 	// Method to render the node icon for a column header
 	const renderNodeIcon = (nodeType: string | undefined) => {
 		if (!nodeType || nodeType === "unassigned") {
@@ -465,7 +519,10 @@ export default function LeadPipelinePage() {
 		const enhancedColumn = {
 			...column,
 			renderHeader: () => (
-				<Box sx={{ display: "flex", alignItems: "center" }}>
+				<Box
+					sx={{ display: "flex", alignItems: "center" }}
+					className="column-header"
+				>
 					<IconBox
 						sx={{
 							backgroundColor: column.iconColor || "#9e9e9e",
@@ -497,7 +554,10 @@ export default function LeadPipelinePage() {
 				column={{
 					...enhancedColumn,
 					title: (
-						<Box sx={{ display: "flex", alignItems: "center" }}>
+						<Box
+							sx={{ display: "flex", alignItems: "center" }}
+							className="column-header"
+						>
 							<IconBox
 								sx={{
 									backgroundColor: column.iconColor || "#9e9e9e",
@@ -707,8 +767,10 @@ export default function LeadPipelinePage() {
 				<Box sx={{ p: 2 }}>
 					<DndContext
 						sensors={sensors}
-						onDragStart={onDragStart}
+						onDragStart={handleDragStart}
 						onDragEnd={onDragEnd}
+						onDragCancel={handleDragCancel}
+						collisionDetection={closestCorners}
 					>
 						<Box
 							sx={{
@@ -739,7 +801,10 @@ export default function LeadPipelinePage() {
 												column={{
 													...column,
 													title: (
-														<Box sx={{ display: "flex", alignItems: "center" }}>
+														<Box
+															sx={{ display: "flex", alignItems: "center" }}
+															className="column-header"
+														>
 															<IconBox
 																sx={{
 																	backgroundColor:
@@ -774,7 +839,10 @@ export default function LeadPipelinePage() {
 											column={{
 												...activeColumn,
 												title: (
-													<Box sx={{ display: "flex", alignItems: "center" }}>
+													<Box
+														sx={{ display: "flex", alignItems: "center" }}
+														className="column-header"
+													>
 														<IconBox
 															sx={{
 																backgroundColor:

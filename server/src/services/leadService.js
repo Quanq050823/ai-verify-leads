@@ -81,65 +81,77 @@ export const publishLead = async (
     nodeId,
     leads,
     result = null,
-    isError = false
+    isRetry = false
 ) => {
     try {
-        let flow = await flowService.checkFlowExists(flowId, userId);
+        const flow = await flowService.checkFlowExists(flowId, userId);
         if (!flow) {
             throw new ApiError(StatusCodes.BAD_REQUEST, "Flow does not exist.");
         }
 
-        const routing = flow.routeData.find((route) => route.source === nodeId);
+        let routing = isRetry
+            ? flow.routeData.find(
+                  (route) =>
+                      route.target === nodeId ||
+                      route.successTarget === nodeId ||
+                      route.failTarget === nodeId
+              )
+            : flow.routeData.find((route) => route.source === nodeId);
 
-        if (routing?.isSeparate && !isError) {
+        if (routing?.isSeparate) {
             if (result === null) {
                 throw new ApiError(
                     StatusCodes.BAD_REQUEST,
                     "Result is required for separate routing."
                 );
             }
+
             routing.target = result ? routing.successTarget : routing.failTarget;
+
             if (!routing.target) {
-                routing = null;
                 console.log(`No config target found for ${result} in node ${nodeId}`);
+                routing = null;
             }
         }
 
-        if (!routing && !isError) {
-            leads.forEach(async (lead) => {
-                let result = await Lead.findOneAndUpdate(
-                    { _id: leads[0]._id, userId: getObjectId(userId) },
-                    { $set: { status: 9 } },
-                    { new: true }
-                );
-            });
+        if (!routing) {
+            await Promise.all(
+                leads.map(async (lead) => {
+                    await Lead.findOneAndUpdate(
+                        { _id: lead._id, userId: getObjectId(userId) },
+                        { $set: { status: 9 } },
+                        { new: true }
+                    );
+                })
+            );
 
             console.log("✅ Flow has been completed. Lead stop published.");
             return;
         }
 
-        console.log("Routing found:", routing);
-
         const targetNode = routing.target.split("_")[0];
-        const task = isError ? "tasks.deadLead" : `tasks.${targetNode}`;
-        let targetExchange = isError ? "deadLead" : targetNode;
-        let routingKey = isError ? "deadLead.consumer" : `${userId}.${flowId}.${routing?.target}`;
-        leads.forEach(async (lead) => {
-            await Producer.publishToCelery(
-                targetExchange,
-                routingKey,
-                {
-                    leadId: lead._id,
-                    flowId: flowId,
-                    userId: userId,
-                    nodeId: nodeId,
-                    targetNode: routing?.target,
-                },
-                task
-            );
-        });
+        const task = `tasks.${targetNode}`;
+        const targetExchange = targetNode;
+        const routingKey = `${userId}.${flowId}.${routing.target}`;
 
-        return flow ? flow : null;
+        await Promise.all(
+            leads.map(async (lead) => {
+                await Producer.publishToCelery(
+                    targetExchange,
+                    routingKey,
+                    {
+                        leadId: lead._id,
+                        flowId,
+                        userId,
+                        nodeId,
+                        targetNode: routing.target,
+                    },
+                    task
+                );
+            })
+        );
+
+        return flow;
     } catch (error) {
         throw error;
     }

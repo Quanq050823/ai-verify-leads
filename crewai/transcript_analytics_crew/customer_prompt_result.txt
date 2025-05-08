@@ -1,3 +1,1 @@
-1. Company must be based in Ho Chi Minh City.
-2. Company must have at least 10 employees.
-3. Company budget must be more than 10 million VND.
+[{"name": "Location", "description": "Must be based in Ho Chi Minh City"}, {"name": "Staff Size", "description": "Must have at least 100 employees"}, {"name": "Budget", "description": "Must have a budget of more than 10 million VND"}]

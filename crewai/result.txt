@@ -1,1 +1,20 @@
-{"pass":false,"criteria_results":[{"criterion":"Company must be based in Ho Chi Minh City.","passed":false,"reason":"The company is located in Ha Noi, not Ho Chi Minh City."},{"criterion":"Company must have at least 10 employees.","passed":true,"reason":"The company has around 10 employees."},{"criterion":"Company budget must be more than 10 million VND.","passed":true,"reason":"The budget is between 15 to 20 million VND, which exceeds 10 million VND."}]}
+{
+  "pass": true,
+  "criteria_results": [
+    {
+      "criterion": "Location",
+      "passed": true,
+      "reason": "Customer is based in Ho Chi Minh City."
+    },
+    {
+      "criterion": "Staff Size",
+      "passed": true,
+      "reason": "Customer has around 200 employees."
+    },
+    {
+      "criterion": "Budget",
+      "passed": true,
+      "reason": "Customer's budget is 15 to 20 million VND per year."
+    }
+  ]
+}

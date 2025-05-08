@@ -133,18 +133,22 @@ export const getTranscript = async (data) => {
     leadId = getObjectId(leadId);
     try {
         if (error == true || error == "true") {
-            let lead = await Lead.findOneAndUpdate(
-                { _id: leadId },
-                {
-                    $set: {
-                        status: 0,
-                        "error.status": true,
-                        "error.message": message,
-                    },
-                },
-                { new: true }
-            );
-            // if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
+            console.warn("Call lead error:", message);
+            let lead = await Lead.findById(leadId);
+
+            lead.error = {
+                status: true,
+                message: message,
+                stackTrace: error?.stack,
+                retryCount: lead?.error?.retryCount ? lead.error.retryCount : 0,
+            };
+            lead.status = 0;
+            if (lead?.error?.retryCount < 2) {
+                lead.error.retryCount += 1;
+                await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true, true);
+                console.warn("Retrying lead...");
+            }
+            await lead.save();
             return;
         }
         if (!leadId || !transcript) {

@@ -1,7 +1,13 @@
 "use client";
-import { Column, Id } from "@/type";
+import { Column, Id, Lead } from "../../type";
 
-import React, { useState, FormEvent } from "react";
+import React, {
+	useState,
+	FormEvent,
+	useMemo,
+	MouseEvent,
+	useEffect,
+} from "react";
 import {
 	Card,
 	Box,
@@ -9,7 +15,6 @@ import {
 	Menu,
 	MenuItem,
 	IconButton,
-	AvatarGroup,
 	Button,
 	DialogTitle,
 	Grid,
@@ -18,128 +23,32 @@ import {
 	TextField,
 	Dialog,
 	OutlinedInput,
+	Badge,
+	Tooltip,
+	Divider,
+	Paper,
+	DialogContent,
+	DialogActions,
+	Select,
+	SelectChangeEvent,
 } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import EditIcon from "@mui/icons-material/Edit";
-import { styled } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
-import CloseIcon from "@mui/icons-material/Close";
-import PropTypes from "prop-types";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import SortIcon from "@mui/icons-material/Sort";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import LeadCard from "./LeadCard";
+import { toast } from "react-toastify";
 
 interface Props {
 	column: Column;
 	deleteColumn: (id: Id) => void;
 }
 
-// ToDo data
-interface TeamMember {
-	img: string;
-}
-
-interface ToDoList {
-	leadName: string;
-	leadEmail: string;
-	leadPhone: string;
-	leadSource: string;
-	leadweb: string;
-	attempts: string;
-	bgClass: string;
-}
-
-const toDoListData: ToDoList[] = [
-	{
-		leadName: "John Doe",
-		leadEmail: "john.doe@example.com",
-		leadPhone: "+84 123 456 789",
-		leadSource: "Facebook",
-		leadweb: "dattax.vn",
-		attempts: "Attempts: 2",
-		bgClass: "bg-purple-100",
-	},
-	{
-		leadName: "Alice Nguyen",
-		leadEmail: "alice.nguyen@example.com",
-		leadPhone: "+84 987 654 321",
-		leadSource: "Facebook",
-		leadweb: "caxsoft.vn",
-		attempts: "Attempts: 4",
-		bgClass: "bg-danger-100",
-	},
-	{
-		leadName: "David Tran",
-		leadEmail: "david.tran@example.com",
-		leadPhone: "+84 555 666 777",
-		leadSource: "Facebook",
-		leadweb: "davidtran.com",
-		attempts: "Attempts: 5",
-		bgClass: "bg-success-100",
-	},
-];
-
-// Modal
-interface BootstrapDialogTitleProps {
-	children?: React.ReactNode;
-	onClose: () => void;
-}
-
-const BootstrapDialog = styled(Dialog)(({ theme }) => ({
-	"& .MuiDialogContent-root": {
-		padding: theme.spacing(2),
-	},
-	"& .MuiDialogActions-root": {
-		padding: theme.spacing(1),
-	},
-}));
-
-function BootstrapDialogTitle(props: BootstrapDialogTitleProps) {
-	const { children, onClose, ...other } = props;
-
-	return (
-		<DialogTitle sx={{ m: 0, p: 2 }} {...other}>
-			{children}
-			{onClose ? (
-				<IconButton
-					aria-label="close"
-					onClick={onClose}
-					sx={{
-						position: "absolute",
-						right: 8,
-						top: 8,
-						color: (theme) => theme.palette.grey[500],
-					}}
-				>
-					<CloseIcon />
-				</IconButton>
-			) : null}
-		</DialogTitle>
-	);
-}
-
-BootstrapDialogTitle.propTypes = {
-	children: PropTypes.node,
-	onClose: PropTypes.func.isRequired,
-};
-// End Modal
-
-// Select input data
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-	PaperProps: {
-		style: {
-			maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-			width: 250,
-		},
-	},
-};
-
 function ColumnContainer(props: Props) {
 	const { column, deleteColumn } = props;
-
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
 	const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -149,35 +58,37 @@ function ColumnContainer(props: Props) {
 		setAnchorEl(null);
 	};
 
-	// Modal
-	const [openModal, setOpenModal] = useState(false);
-	const handleClickOpenModal = () => {
-		setOpenModal(true);
+	const [openCreateLead, setOpenCreateLead] = useState(false);
+	const handleClickOpenCreateLead = () => {
+		setOpenCreateLead(true);
 	};
-	const handleCloseModal = () => {
-		setOpenModal(false);
+	const handleCloseCreateLead = () => {
+		setOpenCreateLead(false);
 	};
 	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		// const data = new FormData(event.currentTarget);
-		// console.log();
+		// Implement lead creation logic here
+		handleCloseCreateLead();
 	};
 
-	// Select team members
-	const [teamMembersName, setTeamMembersName] = useState<string[]>([]);
-
-	const handleChange = (
-		event: SelectChangeEvent<typeof teamMembersName>,
-		setNames: React.Dispatch<React.SetStateAction<string[]>>
-	) => {
-		const {
-			target: { value },
-		} = event;
-		setNames(
-			// On autofill we get a stringified value.
-			typeof value === "string" ? value.split(",") : value
-		);
+	const [editLead, setEditLead] = useState<Lead | null>(null);
+	const handleEditLead = (lead: Lead) => {
+		setEditLead(lead);
 	};
+	const handleCloseEditLead = () => {
+		setEditLead(null);
+	};
+
+	const [leads, setLeads] = useState<Lead[]>(column.leads || []);
+	const [filterText, setFilterText] = useState("");
+
+	useEffect(() => {
+		if (column.leads) {
+			setLeads(column.leads);
+		}
+	}, [column.leads]);
+
+	const handleDeleteLead = async (leadId: string) => {};
 
 	const {
 		setNodeRef,
@@ -192,41 +103,48 @@ function ColumnContainer(props: Props) {
 			type: "Column",
 			column,
 		},
+		disabled: open || openCreateLead,
 	});
 
 	const style = {
-		transition,
 		transform: CSS.Translate.toString(transform),
+		transition,
+	};
+
+	const handleColumnHeaderClick = (e: React.MouseEvent) => {
+		if (
+			e.target instanceof HTMLElement &&
+			(e.target.closest("button") ||
+				e.target.closest(".MuiMenu-root") ||
+				e.target.closest("input") ||
+				e.target.closest("select"))
+		) {
+			e.stopPropagation();
+		}
 	};
 
 	if (isDragging) {
 		return (
 			<div ref={setNodeRef} style={style} className="columnoverlay">
-				{" "}
 				<Box
-
 					style={{
-						minWidth: "300px",
+						minWidth: "320px",
 						minHeight: "700px",
 					}}
 				>
-					<Card
-
+					<Paper
 						{...attributes}
 						{...listeners}
-
 						sx={{
 							boxShadow: "none",
-							borderRadius: "7px",
+							borderRadius: "16px",
 							mb: "25px",
 							padding: { xs: "18px", sm: "20px", lg: "25px" },
-							maxWidth: "350px",
+							width: "320px",
 							minHeight: "700px",
-							opacity: "6",
-							borderColor: "#0dcaf0",
-							borderWidth: "2",
+							opacity: "0.6",
+							border: "2px dashed #0dcaf0",
 						}}
-						className="rmui-card"
 					>
 						<Box
 							sx={{
@@ -236,640 +154,814 @@ function ColumnContainer(props: Props) {
 								mb: "15px",
 							}}
 						></Box>
-					</Card>
-
+					</Paper>
 				</Box>
-				{/* Modal */}
-				<BootstrapDialog
-					onClose={handleCloseModal}
-					aria-labelledby="customized-dialog-title"
-					open={openModal}
-					className="rmu-modal"
-				>
-					<Box>
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								alignItems: "center",
-								background: "#f6f7f9",
-								padding: { xs: "15px 20px", md: "25px" },
-							}}
-							className="rmu-modal-header"
-						>
-							<Typography
-								id="modal-modal-title"
-								variant="h6"
-								sx={{
-									fontWeight: "600",
-									fontSize: { xs: "16px", md: "18px" },
-								}}
-								className="text-black"
-							>
-								Add New Card
-							</Typography>
-
-							<IconButton
-								aria-label="remove"
-								size="small"
-								onClick={handleCloseModal}
-							>
-								<ClearIcon />
-							</IconButton>
-						</Box>
-
-						<Box className="rmu-modal-content">
-							<Box component="form" noValidate onSubmit={handleSubmit}>
-								<Box
-									sx={{
-										padding: "25px",
-										borderRadius: "8px",
-									}}
-									className="bg-white"
-								>
-									<Grid container alignItems="center" spacing={2}>
-										<Grid item xs={12} md={12} lg={12}>
-											<Typography
-												component="h5"
-												sx={{
-													fontWeight: "500",
-													fontSize: "14px",
-													mb: "12px",
-												}}
-												className="text-black"
-											>
-												Name
-											</Typography>
-
-											<TextField
-												autoComplete="name"
-												name="name"
-												required
-												fullWidth
-												id="name"
-												label="Name"
-												autoFocus
-												InputProps={{
-													style: { borderRadius: 8 },
-												}}
-											/>
-										</Grid>
-
-										<Grid item xs={12} md={12} lg={12}>
-											<Typography
-												component="h5"
-												sx={{
-													fontWeight: "500",
-													fontSize: "14px",
-													mb: "12px",
-												}}
-												className="text-black"
-											>
-												Email
-											</Typography>
-
-											<TextField
-												autoComplete="email"
-												name="email"
-												required
-												fullWidth
-												id="email"
-												label="Email"
-												InputProps={{
-													style: { borderRadius: 8 },
-												}}
-											/>
-										</Grid>
-
-										<Grid item xs={12} md={12} lg={12}>
-											<Typography
-												component="h5"
-												sx={{
-													fontWeight: "500",
-													fontSize: "14px",
-													mb: "12px",
-												}}
-												className="text-black"
-											>
-												Phone
-											</Typography>
-
-											<TextField
-												autoComplete="phone"
-												name="phone"
-												required
-												fullWidth
-												id="phone"
-												label="Phone"
-												InputProps={{
-													style: { borderRadius: 8 },
-												}}
-											/>
-										</Grid>
-
-										<Grid item xs={12} md={12} lg={12}>
-											<Typography
-												component="h5"
-												sx={{
-													fontWeight: "500",
-													fontSize: "14px",
-													mb: "12px",
-												}}
-												className="text-black"
-											>
-												Source
-											</Typography>
-
-											<FormControl fullWidth>
-												<InputLabel id="source-select-label">Source</InputLabel>
-												<Select
-													labelId="source-select-label"
-													id="source-select"
-													name="source"
-													required
-													input={<OutlinedInput label="Source" />}
-												>
-													<MenuItem value="Facebook">Facebook</MenuItem>
-													<MenuItem value="Import GG Sheet">
-														Import GG Sheet
-													</MenuItem>
-												</Select>
-											</FormControl>
-										</Grid>
-
-										<Grid item xs={12} mt={1}>
-											<Box
-												sx={{
-													display: "flex",
-													alignItems: "center",
-													justifyContent: "end",
-													gap: "10px",
-												}}
-											>
-												<Button
-													onClick={handleCloseModal}
-													variant="outlined"
-													color="error"
-													sx={{
-														textTransform: "capitalize",
-														borderRadius: "8px",
-														fontWeight: "500",
-														fontSize: "13px",
-														padding: "11px 30px",
-													}}
-												>
-													Cancel
-												</Button>
-
-												<Button
-													type="submit"
-													variant="contained"
-													sx={{
-														textTransform: "capitalize",
-														borderRadius: "8px",
-														fontWeight: "500",
-														fontSize: "13px",
-														padding: "11px 30px",
-														color: "#fff !important",
-													}}
-												>
-													<AddIcon
-														sx={{
-															position: "relative",
-															top: "-1px",
-														}}
-													/>{" "}
-													Create
-												</Button>
-											</Box>
-										</Grid>
-									</Grid>
-								</Box>
-							</Box>
-						</Box>
-					</Box>
-				</BootstrapDialog>
-
 			</div>
 		);
 	}
 
 	return (
 		<div ref={setNodeRef} style={style}>
-			{" "}
 			<Box
-				{...attributes}
-				{...listeners}
 				style={{
-					minWidth: "300px",
+					minWidth: "320px",
 					minHeight: "700px",
 				}}
 			>
-				<Card
+				<Paper
+					elevation={0}
 					sx={{
-						boxShadow: "none",
-						borderRadius: "7px",
+						borderRadius: "16px",
 						mb: "25px",
-						padding: { xs: "18px", sm: "20px", lg: "25px" },
-						maxWidth: "350px",
+						width: "320px",
+						background: "#F9FAFB",
+						border: "1px solid #E5E7EB",
+						overflow: "hidden",
 					}}
-					className="rmui-card"
 				>
+					{/* Column Header */}
 					<Box
 						sx={{
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "space-between",
-							mb: "15px",
+							p: "16px 20px",
+							background: "#FFFFFF",
+							borderBottom: "1px solid #E5E7EB",
+							cursor: "grab",
 						}}
+						className="column-header"
+						{...attributes}
+						{...listeners}
+						onClick={handleColumnHeaderClick}
 					>
-						<Typography
-							variant="h3"
-							sx={{
-								fontSize: { xs: "16px", md: "18px" },
-								fontWeight: 700,
-							}}
-							className="text-black"
-						>
-							New {column.title}
-						</Typography>
+						<Box sx={{ display: "flex", alignItems: "center" }}>
+							<Typography
+								variant="subtitle1"
+								sx={{
+									fontWeight: 600,
+									fontSize: "15px",
+									color: "#121828",
+								}}
+							>
+								{column.title}
+							</Typography>
 
-						<Box>
+							<Badge
+								badgeContent={column.leads?.length || 0}
+								color="primary"
+								sx={{
+									ml: 1.5,
+									"& .MuiBadge-badge": {
+										fontSize: "11px",
+										height: "18px",
+										minWidth: "18px",
+									},
+								}}
+							/>
+						</Box>
+
+						<Box sx={{ display: "flex" }}>
 							<IconButton
 								onClick={handleClick}
 								size="small"
-								aria-controls={open ? "account-menu" : undefined}
+								aria-controls={open ? "column-menu" : undefined}
 								aria-haspopup="true"
 								aria-expanded={open ? "true" : undefined}
 							>
-								<MoreHorizIcon sx={{ fontSize: "25px" }} />
+								<MoreHorizIcon fontSize="small" sx={{ color: "#637381" }} />
 							</IconButton>
 
 							<Menu
 								anchorEl={anchorEl}
-								id="account-menu"
+								id="column-menu"
 								open={open}
 								onClose={handleClose}
 								onClick={handleClose}
 								PaperProps={{
-									elevation: 0,
-
+									elevation: 2,
 									sx: {
 										overflow: "visible",
-										boxShadow: "0 4px 45px #0000001a",
-										mt: 0,
-										"& .MuiAvatar-root": {
-											width: 32,
-											height: 32,
-											ml: -0.5,
-											mr: 1,
-										},
+										mt: 1.5,
+										boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.15)",
+										borderRadius: "8px",
+										minWidth: "150px",
 									},
 								}}
 								transformOrigin={{ horizontal: "right", vertical: "top" }}
 								anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
 							>
-								<MenuItem onClick={() => deleteColumn(column.id)}>
+								<MenuItem
+									sx={{
+										fontSize: "14px",
+										py: 1,
+										color: "#212B36",
+									}}
+								>
+									Edit Column
+								</MenuItem>
+								<MenuItem
+									onClick={() => deleteColumn(column.id)}
+									sx={{
+										fontSize: "14px",
+										py: 1,
+										color: "#F44336",
+									}}
+								>
 									Delete Column
 								</MenuItem>
 							</Menu>
 						</Box>
 					</Box>
 
-					<Box>
-						{toDoListData &&
-							toDoListData.map((toDoList, index) => (
-								<Box
-									className={`bg-purple-100 ${toDoList.bgClass} task-card`}
-									style={{
-										borderWidth: "2px",
-										borderStyle: "solid",
-									}}
+					{/* Card content area with scrolling */}
+					<Box
+						sx={{
+							p: "16px",
+							maxHeight: "calc(100vh - 200px)",
+							overflowY: "auto",
+							"&::-webkit-scrollbar": {
+								width: "6px",
+							},
+							"&::-webkit-scrollbar-thumb": {
+								background: "#DFE3E8",
+								borderRadius: "10px",
+							},
+						}}
+					>
+						{leads.filter((lead) => {
+							// Nếu có filter text, lọc theo tên, email, hoặc phone
+							if (filterText) {
+								const searchText = filterText.toLowerCase();
+								const name =
+									lead.leadData["full name"] || lead.leadData.name || "";
+								const email = lead.leadData.email || "";
+								const phone = lead.leadData.phone || "";
+								const company =
+									lead.leadData.company_name || lead.leadData.company || "";
+
+								return (
+									name.toLowerCase().includes(searchText) ||
+									email.toLowerCase().includes(searchText) ||
+									phone.toLowerCase().includes(searchText) ||
+									company.toLowerCase().includes(searchText)
+								);
+							}
+							return true;
+						}).length > 0 ? (
+							leads
+								.filter((lead) => {
+									// Nếu có filter text, lọc theo tên, email, hoặc phone
+									if (filterText) {
+										const searchText = filterText.toLowerCase();
+										const name =
+											lead.leadData["full name"] || lead.leadData.name || "";
+										const email = lead.leadData.email || "";
+										const phone = lead.leadData.phone || "";
+										const company =
+											lead.leadData.company_name || lead.leadData.company || "";
+
+										return (
+											name.toLowerCase().includes(searchText) ||
+											email.toLowerCase().includes(searchText) ||
+											phone.toLowerCase().includes(searchText) ||
+											company.toLowerCase().includes(searchText)
+										);
+									}
+									return true;
+								})
+								.map((lead) => (
+									<LeadCard
+										key={lead._id.toString()}
+										lead={lead}
+										onEdit={handleEditLead}
+										onDelete={handleDeleteLead}
+									/>
+								))
+						) : (
+							<Box
+								sx={{
+									p: 3,
+									display: "flex",
+									flexDirection: "column",
+									alignItems: "center",
+									justifyContent: "center",
+									color: "text.secondary",
+									backgroundColor: "#ffffff50",
+									borderRadius: "8px",
+									border: "1px dashed #DFE3E8",
+								}}
+							>
+								<Typography
 									sx={{
-										padding: "25px",
-										borderRadius: "7px",
-										marginBottom: "25px",
+										mb: 1,
+										fontSize: "14px",
+										color: "#637381",
 									}}
-									key={index}
 								>
-									<Box
+									{filterText
+										? "No leads match your filter"
+										: "No leads in this column"}
+								</Typography>
+								{!filterText && (
+									<Typography
+										variant="caption"
 										sx={{
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "space-between",
-											mb: "17px",
+											fontSize: "12px",
+											color: "#919EAB",
 										}}
 									>
-										<Typography
-											variant="h4"
-											fontWeight={600}
-											fontSize="15px"
-											className="text-black"
-										>
-											{toDoList.leadName}
-										</Typography>
-
-										<IconButton aria-label="delete" size="small">
-											<EditIcon fontSize="inherit" />
-										</IconButton>
-									</Box>
-
-									<Typography mb="5px">Email: {toDoList.leadEmail}</Typography>
-									<Typography mb="5px"> Phone: {toDoList.leadPhone}</Typography>
-									<Typography mb="5px">
-										Source: {toDoList.leadSource}
+										Add a new lead to get started
 									</Typography>
-									<Typography mb="5px">
-										Website:{" "}
-										<a
-											href={`https://${toDoList.leadweb}`}
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											{toDoList.leadweb}
-										</a>
-									</Typography>
-
-									<Box
-										sx={{
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "space-between",
-											mt: "5px",
-										}}
-									>
-										<AvatarGroup
-											max={3}
-											sx={{
-												"& .MuiAvatar-root": {
-													border: "2px solid #fff",
-													backgroundColor: "#f0f0f0",
-													color: "#000",
-													width: "28px",
-													height: "28px",
-												},
-												"& .MuiAvatarGroup-avatar": {
-													backgroundColor: "#605dff", // Custom background color for the total avatar
-													color: "#fff", // Custom color for the text
-													fontSize: "10px",
-												},
-											}}
-										></AvatarGroup>
-
-										<Typography color="primary.main">
-											{toDoList.attempts}
-										</Typography>
-									</Box>
-								</Box>
-							))}
-
-						<Box>
-							<Button
-								variant="outlined"
-								color="primary"
-								sx={{
-									borderRadius: "7px",
-									padding: "3.3px 11px",
-									fontSize: "14px",
-									fontWeight: "500",
-									textTransform: "capitalize",
-									boxShadow: "none",
-									textAlign: "center",
-								}}
-								onClick={handleClickOpenModal}
-							>
-								<Box
-									sx={{
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										gap: "5px",
-									}}
-								>
-									<i
-										className="material-symbols-outlined"
-										style={{ fontSize: "20px" }}
-									>
-										add
-									</i>
-									Add New Card
-								</Box>
-							</Button>
-						</Box>
-					</Box>
-				</Card>
-
-				{/* Modal */}
-				<BootstrapDialog
-					onClose={handleCloseModal}
-					aria-labelledby="customized-dialog-title"
-					open={openModal}
-					className="rmu-modal"
-				>
-					<Box>
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								alignItems: "center",
-								background: "#f6f7f9",
-								padding: { xs: "15px 20px", md: "25px" },
-							}}
-							className="rmu-modal-header"
-						>
-							<Typography
-								id="modal-modal-title"
-								variant="h6"
-								sx={{
-									fontWeight: "600",
-									fontSize: { xs: "16px", md: "18px" },
-								}}
-								className="text-black"
-							>
-								Add New Card
-							</Typography>
-
-							<IconButton
-								aria-label="remove"
-								size="small"
-								onClick={handleCloseModal}
-							>
-								<ClearIcon />
-							</IconButton>
-						</Box>
-
-						<Box className="rmu-modal-content">
-							<Box component="form" noValidate onSubmit={handleSubmit}>
-								<Box
-									sx={{
-										padding: "25px",
-										borderRadius: "8px",
-									}}
-									className="bg-white"
-								>
-									<Grid container alignItems="center" spacing={2}>
-										<Grid item xs={12} md={12} lg={12}>
-											<Typography
-												component="h5"
-												sx={{
-													fontWeight: "500",
-													fontSize: "14px",
-													mb: "12px",
-												}}
-												className="text-black"
-											>
-												Name
-											</Typography>
-
-											<TextField
-												autoComplete="name"
-												name="name"
-												required
-												fullWidth
-												id="name"
-												label="Name"
-												autoFocus
-												InputProps={{
-													style: { borderRadius: 8 },
-												}}
-											/>
-										</Grid>
-
-										<Grid item xs={12} md={12} lg={12}>
-											<Typography
-												component="h5"
-												sx={{
-													fontWeight: "500",
-													fontSize: "14px",
-													mb: "12px",
-												}}
-												className="text-black"
-											>
-												Email
-											</Typography>
-
-											<TextField
-												autoComplete="email"
-												name="email"
-												required
-												fullWidth
-												id="email"
-												label="Email"
-												InputProps={{
-													style: { borderRadius: 8 },
-												}}
-											/>
-										</Grid>
-
-										<Grid item xs={12} md={12} lg={12}>
-											<Typography
-												component="h5"
-												sx={{
-													fontWeight: "500",
-													fontSize: "14px",
-													mb: "12px",
-												}}
-												className="text-black"
-											>
-												Phone
-											</Typography>
-
-											<TextField
-												autoComplete="phone"
-												name="phone"
-												required
-												fullWidth
-												id="phone"
-												label="Phone"
-												InputProps={{
-													style: { borderRadius: 8 },
-												}}
-											/>
-										</Grid>
-
-										<Grid item xs={12} md={12} lg={12}>
-											<Typography
-												component="h5"
-												sx={{
-													fontWeight: "500",
-													fontSize: "14px",
-													mb: "12px",
-												}}
-												className="text-black"
-											>
-												Source
-											</Typography>
-
-											<FormControl fullWidth>
-												<InputLabel id="source-select-label">Source</InputLabel>
-												<Select
-													labelId="source-select-label"
-													id="source-select"
-													name="source"
-													required
-													input={<OutlinedInput label="Source" />}
-												>
-													<MenuItem value="Facebook">Facebook</MenuItem>
-													<MenuItem value="Import GG Sheet">
-														Import GG Sheet
-													</MenuItem>
-												</Select>
-											</FormControl>
-										</Grid>
-
-										<Grid item xs={12} mt={1}>
-											<Box
-												sx={{
-													display: "flex",
-													alignItems: "center",
-													justifyContent: "end",
-													gap: "10px",
-												}}
-											>
-												<Button
-													onClick={handleCloseModal}
-													variant="outlined"
-													color="error"
-													sx={{
-														textTransform: "capitalize",
-														borderRadius: "8px",
-														fontWeight: "500",
-														fontSize: "13px",
-														padding: "11px 30px",
-													}}
-												>
-													Cancel
-												</Button>
-
-												<Button
-													type="submit"
-													variant="contained"
-													sx={{
-														textTransform: "capitalize",
-														borderRadius: "8px",
-														fontWeight: "500",
-														fontSize: "13px",
-														padding: "11px 30px",
-														color: "#fff !important",
-													}}
-												>
-													<AddIcon
-														sx={{
-															position: "relative",
-															top: "-1px",
-														}}
-													/>{" "}
-													Create
-												</Button>
-											</Box>
-										</Grid>
-									</Grid>
-								</Box>
+								)}
 							</Box>
+						)}
+					</Box>
+
+					{/* Add Lead button at bottom */}
+					<Box
+						sx={{
+							p: "12px 16px",
+							background: "#FFFFFF",
+							borderTop: "1px solid #E5E7EB",
+						}}
+					>
+						<Button
+							onClick={handleClickOpenCreateLead}
+							variant="outlined"
+							startIcon={<AddIcon />}
+							sx={{
+								textTransform: "none",
+								borderRadius: "8px",
+								fontWeight: "500",
+								fontSize: "13px",
+								padding: "8px 16px",
+								width: "100%",
+								color: "primary.main",
+								borderColor: "primary.main",
+								"&:hover": {
+									backgroundColor: "primary.lighter",
+								},
+							}}
+						>
+							Add Lead
+						</Button>
+					</Box>
+				</Paper>
+			</Box>
+
+			{/* Create Lead Modal */}
+			<Dialog
+				open={openCreateLead}
+				onClose={handleCloseCreateLead}
+				aria-labelledby="create-lead-dialog-title"
+				maxWidth="sm"
+				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: "16px",
+						boxShadow: "0px 24px 48px rgba(0, 0, 0, 0.2)",
+					},
+				}}
+			>
+				<Box
+					sx={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+						p: "16px 24px",
+					}}
+				>
+					<DialogTitle
+						id="create-lead-dialog-title"
+						sx={{
+							p: 0,
+							fontWeight: "600",
+							fontSize: "18px",
+						}}
+					>
+						Create New Lead
+					</DialogTitle>
+					<IconButton
+						aria-label="close"
+						onClick={handleCloseCreateLead}
+						sx={{
+							color: "text.secondary",
+							p: 1,
+						}}
+					>
+						<ClearIcon />
+					</IconButton>
+				</Box>
+
+				<Divider />
+
+				<Box sx={{ p: 3 }}>
+					<Box component="form" noValidate onSubmit={handleSubmit}>
+						<Grid container spacing={2}>
+							<Grid item xs={12} md={6}>
+								<Typography
+									component="label"
+									htmlFor="name"
+									sx={{
+										display: "block",
+										fontWeight: "500",
+										fontSize: "14px",
+										mb: 1,
+										color: "#212B36",
+									}}
+								>
+									Name <span style={{ color: "#F44336" }}>*</span>
+								</Typography>
+
+								<TextField
+									autoComplete="name"
+									name="name"
+									required
+									fullWidth
+									id="name"
+									placeholder="Enter lead name"
+									autoFocus
+									size="small"
+									InputProps={{
+										style: { borderRadius: 8 },
+									}}
+								/>
+							</Grid>
+
+							<Grid item xs={12} md={6}>
+								<Typography
+									component="label"
+									htmlFor="email"
+									sx={{
+										display: "block",
+										fontWeight: "500",
+										fontSize: "14px",
+										mb: 1,
+										color: "#212B36",
+									}}
+								>
+									Email <span style={{ color: "#F44336" }}>*</span>
+								</Typography>
+
+								<TextField
+									autoComplete="email"
+									name="email"
+									required
+									fullWidth
+									id="email"
+									placeholder="Enter email address"
+									size="small"
+									InputProps={{
+										style: { borderRadius: 8 },
+									}}
+								/>
+							</Grid>
+
+							<Grid item xs={12} md={6}>
+								<Typography
+									component="label"
+									htmlFor="phone"
+									sx={{
+										display: "block",
+										fontWeight: "500",
+										fontSize: "14px",
+										mb: 1,
+										color: "#212B36",
+									}}
+								>
+									Phone <span style={{ color: "#F44336" }}>*</span>
+								</Typography>
+
+								<TextField
+									autoComplete="phone"
+									name="phone"
+									required
+									fullWidth
+									id="phone"
+									placeholder="Enter phone number"
+									size="small"
+									InputProps={{
+										style: { borderRadius: 8 },
+									}}
+								/>
+							</Grid>
+
+							<Grid item xs={12} md={6}>
+								<Typography
+									component="label"
+									htmlFor="source"
+									sx={{
+										display: "block",
+										fontWeight: "500",
+										fontSize: "14px",
+										mb: 1,
+										color: "#212B36",
+									}}
+								>
+									Source <span style={{ color: "#F44336" }}>*</span>
+								</Typography>
+
+								<FormControl fullWidth size="small">
+									<Select
+										id="source-select"
+										name="source"
+										displayEmpty
+										required
+										input={<OutlinedInput sx={{ borderRadius: 2 }} />}
+										renderValue={(selected: string) => {
+											if (!selected) {
+												return (
+													<span style={{ color: "#919EAB" }}>
+														Select source
+													</span>
+												);
+											}
+											return selected;
+										}}
+									>
+										<MenuItem value="Facebook">Facebook</MenuItem>
+										<MenuItem value="Google">Google</MenuItem>
+										<MenuItem value="Referral">Referral</MenuItem>
+										<MenuItem value="Website">Website</MenuItem>
+										<MenuItem value="LinkedIn">LinkedIn</MenuItem>
+										<MenuItem value="Other">Other</MenuItem>
+									</Select>
+								</FormControl>
+							</Grid>
+
+							<Grid item xs={12} md={6}>
+								<Typography
+									component="label"
+									htmlFor="company"
+									sx={{
+										display: "block",
+										fontWeight: "500",
+										fontSize: "14px",
+										mb: 1,
+										color: "#212B36",
+									}}
+								>
+									Company
+								</Typography>
+
+								<TextField
+									name="company"
+									fullWidth
+									id="company"
+									placeholder="Enter company name"
+									size="small"
+									InputProps={{
+										style: { borderRadius: 8 },
+									}}
+								/>
+							</Grid>
+
+							<Grid item xs={12} md={6}>
+								<Typography
+									component="label"
+									htmlFor="position"
+									sx={{
+										display: "block",
+										fontWeight: "500",
+										fontSize: "14px",
+										mb: 1,
+										color: "#212B36",
+									}}
+								>
+									Position
+								</Typography>
+
+								<TextField
+									name="position"
+									fullWidth
+									id="position"
+									placeholder="Enter position"
+									size="small"
+									InputProps={{
+										style: { borderRadius: 8 },
+									}}
+								/>
+							</Grid>
+
+							<Grid item xs={12}>
+								<Typography
+									component="label"
+									htmlFor="website"
+									sx={{
+										display: "block",
+										fontWeight: "500",
+										fontSize: "14px",
+										mb: 1,
+										color: "#212B36",
+									}}
+								>
+									Website
+								</Typography>
+
+								<TextField
+									name="website"
+									fullWidth
+									id="website"
+									placeholder="example.com"
+									size="small"
+									InputProps={{
+										style: { borderRadius: 8 },
+									}}
+								/>
+							</Grid>
+
+							<Grid item xs={12} sx={{ mt: 2 }}>
+								<Button
+									type="submit"
+									variant="contained"
+									fullWidth
+									sx={{
+										textTransform: "none",
+										borderRadius: "8px",
+										fontWeight: "600",
+										fontSize: "15px",
+										padding: "10px",
+										boxShadow: "0px 8px 16px rgba(81, 100, 255, 0.24)",
+									}}
+								>
+									Create Lead
+								</Button>
+							</Grid>
+						</Grid>
+					</Box>
+				</Box>
+			</Dialog>
+
+			{/* Edit Lead Modal */}
+			<Dialog
+				open={Boolean(editLead)}
+				onClose={handleCloseEditLead}
+				aria-labelledby="edit-lead-dialog-title"
+				maxWidth="sm"
+				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: "16px",
+						boxShadow: "0px 24px 48px rgba(0, 0, 0, 0.2)",
+					},
+				}}
+			>
+				<Box
+					sx={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+						p: "16px 24px",
+					}}
+				>
+					<DialogTitle
+						id="edit-lead-dialog-title"
+						sx={{
+							p: 0,
+							fontWeight: "600",
+							fontSize: "18px",
+						}}
+					>
+						Edit Lead
+					</DialogTitle>
+					<IconButton
+						aria-label="close"
+						onClick={handleCloseEditLead}
+						sx={{
+							color: "text.secondary",
+							p: 1,
+						}}
+					>
+						<ClearIcon />
+					</IconButton>
+				</Box>
+
+				<Divider />
+
+				{editLead && (
+					<Box sx={{ p: 3 }}>
+						<Box component="form" noValidate onSubmit={handleSubmit}>
+							<Grid container spacing={2}>
+								<Grid item xs={12} md={6}>
+									<Typography
+										component="label"
+										htmlFor="edit-name"
+										sx={{
+											display: "block",
+											fontWeight: "500",
+											fontSize: "14px",
+											mb: 1,
+											color: "#212B36",
+										}}
+									>
+										Name <span style={{ color: "#F44336" }}>*</span>
+									</Typography>
+
+									<TextField
+										autoComplete="name"
+										name="name"
+										required
+										fullWidth
+										id="edit-name"
+										defaultValue={editLead.leadData?.["full name"] || ""}
+										size="small"
+										InputProps={{
+											style: { borderRadius: 8 },
+										}}
+									/>
+								</Grid>
+
+								<Grid item xs={12} md={6}>
+									<Typography
+										component="label"
+										htmlFor="edit-email"
+										sx={{
+											display: "block",
+											fontWeight: "500",
+											fontSize: "14px",
+											mb: 1,
+											color: "#212B36",
+										}}
+									>
+										Email <span style={{ color: "#F44336" }}>*</span>
+									</Typography>
+
+									<TextField
+										autoComplete="email"
+										name="email"
+										required
+										fullWidth
+										id="edit-email"
+										defaultValue={editLead.leadData?.email || ""}
+										size="small"
+										InputProps={{
+											style: { borderRadius: 8 },
+										}}
+									/>
+								</Grid>
+
+								<Grid item xs={12} md={6}>
+									<Typography
+										component="label"
+										htmlFor="edit-phone"
+										sx={{
+											display: "block",
+											fontWeight: "500",
+											fontSize: "14px",
+											mb: 1,
+											color: "#212B36",
+										}}
+									>
+										Phone <span style={{ color: "#F44336" }}>*</span>
+									</Typography>
+
+									<TextField
+										autoComplete="phone"
+										name="phone"
+										required
+										fullWidth
+										id="edit-phone"
+										defaultValue={editLead.leadData?.phone || ""}
+										size="small"
+										InputProps={{
+											style: { borderRadius: 8 },
+										}}
+									/>
+								</Grid>
+
+								<Grid item xs={12} md={6}>
+									<Typography
+										component="label"
+										htmlFor="edit-source"
+										sx={{
+											display: "block",
+											fontWeight: "500",
+											fontSize: "14px",
+											mb: 1,
+											color: "#212B36",
+										}}
+									>
+										Source <span style={{ color: "#F44336" }}>*</span>
+									</Typography>
+
+									<FormControl fullWidth size="small">
+										<Select
+											id="edit-source-select"
+											name="source"
+											defaultValue={editLead.leadData?.source || "Facebook Ads"}
+											required
+											input={<OutlinedInput sx={{ borderRadius: 2 }} />}
+										>
+											<MenuItem value="Facebook">Facebook</MenuItem>
+											<MenuItem value="Google">GG Sheet</MenuItem>
+										</Select>
+									</FormControl>
+								</Grid>
+
+								<Grid item xs={12} md={6}>
+									<Typography
+										component="label"
+										htmlFor="edit-company"
+										sx={{
+											display: "block",
+											fontWeight: "500",
+											fontSize: "14px",
+											mb: 1,
+											color: "#212B36",
+										}}
+									>
+										Company
+									</Typography>
+
+									<TextField
+										name="company"
+										fullWidth
+										id="edit-company"
+										defaultValue={editLead.leadData?.company_name || ""}
+										size="small"
+										InputProps={{
+											style: { borderRadius: 8 },
+										}}
+									/>
+								</Grid>
+
+								<Grid item xs={12} md={6}>
+									<Typography
+										component="label"
+										htmlFor="edit-position"
+										sx={{
+											display: "block",
+											fontWeight: "500",
+											fontSize: "14px",
+											mb: 1,
+											color: "#212B36",
+										}}
+									>
+										Job Title
+									</Typography>
+
+									<TextField
+										name="position"
+										fullWidth
+										id="edit-position"
+										defaultValue={editLead.leadData?.job_title || ""}
+										size="small"
+										InputProps={{
+											style: { borderRadius: 8 },
+										}}
+									/>
+								</Grid>
+
+								<Grid item xs={12}>
+									<Typography
+										component="label"
+										htmlFor="edit-website"
+										sx={{
+											display: "block",
+											fontWeight: "500",
+											fontSize: "14px",
+											mb: 1,
+											color: "#212B36",
+										}}
+									>
+										Website
+									</Typography>
+
+									<TextField
+										name="website"
+										fullWidth
+										id="edit-website"
+										defaultValue={editLead.leadData?.website_link || ""}
+										size="small"
+										InputProps={{
+											style: { borderRadius: 8 },
+										}}
+									/>
+								</Grid>
+
+								<Grid item xs={12} sx={{ mt: 2 }}>
+									<Button
+										type="submit"
+										variant="contained"
+										fullWidth
+										sx={{
+											textTransform: "none",
+											borderRadius: "8px",
+											fontWeight: "600",
+											fontSize: "15px",
+											padding: "10px",
+											boxShadow: "0px 8px 16px rgba(81, 100, 255, 0.24)",
+										}}
+									>
+										Update Lead
+									</Button>
+								</Grid>
+							</Grid>
 						</Box>
 					</Box>
-				</BootstrapDialog>
-			</Box>
+				)}
+			</Dialog>
 		</div>
 	);
 }

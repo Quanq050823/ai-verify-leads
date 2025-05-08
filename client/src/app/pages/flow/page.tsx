@@ -5,22 +5,36 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
-import { Tooltip } from "@mui/material";
+import {
+	Tooltip,
+	Breadcrumbs,
+	Divider,
+	Chip,
+	InputAdornment,
+	MenuItem,
+	Card,
+	CardContent,
+	CircularProgress,
+	CardActionArea,
+} from "@mui/material";
 import TextField from "@mui/material/TextField";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
-import { styled } from "@mui/material/styles";
+import { styled, alpha } from "@mui/material/styles";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
 import Menu from "@mui/material/Menu";
 import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PersonIcon from "@mui/icons-material/Person";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import HomeIcon from "@mui/icons-material/Home";
 import TableChart from "@mui/icons-material/TableChart";
 import Facebook from "@mui/icons-material/Facebook";
 import SmartToy from "@mui/icons-material/SmartToy";
@@ -41,6 +55,43 @@ import {
 	getFlowById,
 } from "@/services/flowServices";
 
+const StyledCard = styled(Card)(({ theme }) => ({
+	transition: "all 0.3s ease",
+	borderRadius: "12px",
+	overflow: "hidden",
+	border: "1px solid #E5E7EB",
+	height: "100%",
+	"&:hover": {
+		transform: "translateY(-4px)",
+		boxShadow: "0 12px 24px rgba(0, 0, 0, 0.08)",
+	},
+}));
+
+const ComponentIcon = styled(Box)(({ theme }) => ({
+	display: "flex",
+	alignItems: "center",
+	justifyContent: "center",
+	color: "white",
+	borderRadius: "10px",
+	width: "42px",
+	height: "42px",
+	marginRight: "8px",
+	boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+}));
+
+const SearchTextField = styled(TextField)(({ theme }) => ({
+	"& .MuiOutlinedInput-root": {
+		borderRadius: "10px",
+		backgroundColor: alpha(theme.palette.common.white, 0.9),
+		"&:hover": {
+			backgroundColor: theme.palette.common.white,
+		},
+		"&.Mui-focused": {
+			backgroundColor: theme.palette.common.white,
+		},
+	},
+}));
+
 const UploadBox = styled(Paper)(({ theme }) => ({
 	padding: theme.spacing(3),
 	textAlign: "center",
@@ -57,6 +108,19 @@ const UploadBox = styled(Paper)(({ theme }) => ({
 	"&:hover": {
 		backgroundColor: theme.palette.action.hover,
 	},
+}));
+
+const EmptyState = styled(Box)(({ theme }) => ({
+	display: "flex",
+	flexDirection: "column",
+	alignItems: "center",
+	justifyContent: "center",
+	padding: theme.spacing(6),
+	textAlign: "center",
+	backgroundColor: "#f9fafb",
+	borderRadius: "12px",
+	border: "1px dashed #d1d5db",
+	margin: theme.spacing(4, 0),
 }));
 
 interface Component {
@@ -79,6 +143,7 @@ interface FlowListProps {
 	activeFlowId: string | null;
 	onToggleActive: (id: string) => void;
 	onDeleteFlow: (id: string) => void;
+	searchTerm: string;
 }
 
 const FlowList: React.FC<FlowListProps> = ({
@@ -86,13 +151,19 @@ const FlowList: React.FC<FlowListProps> = ({
 	activeFlowId,
 	onToggleActive,
 	onDeleteFlow,
+	searchTerm,
 }) => {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
 	const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 	const [dialogAction, setDialogAction] = useState<string>("");
 
+	const filteredFlows = flows.filter((flow) =>
+		flow.name.toLowerCase().includes(searchTerm.toLowerCase())
+	);
+
 	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, flow: Flow) => {
+		event.stopPropagation();
 		setAnchorEl(event.currentTarget);
 		setSelectedFlow(flow);
 	};
@@ -130,211 +201,328 @@ const FlowList: React.FC<FlowListProps> = ({
 
 	const handleEditFlow = (flow: Flow) => {
 		console.log(`Editing flow: ${flow.name}`);
-		// Chuyển hướng đến trang chỉnh sửa luồng với ID flow
 		window.location.href = `/pages/customflow?id=${flow.id}`;
 	};
 
+	if (filteredFlows.length === 0) {
+		return (
+			<EmptyState>
+				<Layers sx={{ fontSize: 48, color: "#9ca3af", mb: 2 }} />
+				<Typography variant="h6" color="textSecondary" gutterBottom>
+					{searchTerm
+						? "No scenarios matching your search"
+						: "No scenarios yet"}
+				</Typography>
+				<Typography
+					variant="body2"
+					color="textSecondary"
+					sx={{ mb: 3, maxWidth: 450 }}
+				>
+					{searchTerm
+						? "Try using different keywords or clear your search"
+						: "Create your first automation scenario to streamline your workflow"}
+				</Typography>
+			</EmptyState>
+		);
+	}
+
 	return (
-		<Grid container spacing={2}>
-			{flows.map((flow) => (
-				<Grid item xs={12} key={flow.id}>
-					<Paper
-						style={{
-							padding: "16px",
-							display: "flex",
-							alignItems: "center",
-							cursor: "pointer",
-							transition: "background-color 0.3s",
-						}}
-						className="scenario flow-item"
-					>
-						<Grid container alignItems="center">
-							<Grid item xs={2}>
-								<Box style={{ display: "flex", alignItems: "center" }}>
-									{flow.components && flow.components.length > 0 ? (
-										<>
-											{flow.components.slice(0, 3).map((component, idx) => (
-												<Box
-													key={idx}
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "center",
-														backgroundColor:
-															component.backgroundColor ||
-															getNodeColor(component.name),
-														color: "white",
-														borderRadius: "7px",
-														width: "40px",
-														height: "40px",
-														marginRight: "5px",
-													}}
-												>
-													{getNodeIcon(component.name)}
-												</Box>
-											))}
-											{flow.components.length > 3 && (
-												<Box
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "center",
-														backgroundColor: "#9E9E9E",
-														color: "white",
-														borderRadius: "7px",
-														width: "40px",
-														height: "40px",
-														fontSize: "14px",
-														fontWeight: "bold",
-													}}
-												>
-													+{flow.components.length - 3}
-												</Box>
-											)}
-										</>
-									) : (
+		<>
+			<Grid container spacing={3}>
+				{filteredFlows.map((flow) => (
+					<Grid item xs={12} sm={6} lg={4} xl={3} key={flow.id}>
+						<StyledCard>
+							<CardContent
+								sx={{
+									p: 0,
+									height: "100%",
+									display: "flex",
+									flexDirection: "column",
+								}}
+							>
+								{/* Header with status and menu */}
+								<Box
+									sx={{
+										p: 2,
+										display: "flex",
+										justifyContent: "space-between",
+										alignItems: "center",
+										borderBottom: "1px solid #E5E7EB",
+										bgcolor: "#FAFBFC",
+									}}
+								>
+									<Chip
+										label={flow.status === 2 ? "Active" : "Inactive"}
+										size="small"
+										color={flow.status === 2 ? "success" : "default"}
+										sx={{
+											height: 24,
+											fontSize: "0.75rem",
+											borderRadius: "6px",
+										}}
+									/>
+									<Box sx={{ display: "flex", alignItems: "center" }}>
+										<Box
+											onClick={(e) => {
+												e.stopPropagation();
+												onToggleActive(flow.id);
+											}}
+											sx={{ display: "inline-flex", mr: 0.5 }}
+										>
+											<Tooltip
+												title={
+													flow.status === 2 ? "Disable flow" : "Activate flow"
+												}
+											>
+												<Switch
+													checked={flow.status === 2}
+													color="primary"
+													size="small"
+													onClick={(e) => e.stopPropagation()}
+												/>
+											</Tooltip>
+										</Box>
+										<IconButton
+											size="small"
+											onClick={(event) => handleMenuOpen(event, flow)}
+											sx={{ ml: 0.5 }}
+										>
+											<MoreVertIcon fontSize="small" />
+										</IconButton>
+									</Box>
+								</Box>
+
+								{/* Content - Now using CardActionArea outside the content area */}
+								<CardActionArea
+									onClick={() => handleEditFlow(flow)}
+									sx={{
+										flexGrow: 1,
+										display: "flex",
+										flexDirection: "column",
+										alignItems: "flex-start",
+										justifyContent: "flex-start",
+									}}
+								>
+									<Box sx={{ p: 2.5, width: "100%" }}>
+										{/* Flow name */}
+										<Typography
+											variant="h6"
+											sx={{
+												fontWeight: 600,
+												mb: 1.5,
+												color: "#111827",
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												display: "-webkit-box",
+												WebkitLineClamp: 1,
+												WebkitBoxOrient: "vertical",
+											}}
+										>
+											{flow.name}
+										</Typography>
+
+										{/* Flow info */}
+										<Box
+											sx={{ display: "flex", alignItems: "center", mb: 2.5 }}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													display: "flex",
+													alignItems: "center",
+													color: "#6B7280",
+													fontSize: "0.8125rem",
+													mr: 2,
+												}}
+											>
+												<CalendarMonthIcon
+													sx={{ fontSize: 16, mr: 0.5, color: "#9CA3AF" }}
+												/>
+												{flow.date}
+											</Typography>
+											<Typography
+												variant="body2"
+												sx={{
+													display: "flex",
+													alignItems: "center",
+													color: "#6B7280",
+													fontSize: "0.8125rem",
+												}}
+											>
+												<PersonIcon
+													sx={{ fontSize: 16, mr: 0.5, color: "#9CA3AF" }}
+												/>
+												{flow.creator}
+											</Typography>
+										</Box>
+
+										{/* Components */}
 										<Box
 											sx={{
 												display: "flex",
 												alignItems: "center",
-												justifyContent: "center",
-												backgroundColor: "#9E9E9E",
-												color: "white",
-												borderRadius: "7px",
-												width: "40px",
-												height: "40px",
+												flexWrap: "wrap",
 											}}
 										>
-											<Layers fontSize="small" />
+											{flow.components && flow.components.length > 0 ? (
+												<>
+													{flow.components.slice(0, 3).map((component, idx) => (
+														<ComponentIcon
+															key={idx}
+															sx={{
+																backgroundColor:
+																	component.backgroundColor ||
+																	getNodeColor(component.name),
+															}}
+														>
+															{getNodeIcon(component.name)}
+														</ComponentIcon>
+													))}
+													{flow.components.length > 3 && (
+														<ComponentIcon
+															sx={{
+																backgroundColor: "#9E9E9E",
+															}}
+														>
+															+{flow.components.length - 3}
+														</ComponentIcon>
+													)}
+												</>
+											) : (
+												<ComponentIcon
+													sx={{
+														backgroundColor: "#9E9E9E",
+													}}
+												>
+													<Layers fontSize="small" />
+												</ComponentIcon>
+											)}
 										</Box>
-									)}
-								</Box>
-							</Grid>
-							<Grid item xs={8}>
-								<Box onClick={() => handleEditFlow(flow)}>
-									<Typography variant="h6">{flow.name}</Typography>
-									<Typography
-										variant="body2"
-										color="textSecondary"
-										style={{ display: "flex", alignItems: "center" }}
-									>
-										<CalendarMonthIcon style={{ marginRight: "5px" }} />
-										{flow.date}
-										<PersonIcon
-											style={{ marginRight: "5px", marginLeft: "10px" }}
-										/>
-										{flow.creator}
-									</Typography>
-								</Box>
-							</Grid>
-							<Grid item xs={1}>
-								<Tooltip
-									title={
-										flow.status === 1
-											? "Click to activate flow"
-											: "Click to disable flow"
-									}
-									placement="left"
-								>
-									<Switch
-										checked={flow.status === 2}
-										onChange={(e) => {
-											e.stopPropagation();
-											onToggleActive(flow.id);
-										}}
-										onClick={(e) => e.stopPropagation()}
-										color="primary"
-									/>
-								</Tooltip>
-							</Grid>
-							<Grid item xs={1}>
-								<IconButton
-									aria-controls="simple-menu"
-									aria-haspopup="true"
-									onClick={(event) => handleMenuOpen(event, flow)}
-								>
-									<MoreVertIcon />
-								</IconButton>
-								<Menu
-									id="simple-menu"
-									anchorEl={anchorEl}
-									keepMounted
-									open={Boolean(anchorEl)}
-									onClose={handleMenuClose}
-									PaperProps={{
-										elevation: 0,
-										sx: {
-											borderRadius: "7px",
-											boxShadow: "0 4px 45px rgba(99, 99, 99, 0.1)",
-											overflow: "visible",
-											mt: 1.5,
-											"& .MuiAvatar-root": {
-												width: 32,
-												height: 32,
-												ml: -0.5,
-												mr: 1,
-											},
-											"&:before": {
-												content: '""',
-												display: "block",
-												position: "absolute",
-												top: 0,
-												right: 14,
-												width: 10,
-												height: 10,
-												bgcolor: "background.paper",
-												transform: "translateY(-50%) rotate(45deg)",
-												zIndex: 0,
-											},
-										},
-									}}
-									transformOrigin={{ horizontal: "right", vertical: "top" }}
-									anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-									className="for-dark-top-navList"
-								>
-									<MenuItem onClick={() => handleDialogOpen("clone")}>
-										Clone
-									</MenuItem>
-									<MenuItem onClick={() => handleDialogOpen("delete")}>
-										Delete
-									</MenuItem>
-								</Menu>
-							</Grid>
-						</Grid>
-					</Paper>
-				</Grid>
-			))}
+									</Box>
+								</CardActionArea>
+							</CardContent>
+						</StyledCard>
+					</Grid>
+				))}
+			</Grid>
+
+			<Menu
+				id="simple-menu"
+				anchorEl={anchorEl}
+				keepMounted
+				open={Boolean(anchorEl)}
+				onClose={handleMenuClose}
+				PaperProps={{
+					elevation: 0,
+					sx: {
+						borderRadius: "8px",
+						boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+						overflow: "visible",
+						mt: 1.5,
+						"& .MuiMenuItem-root": {
+							fontSize: "0.875rem",
+							py: 1,
+						},
+						"&:before": {
+							content: '""',
+							display: "block",
+							position: "absolute",
+							top: 0,
+							right: 14,
+							width: 10,
+							height: 10,
+							bgcolor: "background.paper",
+							transform: "translateY(-50%) rotate(45deg)",
+							zIndex: 0,
+						},
+					},
+				}}
+				transformOrigin={{ horizontal: "right", vertical: "top" }}
+				anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+			>
+				<MenuItem
+					onClick={() => handleDialogOpen("clone")}
+					sx={{ color: "#111827" }}
+				>
+					<ContentCopyIcon fontSize="small" sx={{ mr: 1, color: "#6B7280" }} />
+					Clone
+				</MenuItem>
+				<MenuItem
+					onClick={() => handleDialogOpen("delete")}
+					sx={{ color: "#F44336" }}
+				>
+					<DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />
+					Delete
+				</MenuItem>
+			</Menu>
+
 			<Dialog
 				open={dialogOpen}
 				onClose={handleDialogClose}
 				aria-labelledby="alert-dialog-title"
 				aria-describedby="alert-dialog-description"
+				PaperProps={{
+					sx: {
+						borderRadius: "12px",
+						boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+						overflow: "hidden",
+					},
+				}}
 			>
-				<DialogTitle id="alert-dialog-title">
-					{`Confirm ${dialogAction}`}
+				<DialogTitle
+					id="alert-dialog-title"
+					sx={{ fontSize: "1.25rem", fontWeight: 600 }}
+				>
+					{dialogAction === "clone" ? "Clone Scenario" : "Delete Scenario"}
 				</DialogTitle>
 				<DialogContent>
-					<Typography>
-						{`Are you sure you want to ${dialogAction} the flow "${selectedFlow?.name}"?`}
+					<Typography variant="body1" sx={{ mt: 1 }}>
+						{dialogAction === "clone"
+							? `Are you sure you want to create a copy of "${selectedFlow?.name}"?`
+							: `Are you sure you want to delete "${selectedFlow?.name}"?`}
 					</Typography>
+					{dialogAction === "delete" && (
+						<Typography variant="body2" color="error" sx={{ mt: 2 }}>
+							This action cannot be undone. The scenario will be moved to trash.
+						</Typography>
+					)}
 				</DialogContent>
-				<DialogActions>
-					<Button onClick={handleDialogClose} color="primary">
+				<DialogActions sx={{ padding: "16px 24px" }}>
+					<Button
+						onClick={handleDialogClose}
+						variant="outlined"
+						sx={{
+							textTransform: "none",
+							borderRadius: "8px",
+							px: 2,
+						}}
+					>
 						Cancel
 					</Button>
-					<Button onClick={handleConfirmAction} color="primary" autoFocus>
-						Confirm
+					<Button
+						onClick={handleConfirmAction}
+						color={dialogAction === "delete" ? "error" : "primary"}
+						variant="contained"
+						autoFocus
+						sx={{
+							textTransform: "none",
+							borderRadius: "8px",
+							px: 2,
+						}}
+					>
+						{dialogAction === "clone" ? "Clone" : "Delete"}
 					</Button>
 				</DialogActions>
 			</Dialog>
-		</Grid>
+		</>
 	);
 };
 
-const ImportLeadUI: React.FC = () => {
+const ScenarioPage: React.FC = () => {
 	const [flows, setFlows] = useState<Flow[]>([]);
 	const [activeFlowId, setActiveFlowId] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [searchTerm, setSearchTerm] = useState<string>("");
 
 	const loadFlows = async () => {
 		try {
@@ -412,30 +600,110 @@ const ImportLeadUI: React.FC = () => {
 
 	return (
 		<Box
-			style={{ minHeight: "80vh", display: "flex", flexDirection: "column" }}
+			sx={{
+				minHeight: "80vh",
+				display: "flex",
+				flexDirection: "column",
+				px: 1,
+			}}
 		>
+			{/* Breadcrumbs */}
+			<Breadcrumbs
+				separator={<NavigateNextIcon fontSize="small" />}
+				aria-label="breadcrumb"
+				sx={{ mb: 2 }}
+			>
+				<Link href="/app/dashboard" passHref style={{ textDecoration: "none" }}>
+					<Typography
+						color="text.secondary"
+						sx={{ display: "flex", alignItems: "center", fontSize: "0.875rem" }}
+					>
+						<HomeIcon sx={{ mr: 0.5, fontSize: "0.875rem" }} />
+						Dashboard
+					</Typography>
+				</Link>
+				<Typography color="text.primary" sx={{ fontSize: "0.875rem" }}>
+					Scenarios
+				</Typography>
+			</Breadcrumbs>
+
+			{/* Header */}
 			<Box
-				className="breadcrumb-card"
-				style={{
+				sx={{
 					display: "flex",
 					justifyContent: "space-between",
 					alignItems: "center",
+					mb: 3,
 				}}
 			>
-				<h1>All scenarios</h1>
-				<Button variant="outlined" component={Link} href="/pages/customflow">
-					<AddIcon
-						sx={{
-							position: "relative",
-							paddingRight: "5px",
-						}}
-					/>
-					<Typography color="primary">Create a new Scenario</Typography>
+				<Typography variant="h5" sx={{ fontWeight: 700 }}>
+					All Scenarios
+				</Typography>
+
+				<Button
+					variant="outlined"
+					startIcon={<DeleteOutlineIcon />}
+					href="/pages/trash/"
+					sx={{
+						borderRadius: "10px",
+						textTransform: "none",
+						boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)",
+					}}
+				>
+					Trash
 				</Button>
 			</Box>
+
+			{/* Search and Add */}
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					mb: 3,
+					flexWrap: "wrap",
+					gap: 2,
+				}}
+			>
+				<SearchTextField
+					placeholder="Search scenarios..."
+					variant="outlined"
+					value={searchTerm}
+					onChange={(e) => setSearchTerm(e.target.value)}
+					InputProps={{
+						startAdornment: (
+							<InputAdornment position="start">
+								<SearchIcon color="action" />
+							</InputAdornment>
+						),
+					}}
+					size="small"
+					sx={{ flexGrow: 1, maxWidth: { xs: "100%", sm: 320 } }}
+				/>
+
+				<Button
+					variant="contained"
+					component={Link}
+					href="/pages/customflow"
+					startIcon={<AddIcon />}
+					sx={{
+						borderRadius: "10px",
+						textTransform: "none",
+						boxShadow: "0 8px 16px rgba(85, 105, 255, 0.2)",
+						py: 1,
+						px: 2.5,
+					}}
+				>
+					Create New Scenario
+				</Button>
+			</Box>
+
+			<Divider sx={{ mb: 3 }} />
+
+			{/* Content */}
 			{isLoading ? (
-				<Box display="flex" justifyContent="center" my={4}>
-					<Typography>Loading flows...</Typography>
+				<Box display="flex" justifyContent="center" alignItems="center" my={8}>
+					<CircularProgress size={40} color="primary" />
 				</Box>
 			) : (
 				<FlowList
@@ -443,9 +711,11 @@ const ImportLeadUI: React.FC = () => {
 					activeFlowId={activeFlowId}
 					onToggleActive={handleToggleActive}
 					onDeleteFlow={handleDeleteFlow}
+					searchTerm={searchTerm}
 				/>
 			)}
 		</Box>
 	);
 };
-export default ImportLeadUI;
+
+export default ScenarioPage;

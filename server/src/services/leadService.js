@@ -28,47 +28,130 @@ export const getLeadById = async (leadId, userId) => {
     }
 };
 
-export const publishLead = async (userId, flowId, nodeId, leads, isError = false) => {
+export const getLeadByNodes = async (userId, flowId) => {
     try {
-        let flow = await flowService.checkFlowExists(flowId, userId);
+        const flow = await flowService.getFlow(flowId, { userId });
+        const leads = await Lead.find({
+            userId: getObjectId(userId),
+            flowId: getObjectId(flowId),
+        }).sort({ createdAt: -1 });
+
+        let mergeNodes = [];
+
+        if (flow?.nodeData?.nodes?.length) {
+            mergeNodes = flow.nodeData.nodes.map((node) => {
+                const nodesLeads = leads.filter(
+                    (lead) => lead.nodeId === node.id && lead.status !== 9 && lead.status !== 0
+                );
+                return {
+                    id: node.id,
+                    type: node.type,
+                    label: node.data.label,
+                    leads: nodesLeads,
+                };
+            });
+        }
+
+        const deadLeads = leads.filter((lead) => lead.status === 0);
+        const successLeads = leads.filter((lead) => lead.status === 9);
+
+        mergeNodes.push({
+            id: "deadLead",
+            type: "deadLead",
+            label: "Dead Leads",
+            leads: deadLeads,
+        });
+
+        mergeNodes.push({
+            id: "successLead",
+            type: "successLead",
+            label: "Success Leads",
+            leads: successLeads,
+        });
+
+        return mergeNodes;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const publishLead = async (
+    userId,
+    flowId,
+    nodeId,
+    leads,
+    result = null,
+    isRetry = false
+) => {
+    try {
+        const flow = await flowService.checkFlowExists(flowId, userId);
         if (!flow) {
             throw new ApiError(StatusCodes.BAD_REQUEST, "Flow does not exist.");
         }
 
-        const routing = flow.routeData.find((route) => route.source === nodeId);
-        if (!routing) {
-            leads.forEach(async (lead) => {
-                let result = await Lead.findOneAndUpdate(
-                    { _id: leads[0]._id, userId: getObjectId(userId) },
-                    { $set: { status: 9 } },
-                    { new: true }
+        let routing = isRetry
+            ? flow.routeData.find(
+                  (route) =>
+                      route.target === nodeId ||
+                      route.successTarget === nodeId ||
+                      route.failTarget === nodeId
+              )
+            : flow.routeData.find((route) => route.source === nodeId);
+
+        if (routing?.isSeparate) {
+            if (result === null) {
+                throw new ApiError(
+                    StatusCodes.BAD_REQUEST,
+                    "Result is required for separate routing."
                 );
-            });
+            }
+
+            routing.target = result ? routing.successTarget : routing.failTarget;
+
+            if (!routing.target) {
+                console.log(`No config target found for ${result} in node ${nodeId}`);
+                routing = null;
+            }
+        }
+
+        if (!routing) {
+            await Promise.all(
+                leads.map(async (lead) => {
+                    await Lead.findOneAndUpdate(
+                        { _id: lead._id, userId: getObjectId(userId) },
+                        { $set: { status: 9 } },
+                        { new: true }
+                    );
+                })
+            );
 
             console.log("✅ Flow has been completed. Lead stop published.");
             return;
         }
 
         const targetNode = routing.target.split("_")[0];
-        const task = isError ? "tasks.deadLead" : `tasks.${targetNode}`;
-        let targetExchange = isError ? "deadLead" : targetNode;
-        let routingKey = isError ? "deadLead.consumer" : `${userId}.${flowId}.${routing?.target}`;
-        leads.forEach(async (lead) => {
-            await Producer.publishToCelery(
-                targetExchange,
-                routingKey,
-                {
-                    leadId: lead._id,
-                    flowId: flowId,
-                    userId: userId,
-                    nodeId: nodeId,
-                    targetNode: routing?.target,
-                },
-                task
-            );
-        });
+        const task = `tasks.${targetNode}`;
+        const targetExchange = targetNode;
+        const routingKey = `${userId}.${flowId}.${routing.target}`;
 
-        return flow ? flow : null;
+        await Promise.all(
+            leads.map(async (lead) => {
+                await Producer.publishToCelery(
+                    targetExchange,
+                    routingKey,
+                    {
+                        leadId: lead._id,
+                        flowId,
+                        userId,
+                        nodeId,
+                        targetNode: routing.target,
+                    },
+                    task
+                );
+            })
+        );
+
+        return flow;
     } catch (error) {
         throw error;
     }

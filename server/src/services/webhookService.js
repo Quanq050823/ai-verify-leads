@@ -105,7 +105,9 @@ const processLeadEvent = async (lead) => {
             await publishLead(flow.userId, flow._id, currentNode.id, [importedLeads]);
         }
     } catch (err) {
-        throw err;
+        console.error("Error processing lead event:", err);
+        return;
+        // throw err;
     }
 };
 
@@ -115,7 +117,10 @@ const fetchLeadData = async (leadgenId, pageAccessToken) => {
     const response = await fetch(url);
 
     if (!response.ok) {
-        throw new Error(`Facebook API error: ${response.statusText}`);
+        throw new ApiError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            `Facebook API error: ${response.statusText}`
+        );
     }
 
     return await response.json();
@@ -128,18 +133,22 @@ export const getTranscript = async (data) => {
     leadId = getObjectId(leadId);
     try {
         if (error == true || error == "true") {
-            let lead = await Lead.findOneAndUpdate(
-                { _id: leadId },
-                {
-                    $set: {
-                        status: 0,
-                        "error.status": true,
-                        "error.message": message,
-                    },
-                },
-                { new: true }
-            );
-            // if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
+            console.warn("Call lead error:", message);
+            let lead = await Lead.findById(leadId);
+
+            lead.error = {
+                status: true,
+                message: message,
+                stackTrace: error?.stack,
+                retryCount: lead?.error?.retryCount ? lead.error.retryCount : 0,
+            };
+            lead.status = 0;
+            if (lead?.error?.retryCount < 2) {
+                lead.error.retryCount += 1;
+                await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true, true);
+                console.warn("Retrying lead...");
+            }
+            await lead.save();
             return;
         }
         if (!leadId || !transcript) {
@@ -160,7 +169,7 @@ export const getTranscript = async (data) => {
             return;
         }
 
-        await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead]);
+        await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], false);
 
         return lead;
     } catch (error) {

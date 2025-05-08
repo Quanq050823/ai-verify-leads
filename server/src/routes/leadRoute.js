@@ -10,5 +10,6 @@ const router = express.Router();
 
 router.get("/", controller.getAllLeads);
 router.get("/:leadId", controller.getLeadById);
+router.get("/mergeNodes/:flowId", controller.getLeadByNodes);
 
 export default router;

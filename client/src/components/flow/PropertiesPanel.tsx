@@ -992,8 +992,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			}
 			// Khởi tạo giá trị mặc định cho node Facebook Lead Ads mới
 			else if (
-				(selectedNode.type === "facebookLeadAds" ||
-					selectedNode.type === "facebookAds") &&
+				selectedNode.type === "facebookLeadAds" &&
 				Object.keys(nodeSettings).length === 0
 			) {
 				setLocalSettings({
@@ -1127,7 +1126,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 					</>
 				);
 
-			case "facebookAds":
 			case "facebookLeadAds":
 				return (
 					<>

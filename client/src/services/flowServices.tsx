@@ -102,6 +102,36 @@ export const deleteFlow = async (flowId: string) => {
 	}
 };
 
+export const restoreFlow = async (flowId: string) => {
+	try {
+		const response = await axios.patch(`/flow/restoreFlow/${flowId}`);
+		toast.success("Successfully restored flow!");
+		return response.data;
+	} catch (error: any) {
+		console.log(error);
+		toast.error(
+			`${error?.response?.data?.message || "Failed to restore flow!"}`
+		);
+		return { error };
+	}
+};
+
+export const permanentDeleteFlow = async (flowId: string) => {
+	try {
+		const response = await axios.delete(`/flow/permanent/${flowId}`);
+		toast.success("Flow permanently deleted!");
+		return response.data;
+	} catch (error: any) {
+		console.log(error);
+		toast.error(
+			`${
+				error?.response?.data?.message || "Failed to permanently delete flow!"
+			}`
+		);
+		return { error };
+	}
+};
+
 // Queue Management
 export const resetQueue = async () => {
 	try {

@@ -1,0 +1,835 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+	Card,
+	CardContent,
+	Box,
+	Typography,
+	Avatar,
+	IconButton,
+	Tooltip,
+	Chip,
+	Divider,
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogActions,
+	Button,
+	Grid,
+	Paper,
+} from "@mui/material";
+import { Lead } from "../../type";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import BusinessIcon from "@mui/icons-material/Business";
+import WorkIcon from "@mui/icons-material/Work";
+import LanguageIcon from "@mui/icons-material/Language";
+import { getLeadById } from "../../services/leadServices";
+import { formatDistance } from "date-fns";
+
+const getStatusColor = (status: number) => {
+	switch (status) {
+		case 1:
+			return "#FF9800"; // Pending - Orange
+		case 2:
+			return "#2196F3"; // In-progress - Blue
+		case 3:
+			return "#4CAF50"; // Success - Green
+		case 9:
+			return "#9C27B0"; // Done-process - Purple
+		default:
+			return "#9E9E9E"; // Default - Grey
+	}
+};
+
+const getStatusText = (status: number) => {
+	switch (status) {
+		case 1:
+			return "Pending";
+		case 2:
+			return "In Progress";
+		case 3:
+			return "Success";
+		case 9:
+			return "Done";
+		default:
+			return "Unknown";
+	}
+};
+
+const getInitials = (name: string) => {
+	return name
+		? name
+				.split(" ")
+				.map((n) => n[0])
+				.join("")
+				.toUpperCase()
+				.substring(0, 2)
+		: "?";
+};
+
+const getRandomColor = (name: string) => {
+	const colors = [
+		"#F44336",
+		"#E91E63",
+		"#9C27B0",
+		"#673AB7",
+		"#3F51B5",
+		"#2196F3",
+		"#03A9F4",
+		"#00BCD4",
+		"#009688",
+		"#4CAF50",
+		"#8BC34A",
+		"#CDDC39",
+		"#FFC107",
+		"#FF9800",
+		"#FF5722",
+	];
+	const hash = name
+		.split("")
+		.reduce((acc, char) => acc + char.charCodeAt(0), 0);
+	return colors[hash % colors.length];
+};
+
+interface LeadCardProps {
+	lead: Lead;
+	onDelete?: (id: string) => void;
+	onEdit?: (lead: Lead) => void;
+}
+
+const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
+	const [openDetails, setOpenDetails] = useState(false);
+	const [detailedLead, setDetailedLead] = useState<Lead | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+
+	const handleOpenDetails = async () => {
+		setLoading(true);
+		try {
+			const leadDetails = await getLeadById(lead._id.toString());
+			if (leadDetails) {
+				setDetailedLead(leadDetails);
+			} else {
+				setDetailedLead(lead);
+			}
+		} catch (error) {
+			console.error("Lỗi khi lấy chi tiết lead:", error);
+			setDetailedLead(lead);
+		} finally {
+			setLoading(false);
+			setOpenDetails(true);
+		}
+	};
+
+	const handleCloseDetails = () => {
+		setOpenDetails(false);
+	};
+
+	const handleOpenDeleteConfirm = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		setOpenDeleteConfirm(true);
+	};
+
+	const handleCloseDeleteConfirm = () => {
+		setOpenDeleteConfirm(false);
+	};
+
+	const handleConfirmDelete = () => {
+		if (onDelete) {
+			onDelete(lead._id.toString());
+		}
+		setOpenDeleteConfirm(false);
+		if (openDetails) {
+			setOpenDetails(false);
+		}
+	};
+
+	const handleEdit = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (onEdit) {
+			onEdit(lead);
+		}
+	};
+
+	const leadName =
+		lead.leadData["full name"] || lead.leadData.name || "Unknown";
+	const leadEmail = lead.leadData.email || "";
+	const leadPhone = lead.leadData.phone || "";
+	const leadCompany = lead.leadData.company_name || lead.leadData.company || "";
+	const leadPosition = lead.leadData.job_title || lead.leadData.position || "";
+	const leadWebsite = lead.leadData.website_link || lead.leadData.website || "";
+	const timeAgo = formatDistance(new Date(lead.updatedAt), new Date(), {
+		addSuffix: true,
+	});
+
+	return (
+		<>
+			<Card
+				sx={{
+					mb: 1,
+					borderRadius: 2,
+					boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+					transition: "transform 0.2s, box-shadow 0.2s",
+					"&:hover": {
+						transform: "translateY(-3px)",
+						boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+					},
+					cursor: "pointer",
+				}}
+				onClick={handleOpenDetails}
+			>
+				<CardContent>
+					<Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+						<Box sx={{ display: "flex", alignItems: "center" }}>
+							<Avatar
+								sx={{
+									bgcolor: getRandomColor(leadName),
+									width: 40,
+									height: 40,
+								}}
+							>
+								{getInitials(leadName)}
+							</Avatar>
+							<Box sx={{ ml: 1.5 }}>
+								<Typography variant="subtitle1" fontWeight="bold">
+									{leadName}
+								</Typography>
+								<Typography
+									variant="body2"
+									color="text.secondary"
+									sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+								>
+									{leadPosition && (
+										<>
+											<WorkIcon fontSize="inherit" />
+											{leadPosition}
+										</>
+									)}
+								</Typography>
+							</Box>
+						</Box>
+						<Box>
+							<Chip
+								label={getStatusText(lead.status)}
+								size="small"
+								sx={{
+									bgcolor: `${getStatusColor(lead.status)}20`,
+									color: getStatusColor(lead.status),
+									fontWeight: "bold",
+									borderRadius: 1,
+								}}
+							/>
+						</Box>
+					</Box>
+
+					<Divider sx={{ my: 1 }} />
+
+					{leadCompany && (
+						<Box
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								gap: 0.5,
+								my: 0.5,
+							}}
+						>
+							<BusinessIcon fontSize="small" sx={{ color: "text.secondary" }} />
+							<Typography variant="body2" noWrap>
+								{leadCompany}
+							</Typography>
+						</Box>
+					)}
+
+					{leadEmail && (
+						<Box
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								gap: 0.5,
+								my: 0.5,
+							}}
+						>
+							<EmailIcon fontSize="small" sx={{ color: "text.secondary" }} />
+							<Typography variant="body2" noWrap>
+								{leadEmail}
+							</Typography>
+						</Box>
+					)}
+
+					<Box
+						sx={{
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "center",
+							mt: 1,
+						}}
+					>
+						<Typography variant="caption" color="text.secondary">
+							{timeAgo}
+						</Typography>
+						<Box>
+							{onEdit && (
+								<Tooltip title="Edit">
+									<IconButton size="small" onClick={handleEdit}>
+										<EditIcon fontSize="small" />
+									</IconButton>
+								</Tooltip>
+							)}
+							{onDelete && (
+								<Tooltip title="Delete">
+									<IconButton size="small" onClick={handleOpenDeleteConfirm}>
+										<DeleteIcon fontSize="small" />
+									</IconButton>
+								</Tooltip>
+							)}
+						</Box>
+					</Box>
+				</CardContent>
+			</Card>
+
+			<Dialog
+				open={openDetails}
+				onClose={handleCloseDetails}
+				maxWidth="md"
+				fullWidth
+				PaperProps={{
+					sx: {
+						borderRadius: "12px",
+						boxShadow: "0px 24px 48px rgba(0, 0, 0, 0.2)",
+						maxHeight: "90vh",
+					},
+				}}
+			>
+				<DialogTitle sx={{ p: "16px 24px" }}>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+						<Avatar
+							sx={{
+								bgcolor: getRandomColor(leadName),
+								width: 40,
+								height: 40,
+							}}
+						>
+							{getInitials(leadName)}
+						</Avatar>
+						<Box>
+							<Typography variant="h6" sx={{ fontWeight: 600 }}>
+								{leadName}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Updated {timeAgo}
+							</Typography>
+						</Box>
+						<Chip
+							label={getStatusText(lead.status)}
+							size="small"
+							sx={{
+								ml: "auto",
+								bgcolor: `${getStatusColor(lead.status)}20`,
+								color: getStatusColor(lead.status),
+								fontWeight: "bold",
+							}}
+						/>
+					</Box>
+				</DialogTitle>
+				<DialogContent dividers sx={{ p: 0 }}>
+					{loading ? (
+						<Box sx={{ textAlign: "center", py: 3 }}>
+							<Typography>Loading lead details...</Typography>
+						</Box>
+					) : (
+						<Box sx={{ p: 3 }}>
+							<Grid container spacing={3}>
+								<Grid item xs={12} md={6}>
+									<Paper
+										elevation={0}
+										sx={{
+											p: 2.5,
+											height: "100%",
+											borderRadius: "12px",
+											border: "1px solid #E5E7EB",
+										}}
+									>
+										<Typography
+											variant="subtitle1"
+											color="text.primary"
+											fontWeight={600}
+											gutterBottom
+										>
+											Contact Information
+										</Typography>
+										<Box sx={{ mt: 2 }}>
+											{leadEmail && (
+												<Box
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														gap: 1.5,
+														mb: 2,
+													}}
+												>
+													<Avatar
+														sx={{
+															bgcolor: "#E3F2FD",
+															width: 36,
+															height: 36,
+														}}
+													>
+														<EmailIcon
+															fontSize="small"
+															sx={{ color: "#2196F3" }}
+														/>
+													</Avatar>
+													<Box>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+														>
+															Email
+														</Typography>
+														<Typography
+															variant="body2"
+															sx={{ wordBreak: "break-word" }}
+														>
+															{leadEmail}
+														</Typography>
+													</Box>
+												</Box>
+											)}
+											{leadPhone && (
+												<Box
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														gap: 1.5,
+														mb: 2,
+													}}
+												>
+													<Avatar
+														sx={{
+															bgcolor: "#E8F5E9",
+															width: 36,
+															height: 36,
+														}}
+													>
+														<PhoneIcon
+															fontSize="small"
+															sx={{ color: "#4CAF50" }}
+														/>
+													</Avatar>
+													<Box>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+														>
+															Phone
+														</Typography>
+														<Typography variant="body2">{leadPhone}</Typography>
+													</Box>
+												</Box>
+											)}
+											{leadWebsite && (
+												<Box
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														gap: 1.5,
+													}}
+												>
+													<Avatar
+														sx={{
+															bgcolor: "#FFF3E0",
+															width: 36,
+															height: 36,
+														}}
+													>
+														<LanguageIcon
+															fontSize="small"
+															sx={{ color: "#FF9800" }}
+														/>
+													</Avatar>
+													<Box>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+														>
+															Website
+														</Typography>
+														<Typography variant="body2">
+															<a
+																href={
+																	leadWebsite.startsWith("http")
+																		? leadWebsite
+																		: `https://${leadWebsite}`
+																}
+																target="_blank"
+																rel="noopener noreferrer"
+																style={{
+																	textDecoration: "none",
+																	color: "#2065D1",
+																}}
+															>
+																{leadWebsite}
+															</a>
+														</Typography>
+													</Box>
+												</Box>
+											)}
+										</Box>
+									</Paper>
+								</Grid>
+								<Grid item xs={12} md={6}>
+									<Paper
+										elevation={0}
+										sx={{
+											p: 2.5,
+											height: "100%",
+											borderRadius: "12px",
+											border: "1px solid #E5E7EB",
+										}}
+									>
+										<Typography
+											variant="subtitle1"
+											color="text.primary"
+											fontWeight={600}
+											gutterBottom
+										>
+											Company Information
+										</Typography>
+										<Box sx={{ mt: 2 }}>
+											{leadCompany && (
+												<Box
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														gap: 1.5,
+														mb: 2,
+													}}
+												>
+													<Avatar
+														sx={{
+															bgcolor: "#EDE7F6",
+															width: 36,
+															height: 36,
+														}}
+													>
+														<BusinessIcon
+															fontSize="small"
+															sx={{ color: "#673AB7" }}
+														/>
+													</Avatar>
+													<Box>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+														>
+															Company
+														</Typography>
+														<Typography variant="body2">
+															{leadCompany}
+														</Typography>
+													</Box>
+												</Box>
+											)}
+											{leadPosition && (
+												<Box
+													sx={{
+														display: "flex",
+														alignItems: "center",
+														gap: 1.5,
+													}}
+												>
+													<Avatar
+														sx={{
+															bgcolor: "#FFEBEE",
+															width: 36,
+															height: 36,
+														}}
+													>
+														<WorkIcon
+															fontSize="small"
+															sx={{ color: "#F44336" }}
+														/>
+													</Avatar>
+													<Box>
+														<Typography
+															variant="caption"
+															color="text.secondary"
+														>
+															Position
+														</Typography>
+														<Typography variant="body2">
+															{leadPosition}
+														</Typography>
+													</Box>
+												</Box>
+											)}
+										</Box>
+									</Paper>
+								</Grid>
+							</Grid>
+
+							{detailedLead?.leadData.transcript && (
+								<Paper
+									elevation={0}
+									sx={{
+										mt: 3,
+										p: 2.5,
+										borderRadius: "12px",
+										border: "1px solid #E5E7EB",
+									}}
+								>
+									<Typography
+										variant="subtitle1"
+										color="text.primary"
+										fontWeight={600}
+										gutterBottom
+									>
+										Transcript
+									</Typography>
+									<Box
+										sx={{
+											mt: 2,
+											p: 2,
+											bgcolor: "#FAFAFA",
+											borderRadius: 1,
+											border: "1px solid #EEEEEE",
+											maxHeight: "200px",
+											overflow: "auto",
+										}}
+									>
+										<Typography
+											variant="body2"
+											whiteSpace="pre-line"
+											sx={{ fontSize: "13px", color: "#424242" }}
+										>
+											{detailedLead.leadData.transcript}
+										</Typography>
+									</Box>
+								</Paper>
+							)}
+
+							<Paper
+								elevation={0}
+								sx={{
+									mt: 3,
+									p: 2.5,
+									borderRadius: "12px",
+									border: "1px solid #E5E7EB",
+								}}
+							>
+								<Typography
+									variant="subtitle1"
+									color="text.primary"
+									fontWeight={600}
+									gutterBottom
+								>
+									System Information
+								</Typography>
+								<Grid container spacing={2} sx={{ mt: 0.5 }}>
+									<Grid item xs={12} sm={6} md={4}>
+										<Box sx={{ mb: 2 }}>
+											<Typography variant="caption" color="text.secondary">
+												Lead ID
+											</Typography>
+											<Typography
+												variant="body2"
+												sx={{ wordBreak: "break-all" }}
+											>
+												{lead._id}
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={12} sm={6} md={4}>
+										<Box sx={{ mb: 2 }}>
+											<Typography variant="caption" color="text.secondary">
+												Flow ID
+											</Typography>
+											<Typography
+												variant="body2"
+												sx={{ wordBreak: "break-all" }}
+											>
+												{lead.flowId}
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={12} sm={6} md={4}>
+										<Box sx={{ mb: 2 }}>
+											<Typography variant="caption" color="text.secondary">
+												Node ID
+											</Typography>
+											<Typography
+												variant="body2"
+												sx={{ wordBreak: "break-all" }}
+											>
+												{lead.nodeId}
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={12} sm={6} md={4}>
+										<Box sx={{ mb: 2 }}>
+											<Typography variant="caption" color="text.secondary">
+												Status
+											</Typography>
+											<Typography variant="body2">
+												{getStatusText(lead.status)} ({lead.status})
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={12} sm={6} md={4}>
+										<Box sx={{ mb: 2 }}>
+											<Typography variant="caption" color="text.secondary">
+												Created At
+											</Typography>
+											<Typography variant="body2">
+												{new Date(lead.createdAt).toLocaleString()}
+											</Typography>
+										</Box>
+									</Grid>
+									<Grid item xs={12} sm={6} md={4}>
+										<Box sx={{ mb: 2 }}>
+											<Typography variant="caption" color="text.secondary">
+												Updated At
+											</Typography>
+											<Typography variant="body2">
+												{new Date(lead.updatedAt).toLocaleString()}
+											</Typography>
+										</Box>
+									</Grid>
+								</Grid>
+							</Paper>
+
+							{lead.error && lead.error.status && (
+								<Paper
+									elevation={0}
+									sx={{
+										mt: 3,
+										p: 2.5,
+										borderRadius: "12px",
+										border: "1px solid #FFCDD2",
+										bgcolor: "#FFF5F5",
+									}}
+								>
+									<Typography
+										variant="subtitle1"
+										color="error"
+										fontWeight={600}
+										gutterBottom
+									>
+										Error Information
+									</Typography>
+									<Box sx={{ mt: 1 }}>
+										<Typography variant="body2">
+											Error Status: {lead.error.status ? "Yes" : "No"}
+										</Typography>
+										<Typography variant="body2">
+											Retry Count: {lead.error.retryCount}
+										</Typography>
+									</Box>
+								</Paper>
+							)}
+						</Box>
+					)}
+				</DialogContent>
+				<DialogActions sx={{ p: 2 }}>
+					{onEdit && (
+						<Button
+							startIcon={<EditIcon />}
+							onClick={handleEdit}
+							color="primary"
+							variant="outlined"
+							sx={{
+								textTransform: "none",
+								borderRadius: "8px",
+								fontWeight: "500",
+							}}
+						>
+							Edit
+						</Button>
+					)}
+					{onDelete && (
+						<Button
+							startIcon={<DeleteIcon />}
+							onClick={handleOpenDeleteConfirm}
+							color="error"
+							variant="outlined"
+							sx={{
+								textTransform: "none",
+								borderRadius: "8px",
+								fontWeight: "500",
+							}}
+						>
+							Delete
+						</Button>
+					)}
+					<Button
+						onClick={handleCloseDetails}
+						sx={{
+							textTransform: "none",
+							borderRadius: "8px",
+							fontWeight: "500",
+						}}
+					>
+						Close
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			<Dialog
+				open={openDeleteConfirm}
+				onClose={handleCloseDeleteConfirm}
+				aria-labelledby="alert-dialog-title"
+				aria-describedby="alert-dialog-description"
+				PaperProps={{
+					sx: {
+						borderRadius: "12px",
+						boxShadow: "0px 12px 24px rgba(0, 0, 0, 0.2)",
+					},
+				}}
+			>
+				<DialogTitle id="alert-dialog-title" sx={{ fontWeight: 600 }}>
+					Delete Confirmation
+				</DialogTitle>
+				<DialogContent>
+					<Typography>
+						Are you sure you want to delete lead <strong>{leadName}</strong>?
+						<br />
+						This action cannot be undone.
+					</Typography>
+				</DialogContent>
+				<DialogActions sx={{ p: 2 }}>
+					<Button
+						onClick={handleCloseDeleteConfirm}
+						sx={{
+							textTransform: "none",
+							borderRadius: "8px",
+							fontWeight: "500",
+						}}
+					>
+						Cancel
+					</Button>
+					<Button
+						onClick={handleConfirmDelete}
+						color="error"
+						variant="contained"
+						autoFocus
+						sx={{
+							textTransform: "none",
+							borderRadius: "8px",
+							fontWeight: "500",
+						}}
+					>
+						Delete
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</>
+	);
+};
+
+export default LeadCard;

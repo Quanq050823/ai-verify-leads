@@ -114,8 +114,6 @@ const NodeWrapper = styled(Box)({
 
 const getActionName = (type: string): string => {
 	switch (type.toLowerCase()) {
-		case "facebookads":
-			return "Get Hook Ads";
 		case "facebookleadads":
 			return "Get Lead Ads";
 		case "googlesheets":

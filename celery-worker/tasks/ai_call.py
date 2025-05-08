@@ -29,7 +29,7 @@ def ai_call(self, message):
         }
         body = {
             "phoneNumber": message.get("phoneNumber", "50002"),  # default for testing
-            "callerId": "",
+            "callerId": "Local",
             "callerNumber": message.get("callerNumber", "6545621000"),
             "attribute": json.dumps(data), 
             "outreachType": "phonecall",

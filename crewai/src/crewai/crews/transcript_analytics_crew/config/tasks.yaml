@@ -1,0 +1,20 @@
+analyze_prompt:
+  description: >
+    Summarize the business requirements from the input prompt: 
+    {customer_prompt}.
+
+    Identify all the criteria for a potential lead. List the criteria clearly, specifically and easily understood.
+
+    Write the result into a file called "customer_prompt_result.txt" in the "transcript_analytics_crew" folder. This is provided by the tool.
+
+  expected_output: >
+    The list of criteria is clearly numbered.
+  agent: prompt_analyzer_agent
+
+evaluate_transcript:
+  description: >
+    Analyze call transcripts {transcripts} and assess whether leads meet defined criteria in "customer_prompt_result.txt". Provide clear conclusions and rationale.
+    Write the result into a file called "transcript_result.txt" in the "transcript_analytics_crew" folder. This is provided by the tool.
+  expected_output: >
+    Evaluation results with detailed reasons. Return a JSON object with pass (true/false) and criteria_results (array of objects, each with criterion, passed, and reason).
+  agent: transcript_analyzer_agent

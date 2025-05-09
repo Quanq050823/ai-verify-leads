@@ -624,3 +624,30 @@
 .dark-theme .BacklogInput {
 	color: #fff !important;
 }
+
+.dark-theme .lead-board {
+	background-color: #111e3a !important;
+}
+
+.dark-theme .lead-board-insight {
+	background-color: #121a2e !important;
+}
+
+.dark-theme .column-header {
+	background-color: #121a2e !important;
+}
+.dark-theme .lead-card {
+	background-color: #23376a !important;
+}
+
+.dark-theme .white-text {
+	color: #ffffff !important;
+}
+
+.dark-theme .lead-info-dialog {
+	background-color: #23376a !important;
+}
+
+.dark-theme .transcript-bg {
+	background-color: #334061 !important;
+}

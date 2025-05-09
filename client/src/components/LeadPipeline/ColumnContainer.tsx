@@ -288,6 +288,7 @@ function ColumnContainer(props: Props) {
 								borderRadius: "10px",
 							},
 						}}
+						className="column-header"
 					>
 						{leads.filter((lead) => {
 							// Nếu có filter text, lọc theo tên, email, hoặc phone
@@ -385,6 +386,7 @@ function ColumnContainer(props: Props) {
 							background: "#FFFFFF",
 							borderTop: "1px solid #E5E7EB",
 						}}
+						className="column-header"
 					>
 						<Button
 							onClick={handleClickOpenCreateLead}

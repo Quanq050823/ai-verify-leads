@@ -29,10 +29,8 @@ import {
 	styled,
 	alpha,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import SortIcon from "@mui/icons-material/Sort";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import SearchIcon from "@mui/icons-material/Search";
 import { Column, Id, Lead } from "../../../type";
 import ColumnContainer from "../../../components/LeadPipeline/ColumnContainer";
 import {
@@ -723,43 +721,47 @@ export default function LeadPipelinePage() {
 						backgroundColor: "#F9FAFB",
 						borderBottom: "1px solid #E5E7EB",
 					}}
+					className={"lead-board"}
 				>
-					<Typography variant="body2" color="text.secondary">
-						Leads are organized by the node type where they entered the system
-					</Typography>
-
-					{/* Search and filter controls */}
 					<Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-						<SearchTextField
-							placeholder="Search leads..."
-							size="small"
-							value={searchTerm}
-							onChange={handleSearchChange}
-							InputProps={{
-								startAdornment: (
-									<InputAdornment position="start">
-										<SearchIcon color="action" fontSize="small" />
-									</InputAdornment>
-								),
-							}}
-							sx={{ minWidth: "250px" }}
-						/>
-
-						<FormControl size="small" sx={{ minWidth: "150px" }}>
-							<InputLabel id="status-filter-label">Status</InputLabel>
-							<Select
-								labelId="status-filter-label"
-								value={filterType}
-								label="Status"
-								onChange={handleFilterChange}
+						<Box sx={{ display: "flex", flexDirection: "row" }}>
+							<Box
+								sx={{
+									display: "flex",
+									gap: 1,
+									alignItems: "center",
+									ml: "auto",
+								}}
 							>
-								<MenuItem value="all">All Statuses</MenuItem>
-								<MenuItem value="1">Pending</MenuItem>
-								<MenuItem value="2">In Progress</MenuItem>
-								<MenuItem value="3">Success</MenuItem>
-								<MenuItem value="9">Done</MenuItem>
-							</Select>
-						</FormControl>
+								<IconButton size="small" title="Refresh leads">
+									<SearchIcon />
+								</IconButton>
+							</Box>
+							<SearchTextField
+								placeholder="Search leads..."
+								size="small"
+								value={searchTerm}
+								onChange={handleSearchChange}
+								className="white-text"
+								sx={{ minWidth: "250px" }}
+							/>
+
+							<FormControl size="small" sx={{ minWidth: "150px" }}>
+								<InputLabel id="status-filter-label">Status</InputLabel>
+								<Select
+									labelId="status-filter-label"
+									value={filterType}
+									label="Status"
+									onChange={handleFilterChange}
+								>
+									<MenuItem value="all">All Statuses</MenuItem>
+									<MenuItem value="1">Pending</MenuItem>
+									<MenuItem value="2">In Progress</MenuItem>
+									<MenuItem value="3">Success</MenuItem>
+									<MenuItem value="9">Done</MenuItem>
+								</Select>
+							</FormControl>
+						</Box>
 
 						{/* Status indicator chips */}
 						<Box
@@ -781,7 +783,7 @@ export default function LeadPipelinePage() {
 					</Box>
 				</Box>
 
-				<Box sx={{ p: 2 }}>
+				<Box sx={{ p: 2 }} className={"lead-board-insight"}>
 					<DndContext
 						sensors={sensors}
 						onDragStart={handleDragStart}

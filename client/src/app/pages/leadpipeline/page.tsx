@@ -55,6 +55,7 @@ import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
 interface ExtendedColumn extends Column {
 	nodeType?: string;
 	iconColor?: string;
+	filterByStatus?: number; // Thêm trường này để lọc theo status
 }
 
 // Mở rộng kiểu Lead để bao gồm nodeBase
@@ -109,6 +110,8 @@ const nodeTypeColors: Record<string, string> = {
 	config: "#795548",
 	error: "#F44336",
 	default: "#9E9E9E",
+	fail: "#FF5252",
+	success: "#4CAF50",
 };
 
 export default function LeadPipelinePage() {
@@ -172,17 +175,12 @@ export default function LeadPipelinePage() {
 		}
 	}, [open]);
 
-	// Xử lý huỷ sự kiện kéo thả khi có lỗi
 	const handleDragCancel = (event: DragCancelEvent) => {
 		setActiveColumn(null);
 	};
 
-	// Override default drag behavior
 	const handleDragStart = (event: DragStartEvent) => {
-		// Prevent drag if dialog is open
 		if (open) {
-			// Không thể cancel trực tiếp, nhưng ta đã vô hiệu hóa kéo thả thông qua CSS
-			// và không thiết lập activeColumn nên sẽ không có hiệu ứng kéo thả
 			return;
 		}
 
@@ -265,26 +263,39 @@ export default function LeadPipelinePage() {
 					};
 				}
 			);
+
+			initialColumns.push({
+				id: initialColumns.length + 1,
+				title: "Fail",
+				nodeType: "fail",
+				iconColor: nodeTypeColors.fail,
+				filterByStatus: 0, // Status 0 cho Fail
+			});
+
+			initialColumns.push({
+				id: initialColumns.length + 2,
+				title: "Success",
+				nodeType: "success",
+				iconColor: nodeTypeColors.success,
+				filterByStatus: 9, // Status 9 cho Success
+			});
+
 			console.log("Initial columns:", initialColumns);
 			setColumns(initialColumns);
 		}
 
-		// 4. Lưu leads đã xử lý
 		setLeads(processedLeads);
 	};
 
-	// Trích xuất phần cơ bản từ nodeId
 	const extractNodeBase = (nodeId: string | undefined): string => {
 		if (!nodeId) return "unassigned";
 		const parts = nodeId.split("_");
 		return normalizeNodeType(parts[0]);
 	};
 
-	// Extract the base node type from a nodeId
 	const getBaseNodeType = (nodeType: string): string => {
 		if (!nodeType || nodeType === "unassigned") return "default";
 
-		// Xử lý nodeId có format nodeType_id
 		const parts = nodeType.split("_");
 		const baseType = parts[0].toLowerCase();
 
@@ -295,7 +306,6 @@ export default function LeadPipelinePage() {
 			baseType
 		);
 
-		// Map các nodeId cụ thể về các loại node chuẩn
 		const baseTypeMapping: Record<string, string> = {
 			facebookleads: "facebookleadads",
 			form: "googlesheets",
@@ -312,21 +322,22 @@ export default function LeadPipelinePage() {
 		return result;
 	};
 
-	// Get appropriate color for a node type
 	const getNodeTypeColor = (baseType: string): string => {
 		return nodeTypeColors[baseType] || nodeTypeColors.default;
 	};
 
-	// Function to convert nodeId to a more readable name
 	const getNodeTypeDisplayName = (nodeType: string): string => {
 		if (!nodeType || nodeType === "unassigned") return "Unassigned";
-
-		// Chỉ lấy phần nodeType (trước dấu gạch dưới)
+		if (nodeType === "fail") return "Fail";
+		if (nodeType === "success") return "Success";
+		if (nodeType === "aiCall") return "AI Call";
+		if (nodeType === "sendWebhook") return "Sending Webhook";
+		if (nodeType === "googleCalendar") return "Booking Meet";
+		if (nodeType === "facebookLeadAds") return "Get Lead Data";
 		const parts = nodeType.split("_");
 		return parts[0];
 	};
 
-	// Distribute leads to columns based on node type
 	useEffect(() => {
 		if (leads.length > 0 && columns.length > 0) {
 			console.log(
@@ -337,14 +348,11 @@ export default function LeadPipelinePage() {
 			);
 
 			const updatedColumns = columns.map((column) => {
-				// Trích xuất nodeBase của cột (chỉ cần làm một lần)
 				const columnNodeBase = column.nodeType
 					? normalizeNodeType(column.nodeType.split("_")[0])
 					: null;
 
-				// Filter leads based on node type
 				const columnLeads = leads.filter((lead) => {
-					// Filter by search term if present
 					const matchesSearch = searchTerm
 						? (lead.leadData?.["full name"] || "")
 								.toLowerCase()
@@ -354,12 +362,17 @@ export default function LeadPipelinePage() {
 								.includes(searchTerm.toLowerCase())
 						: true;
 
-					// So sánh nodeBase đã được tính toán trước
+					if (column.filterByStatus !== undefined) {
+						return matchesSearch && lead.status === column.filterByStatus;
+					}
+					if (lead.status === 0 || lead.status === 9) {
+						return false;
+					}
+
 					const nodeTypeMatch = columnNodeBase
 						? lead.nodeBase === columnNodeBase
 						: lead.nodeBase === "unassigned";
 
-					// Debug aiCall nodes
 					if (lead.nodeBase?.includes("aicall")) {
 						console.log(
 							`Lead nodeId: ${lead.nodeId}, Base: ${lead.nodeBase}`,
@@ -449,6 +462,15 @@ export default function LeadPipelinePage() {
 			return getNodeIcon("default");
 		}
 
+		// Thêm icons cho các cột Fail và Success
+		if (nodeType === "fail") {
+			return getNodeIcon("error");
+		}
+
+		if (nodeType === "success") {
+			return getNodeIcon("verified");
+		}
+
 		const baseType = getBaseNodeType(nodeType);
 		const iconMappings: Record<string, string> = {
 			facebookleadads: "facebookLeadAds",
@@ -470,12 +492,9 @@ export default function LeadPipelinePage() {
 		return getNodeIcon(iconMappings[baseType] || "default");
 	};
 
-	// Normalize node type to ensure consistent casing
 	const normalizeNodeType = (nodeType: string): string => {
-		// Rule: first lowercase everything, then capitalize the first letter
 		if (!nodeType) return "";
 
-		// Handle camelCase (like "aiCall") specially
 		if (/^[a-z]+[A-Z]/.test(nodeType)) {
 			return nodeType; // Keep camelCase as is
 		}
@@ -513,9 +532,7 @@ export default function LeadPipelinePage() {
 		);
 	}
 
-	// Custom ColumnContainer renderer
 	const renderCustomColumnContainer = (column: ExtendedColumn) => {
-		// Create a modified column with custom header rendering
 		const enhancedColumn = {
 			...column,
 			renderHeader: () => (

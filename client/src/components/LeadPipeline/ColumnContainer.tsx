@@ -211,7 +211,7 @@ function ColumnContainer(props: Props) {
 								badgeContent={column.leads?.length || 0}
 								color="primary"
 								sx={{
-									ml: 1.5,
+									ml: 2.5,
 									"& .MuiBadge-badge": {
 										fontSize: "11px",
 										height: "18px",

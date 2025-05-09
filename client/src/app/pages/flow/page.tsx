@@ -60,7 +60,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
 	transition: "all 0.3s ease",
 	borderRadius: "12px",
 	overflow: "hidden",
-	border: "1px solid #E5E7EB",
 	height: "100%",
 	"&:hover": {
 		transform: "translateY(-4px)",
@@ -249,9 +248,9 @@ const FlowList: React.FC<FlowListProps> = ({
 										display: "flex",
 										justifyContent: "space-between",
 										alignItems: "center",
-										borderBottom: "1px solid #E5E7EB",
 										bgcolor: "#FAFBFC",
 									}}
+									className="lead-card"
 								>
 									<Chip
 										label={flow.status === 2 ? "Active" : "Inactive"}

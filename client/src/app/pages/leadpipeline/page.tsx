@@ -662,43 +662,6 @@ export default function LeadPipelinePage() {
 						>
 							Import
 						</Button>
-
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<AddIcon />}
-							sx={{
-								textTransform: "none",
-								borderRadius: "8px",
-								fontWeight: "500",
-								fontSize: "13px",
-								py: "8px",
-								px: "16px",
-								color: "#fff !important",
-								boxShadow: "0 8px 16px 0 rgba(85, 105, 255, 0.24)",
-							}}
-						>
-							Add Lead
-						</Button>
-
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<AddIcon />}
-							sx={{
-								textTransform: "none",
-								borderRadius: "8px",
-								fontWeight: "500",
-								fontSize: "13px",
-								py: "8px",
-								px: "16px",
-								color: "#fff !important",
-								boxShadow: "0 8px 16px 0 rgba(85, 105, 255, 0.24)",
-							}}
-							onClick={createNewColumn}
-						>
-							Add Column
-						</Button>
 					</Box>
 				</Box>
 			</Box>

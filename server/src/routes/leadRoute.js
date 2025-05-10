@@ -11,5 +11,6 @@ const router = express.Router();
 router.get("/", controller.getAllLeads);
 router.get("/:leadId", controller.getLeadById);
 router.get("/mergeNodes/:flowId", controller.getLeadByNodes);
+router.post("/retry/:leadId", controller.retryLead);
 
 export default router;

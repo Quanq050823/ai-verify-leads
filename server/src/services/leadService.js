@@ -75,6 +75,31 @@ export const getLeadByNodes = async (userId, flowId) => {
     }
 };
 
+export const retryLead = async (leadId, userId) => {
+    try {
+        const lead = await Lead.findOne({ _id: getObjectId(leadId), userId: getObjectId(userId) });
+        if (!lead) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
+        }
+
+        lead.status = 1; // Reset status to 1 for retry
+        await lead.save();
+
+        await publishLead(
+            lead.userId,
+            lead.flowId,
+            lead.nodeId,
+            [lead],
+            lead?.previousResult,
+            true
+        );
+
+        return lead;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const publishLead = async (
     userId,
     flowId,

@@ -25,6 +25,7 @@ import {
 } from "@mui/icons-material";
 import { fetchAllNodeTypes, NodeType } from "@/services/nodetypeServices";
 import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
+import Link from "next/link";
 
 type NodeCategory = {
 	title: string;
@@ -449,7 +450,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 		return (
 			<CollapsedSidebar elevation={3} className="lead-board">
 				<Tooltip title="Back to Flow List" placement="right">
-					<IconButton href="/pages/flow/" size="small" sx={{ mt: 1, mb: 2 }}>
+					<IconButton
+						component={Link}
+						href="/pages/flow/"
+						size="small"
+						sx={{ mt: 1, mb: 2 }}
+					>
 						<ArrowBack fontSize="small" />
 					</IconButton>
 				</Tooltip>
@@ -538,6 +544,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 		>
 			<Button
 				href="/pages/flow/"
+				component={Link}
 				startIcon={<ArrowBack />}
 				variant="text"
 				color="primary"

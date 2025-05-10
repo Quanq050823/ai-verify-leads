@@ -239,8 +239,8 @@ const FlowList: React.FC<FlowListProps> = ({
 									height: "100%",
 									display: "flex",
 									flexDirection: "column",
-									backgroundColor: "#0c1427",
 								}}
+								className="flow-card-footer"
 							>
 								{/* Header with status and menu */}
 								<Box
@@ -251,7 +251,7 @@ const FlowList: React.FC<FlowListProps> = ({
 										alignItems: "center",
 										bgcolor: "#FAFBFC",
 									}}
-									className="lead-card"
+									className="flow-card-header"
 								>
 									<Chip
 										label={flow.status === 2 ? "Active" : "Inactive"}
@@ -708,6 +708,7 @@ const ScenarioPage: React.FC = () => {
 
 					<Button
 						variant="outlined"
+						component={Link}
 						startIcon={<DeleteOutlineIcon />}
 						href="/pages/trash/"
 						sx={{

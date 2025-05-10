@@ -58,7 +58,7 @@ const getStatusText = (status: number) => {
 		case 9:
 			return "Done";
 		default:
-			return "Unknown";
+			return "Error";
 	}
 };
 

@@ -92,7 +92,11 @@ const processLeadEvent = async (lead) => {
             const currentNode = flow.nodeData.nodes.find((node) => node.type === "facebookLeadAds");
 
             const leadData = await fetchLeadData(leadgenId, page.access_token);
-            const convertedData = convertLeadData(leadData?.field_data);
+            const convertedData = await convertLeadData(
+                leadData?.field_data,
+                lead.form_id,
+                page.access_token
+            );
 
             let importedLeads = new Lead({
                 userId: getObjectId(flow.userId),

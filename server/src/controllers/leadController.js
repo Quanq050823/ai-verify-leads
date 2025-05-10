@@ -31,3 +31,17 @@ export const getLeadByNodes = async (req, res, next) => {
         next(err);
     }
 };
+
+export const retryLead = async (req, res, next) => {
+    try {
+        const { leadId } = req.params;
+        if (!leadId) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Lead ID is required.");
+        }
+
+        const result = await services.retryLead(leadId, req.user.userId);
+        res.status(StatusCodes.OK).json(result);
+    } catch (err) {
+        next(err);
+    }
+};

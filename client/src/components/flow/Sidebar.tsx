@@ -48,7 +48,6 @@ const SidebarContainer = styled(Paper)(({ theme }) => ({
 	padding: theme.spacing(2),
 	borderRight: `1px solid ${theme.palette.divider}`,
 	zIndex: 10,
-	backgroundImage: "linear-gradient(to bottom, #ffffff, #f8fafc)",
 	boxShadow: "0 0 20px rgba(0,0,0,0.05)",
 	position: "relative",
 	overflow: "hidden",
@@ -63,7 +62,6 @@ const CollapsedSidebar = styled(Paper)(({ theme }) => ({
 	alignItems: "center",
 	borderRight: `1px solid ${theme.palette.divider}`,
 	zIndex: 10,
-	backgroundImage: "linear-gradient(to bottom, #ffffff, #f8fafc)",
 	boxShadow: "0 0 20px rgba(0,0,0,0.05)",
 	position: "relative",
 }));
@@ -197,7 +195,6 @@ const ToggleButton = styled(IconButton)(({ theme }) => ({
 	right: "-12px",
 	top: "50%",
 	transform: "translateY(-50%)",
-	backgroundColor: theme.palette.background.paper,
 	boxShadow: "0px 3px 8px rgba(0,0,0,0.12)",
 	border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
 	width: "28px",
@@ -450,7 +447,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 
 	if (collapsed) {
 		return (
-			<CollapsedSidebar elevation={3}>
+			<CollapsedSidebar elevation={3} className="lead-board">
 				<Tooltip title="Back to Flow List" placement="right">
 					<IconButton href="/pages/flow/" size="small" sx={{ mt: 1, mb: 2 }}>
 						<ArrowBack fontSize="small" />
@@ -522,7 +519,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 					</Box>
 				)}
 
-				<ToggleButton onClick={toggleCollapse} size="small">
+				<ToggleButton
+					onClick={toggleCollapse}
+					size="small"
+					className="lead-button"
+				>
 					<ChevronRight />
 				</ToggleButton>
 			</CollapsedSidebar>
@@ -530,7 +531,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 	}
 
 	return (
-		<SidebarContainer elevation={3} sx={{ overflowY: "hidden" }}>
+		<SidebarContainer
+			elevation={3}
+			sx={{ overflowY: "hidden" }}
+			className="lead-board"
+		>
 			<Button
 				href="/pages/flow/"
 				startIcon={<ArrowBack />}
@@ -547,6 +552,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 						backgroundColor: alpha("#3b82f6", 0.08),
 					},
 				}}
+				className="lead-card"
 			>
 				Back to Flow List
 			</Button>
@@ -652,7 +658,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 				</Typography>
 			</SidebarFooter>
 
-			<ToggleButton onClick={toggleCollapse} size="small">
+			<ToggleButton
+				onClick={toggleCollapse}
+				size="small"
+				className="lead-button"
+			>
 				<ChevronLeft />
 			</ToggleButton>
 		</SidebarContainer>

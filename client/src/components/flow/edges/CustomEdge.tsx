@@ -41,7 +41,6 @@ const EdgeButton = styled(Button)(({ theme }) => ({
 
 const EdgeLabel = styled(Paper)(({ theme }) => ({
 	padding: theme.spacing(0.5, 1),
-	backgroundColor: "rgba(255, 255, 255, 0.8)",
 	backdropFilter: "blur(4px)",
 	borderRadius: theme.shape.borderRadius,
 	boxShadow: theme.shadows[1],

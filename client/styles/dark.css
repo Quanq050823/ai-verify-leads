@@ -651,3 +651,7 @@
 .dark-theme .transcript-bg {
 	background-color: #334061 !important;
 }
+
+.dark-theme .lead-button {
+	background-color: #273d74 !important;
+}

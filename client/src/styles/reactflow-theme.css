@@ -1,0 +1,139 @@
+/* React Flow Light Theme (Default) */
+.react-flow {
+	--bg-color: linear-gradient(
+		135deg,
+		rgba(240, 249, 255, 0.9),
+		rgba(224, 242, 254, 0.9),
+		rgba(236, 254, 255, 0.8)
+	);
+	--node-bg-color: #ffffff;
+	--node-border-color: rgba(226, 232, 240, 0.8);
+	--node-color: #334155;
+	--minimap-mask-color: rgba(240, 245, 250, 0.5);
+	--controls-bg-color: rgba(255, 255, 255, 0.8);
+	--controls-button-color: #64748b;
+	--controls-button-hover-bg: rgba(0, 0, 0, 0.05);
+	--connection-path-color: #3b82f6;
+	--background-pattern-color: #e2e8f0;
+	--edge-path-color: #94a3b8;
+	--edge-label-bg-color: rgba(255, 255, 255, 0.8);
+	--edge-label-text-color: #334155;
+	--node-handle-color: #3b82f6;
+	--panel-bg-color: rgba(255, 255, 255, 0.8);
+	--panel-border-color: rgba(226, 232, 240, 0.8);
+	--panel-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	--tooltip-bg-color: rgba(255, 255, 255, 0.9);
+	--tooltip-text-color: #334155;
+	--sidebar-bg-color: rgba(255, 255, 255, 0.9);
+	--sidebar-border-color: rgba(226, 232, 240, 1);
+	--sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+	--properties-panel-bg-color: rgba(255, 255, 255, 0.95);
+	--properties-panel-border-color: rgba(226, 232, 240, 1);
+	--properties-panel-shadow: 0 0 20px rgba(0, 0, 0, 0.12);
+}
+
+/* React Flow Dark Theme */
+html.dark-theme .react-flow {
+	--bg-color: linear-gradient(
+		135deg,
+		rgba(15, 23, 42, 0.9),
+		rgba(30, 41, 59, 0.95),
+		rgba(20, 30, 49, 0.9)
+	);
+	--node-bg-color: rgba(51, 65, 85, 0.9);
+	--node-border-color: rgba(71, 85, 105, 0.6);
+	--node-color: #e2e8f0;
+	--minimap-mask-color: rgba(15, 23, 42, 0.6);
+	--controls-bg-color: rgba(51, 65, 85, 0.8);
+	--controls-button-color: #cbd5e1;
+	--controls-button-hover-bg: rgba(255, 255, 255, 0.1);
+	--connection-path-color: #5597f3;
+	--background-pattern-color: #475569;
+	--edge-path-color: #5597f3;
+	--edge-label-bg-color: rgba(51, 65, 85, 0.8);
+	--edge-label-text-color: #5597f3;
+	--node-handle-color: #60a5fa;
+	--panel-bg-color: rgba(51, 65, 85, 0.8);
+	--panel-border-color: rgba(71, 85, 105, 0.6);
+	--panel-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	--tooltip-bg-color: rgba(51, 65, 85, 0.9);
+	--tooltip-text-color: #202b39;
+	--sidebar-bg-color: rgba(30, 41, 59, 0.9);
+	--sidebar-border-color: rgba(13, 24, 39, 0.6);
+	--sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+	--properties-panel-bg-color: rgba(30, 41, 59, 0.95);
+	--properties-panel-border-color: rgba(71, 85, 105, 0.6);
+	--properties-panel-shadow: 0 0 20px rgba(0, 0, 0, 0.24);
+}
+
+/* Apply theme to React Flow elements */
+.react-flow__background {
+	background-color: var(--background-pattern-color);
+}
+
+.react-flow__edge-path {
+	stroke: var(--edge-path-color);
+}
+
+.react-flow__controls {
+	background-color: var(--controls-bg-color);
+	border-color: var(--panel-border-color);
+	box-shadow: var(--panel-box-shadow);
+}
+
+.react-flow__controls-button {
+	background-color: transparent;
+	color: var(--controls-button-color);
+	border: none;
+}
+
+.react-flow__controls-button:hover {
+	background-color: var(--controls-button-hover-bg);
+}
+
+.react-flow__minimap {
+	background-color: var(--panel-bg-color);
+	border-color: var(--panel-border-color);
+	box-shadow: var(--panel-box-shadow);
+}
+
+.react-flow__minimap-mask {
+	fill: var(--minimap-mask-color);
+}
+
+.react-flow__edge-text {
+	background-color: var(--edge-label-bg-color);
+	color: var(--edge-label-text-color);
+}
+
+.react-flow__handle {
+	background-color: var(--node-handle-color);
+}
+
+.react-flow__panel {
+	background-color: var(--panel-bg-color);
+	border-color: var(--panel-border-color);
+	box-shadow: var(--panel-box-shadow);
+}
+
+/* Custom project components */
+.lead-board {
+	background-color: var(--panel-bg-color) !important;
+	border-color: var(--panel-border-color) !important;
+	box-shadow: var(--panel-box-shadow) !important;
+}
+
+/* Apply theme to sidebar */
+.sidebar {
+	background-color: var(--sidebar-bg-color);
+	border-color: var(--sidebar-border-color);
+	box-shadow: var(--sidebar-shadow);
+}
+
+/* Apply theme to properties panel */
+.properties-panel {
+	background-color: var(--properties-panel-bg-color);
+	border-color: var(--properties-panel-border-color);
+	box-shadow: var(--properties-panel-shadow);
+	color: var(--node-color);
+}

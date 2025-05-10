@@ -1189,7 +1189,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							fullWidth
 							size="small"
 							label="Prompt"
-							variant="outlined"
 							margin="normal"
 							multiline
 							rows={2}
@@ -1439,6 +1438,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 										fontWeight: "bold",
 										backgroundColor: "#f5f5f5",
 									}}
+									className="lead-info-dialog"
 								>
 									{localSettings.duration || 30}
 								</Box>
@@ -1879,7 +1879,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	};
 
 	return (
-		<PanelContainer>
+		<PanelContainer className="sidebar">
 			<Box
 				sx={{
 					display: "flex",
@@ -1894,7 +1894,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				</IconButton>
 			</Box>
 
-			<NodeInfoCard>
+			<NodeInfoCard className="transcript-bg">
 				<Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
 					<NodeColorIndicator
 						bgcolor={String(selectedNode.data?.color) || "#94a3b8"}

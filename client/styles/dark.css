@@ -1,7 +1,6 @@
 :root {
 	--darkBodyBg: #0a0e19;
-	--darkCardBg: #0c1427;
-	--darkBorder: #172036;
+	--darkBorder: #131c33;
 	--darkBodyColor: #f6f6f6;
 	--darkSecondaryColor: #15203c;
 }
@@ -623,4 +622,42 @@
 
 .dark-theme .BacklogInput {
 	color: #fff !important;
+}
+
+.dark-theme .lead-board {
+	background-color: #111e3a !important;
+}
+
+.dark-theme .lead-board-insight {
+	background-color: #121a2e !important;
+}
+
+.dark-theme .column-header {
+	background-color: #121a2e !important;
+}
+.dark-theme .lead-card {
+	background-color: #23376a !important;
+}
+
+.dark-theme .white-text {
+	color: #ffffff !important;
+}
+.dark-theme .dark-text {
+	color: #60a5fa !important;
+}
+
+.dark-theme .lead-info-dialog {
+	background-color: #23376a !important;
+}
+
+.dark-theme .transcript-bg {
+	background-color: #334061 !important;
+}
+
+.dark-theme .lead-button {
+	background-color: #273d74 !important;
+}
+
+.dark-theme .bg-bar {
+	background-color: #303c53 !important;
 }

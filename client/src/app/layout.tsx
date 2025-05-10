@@ -22,10 +22,11 @@ import * as React from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import theme from "@/theme";
 import LayoutProvider from "@/providers/LayoutProvider";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 export const metadata = {
 	title: "Sine | AI Lead Verify Lead Automation Website",
@@ -43,11 +44,13 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<AppRouterCacheProvider options={{ enableCssLayer: true }}>
-					<ThemeProvider theme={theme}>
-						{/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-						<CssBaseline />
+					<ThemeProvider>
+						<MuiThemeProvider theme={theme}>
+							{/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+							<CssBaseline />
 
-						<LayoutProvider>{props.children}</LayoutProvider>
+							<LayoutProvider>{props.children}</LayoutProvider>
+						</MuiThemeProvider>
 					</ThemeProvider>
 					<ToastContainer position="bottom-right" />
 				</AppRouterCacheProvider>

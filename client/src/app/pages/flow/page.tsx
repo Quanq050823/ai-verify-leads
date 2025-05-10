@@ -45,6 +45,7 @@ import Phone from "@mui/icons-material/Phone";
 import Settings from "@mui/icons-material/Settings";
 import ErrorOutline from "@mui/icons-material/ErrorOutline";
 import Layers from "@mui/icons-material/Layers";
+import UpdateIcon from "@mui/icons-material/Update";
 import Link from "next/link";
 import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
 import {
@@ -59,7 +60,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
 	transition: "all 0.3s ease",
 	borderRadius: "12px",
 	overflow: "hidden",
-	border: "1px solid #E5E7EB",
 	height: "100%",
 	"&:hover": {
 		transform: "translateY(-4px)",
@@ -136,6 +136,7 @@ interface Flow {
 	creator: string;
 	status: number;
 	components: Component[];
+	updatedAt?: string;
 }
 
 interface FlowListProps {
@@ -247,9 +248,9 @@ const FlowList: React.FC<FlowListProps> = ({
 										display: "flex",
 										justifyContent: "space-between",
 										alignItems: "center",
-										borderBottom: "1px solid #E5E7EB",
 										bgcolor: "#FAFBFC",
 									}}
+									className="lead-card"
 								>
 									<Chip
 										label={flow.status === 2 ? "Active" : "Inactive"}
@@ -323,7 +324,11 @@ const FlowList: React.FC<FlowListProps> = ({
 
 										{/* Flow info */}
 										<Box
-											sx={{ display: "flex", alignItems: "center", mb: 2.5 }}
+											sx={{
+												display: "flex",
+												flexDirection: "column",
+												alignItems: "flex-start",
+											}}
 										>
 											<Typography
 												variant="body2"
@@ -333,6 +338,7 @@ const FlowList: React.FC<FlowListProps> = ({
 													color: "#6B7280",
 													fontSize: "0.8125rem",
 													mr: 2,
+													mb: 0.5,
 												}}
 											>
 												<CalendarMonthIcon
@@ -340,19 +346,30 @@ const FlowList: React.FC<FlowListProps> = ({
 												/>
 												{flow.date}
 											</Typography>
+										</Box>
+
+										<Box
+											sx={{
+												display: "flex",
+												flexDirection: "column",
+												alignItems: "flex-start",
+												mb: 2.5,
+											}}
+										>
 											<Typography
 												variant="body2"
 												sx={{
 													display: "flex",
 													alignItems: "center",
 													color: "#6B7280",
-													fontSize: "0.8125rem",
+													fontSize: "0.75rem",
+													mr: 2,
 												}}
 											>
-												<PersonIcon
-													sx={{ fontSize: 16, mr: 0.5, color: "#9CA3AF" }}
+												<UpdateIcon
+													sx={{ fontSize: 14, mr: 0.5, color: "#9CA3AF" }}
 												/>
-												{flow.creator}
+												Updated: {flow.updatedAt}
 											</Typography>
 										</Box>
 
@@ -548,6 +565,7 @@ const ScenarioPage: React.FC = () => {
 							id: flow._id || flow.id,
 							name: flow.name,
 							date: new Date(flow.createdAt).toLocaleDateString(),
+							updatedAt: formatTimeAgo(flow.updatedAt || flow.createdAt),
 							creator: flow.userId || "Unknown",
 							status: flow.status,
 							components:
@@ -596,6 +614,43 @@ const ScenarioPage: React.FC = () => {
 		} catch (error) {
 			console.error("Error deleting flow:", error);
 		}
+	};
+
+	const formatTimeAgo = (dateString: string): string => {
+		const date = new Date(dateString);
+		const now = new Date();
+		const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+		let interval = Math.floor(seconds / 31536000);
+		if (interval >= 1) {
+			return interval === 1 ? `${interval} year ago` : `${interval} years ago`;
+		}
+
+		interval = Math.floor(seconds / 2592000);
+		if (interval >= 1) {
+			return interval === 1
+				? `${interval} month ago`
+				: `${interval} months ago`;
+		}
+
+		interval = Math.floor(seconds / 86400);
+		if (interval >= 1) {
+			return interval === 1 ? `${interval} day ago` : `${interval} days ago`;
+		}
+
+		interval = Math.floor(seconds / 3600);
+		if (interval >= 1) {
+			return interval === 1 ? `${interval} hour ago` : `${interval} hours ago`;
+		}
+
+		interval = Math.floor(seconds / 60);
+		if (interval >= 1) {
+			return interval === 1
+				? `${interval} minute ago`
+				: `${interval} minutes ago`;
+		}
+
+		return seconds <= 5 ? "just now" : `${Math.floor(seconds)} seconds ago`;
 	};
 
 	return (

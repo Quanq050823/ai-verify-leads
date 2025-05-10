@@ -738,6 +738,11 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 										<Typography variant="body2">
 											Retry Count: {lead.error.retryCount}
 										</Typography>
+										{lead.error.message && (
+											<Typography variant="body2">
+												Message: {lead.error.message}
+											</Typography>
+										)}
 									</Box>
 								</Paper>
 							)}

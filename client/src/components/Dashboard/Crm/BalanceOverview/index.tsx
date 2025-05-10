@@ -131,7 +131,7 @@ const BalanceOverview: React.FC = () => {
 					mb: "25px",
 					padding: { xs: "18px", sm: "20px", lg: "25px" },
 				}}
-				className="rmui-card"
+				className="rmui-card lighter-bg"
 			>
 				<Box
 					sx={{

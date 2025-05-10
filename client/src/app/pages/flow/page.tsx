@@ -239,6 +239,7 @@ const FlowList: React.FC<FlowListProps> = ({
 									height: "100%",
 									display: "flex",
 									flexDirection: "column",
+									backgroundColor: "#0c1427",
 								}}
 							>
 								{/* Header with status and menu */}
@@ -303,6 +304,7 @@ const FlowList: React.FC<FlowListProps> = ({
 										alignItems: "flex-start",
 										justifyContent: "flex-start",
 									}}
+									className="flow-card-content"
 								>
 									<Box sx={{ p: 2.5, width: "100%" }}>
 										{/* Flow name */}
@@ -654,121 +656,136 @@ const ScenarioPage: React.FC = () => {
 	};
 
 	return (
-		<Box
-			sx={{
-				minHeight: "80vh",
-				display: "flex",
-				flexDirection: "column",
-				px: 1,
-			}}
-		>
-			{/* Breadcrumbs */}
-			<Breadcrumbs
-				separator={<NavigateNextIcon fontSize="small" />}
-				aria-label="breadcrumb"
-				sx={{ mb: 2 }}
+		<Box sx={{ mb: 3 }}>
+			<Box
+				sx={{
+					minHeight: "80vh",
+					display: "flex",
+					flexDirection: "column",
+					px: 1,
+				}}
 			>
-				<Link href="/app/dashboard" passHref style={{ textDecoration: "none" }}>
-					<Typography
-						color="text.secondary"
-						sx={{ display: "flex", alignItems: "center", fontSize: "0.875rem" }}
+				{/* Breadcrumbs */}
+				<Breadcrumbs
+					separator={<NavigateNextIcon fontSize="small" />}
+					aria-label="breadcrumb"
+					sx={{ mb: 2 }}
+				>
+					<Link
+						href="/app/dashboard"
+						passHref
+						style={{ textDecoration: "none" }}
 					>
-						<HomeIcon sx={{ mr: 0.5, fontSize: "0.875rem" }} />
-						Dashboard
+						<Typography
+							color="text.secondary"
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								fontSize: "0.875rem",
+							}}
+						>
+							<HomeIcon sx={{ mr: 0.5, fontSize: "0.875rem" }} />
+							Dashboard
+						</Typography>
+					</Link>
+					<Typography color="text.primary" sx={{ fontSize: "0.875rem" }}>
+						Scenarios
 					</Typography>
-				</Link>
-				<Typography color="text.primary" sx={{ fontSize: "0.875rem" }}>
-					Scenarios
-				</Typography>
-			</Breadcrumbs>
+				</Breadcrumbs>
 
-			{/* Header */}
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-					mb: 3,
-				}}
-			>
-				<Typography variant="h5" sx={{ fontWeight: 700 }}>
-					All Scenarios
-				</Typography>
-
-				<Button
-					variant="outlined"
-					startIcon={<DeleteOutlineIcon />}
-					href="/pages/trash/"
+				{/* Header */}
+				<Box
 					sx={{
-						borderRadius: "10px",
-						textTransform: "none",
-						boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)",
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+						mb: 3,
 					}}
 				>
-					Trash
-				</Button>
-			</Box>
+					<Typography variant="h5" sx={{ fontWeight: 700 }}>
+						All Scenarios
+					</Typography>
 
-			{/* Search and Add */}
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-					mb: 3,
-					flexWrap: "wrap",
-					gap: 2,
-				}}
-			>
-				<SearchTextField
-					placeholder="Search scenarios..."
-					variant="outlined"
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon color="action" />
-							</InputAdornment>
-						),
-					}}
-					size="small"
-					sx={{ flexGrow: 1, maxWidth: { xs: "100%", sm: 320 } }}
-				/>
-
-				<Button
-					variant="contained"
-					component={Link}
-					href="/pages/customflow"
-					startIcon={<AddIcon />}
-					sx={{
-						borderRadius: "10px",
-						textTransform: "none",
-						boxShadow: "0 8px 16px rgba(85, 105, 255, 0.2)",
-						py: 1,
-						px: 2.5,
-					}}
-				>
-					Create New Scenario
-				</Button>
-			</Box>
-
-			<Divider sx={{ mb: 3 }} />
-
-			{/* Content */}
-			{isLoading ? (
-				<Box display="flex" justifyContent="center" alignItems="center" my={8}>
-					<CircularProgress size={40} color="primary" />
+					<Button
+						variant="outlined"
+						startIcon={<DeleteOutlineIcon />}
+						href="/pages/trash/"
+						sx={{
+							borderRadius: "10px",
+							textTransform: "none",
+							boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)",
+						}}
+					>
+						Trash
+					</Button>
 				</Box>
-			) : (
-				<FlowList
-					flows={flows}
-					activeFlowId={activeFlowId}
-					onToggleActive={handleToggleActive}
-					onDeleteFlow={handleDeleteFlow}
-					searchTerm={searchTerm}
-				/>
-			)}
+
+				{/* Search and Add */}
+				<Box
+					sx={{
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+						mb: 3,
+						flexWrap: "wrap",
+						gap: 2,
+					}}
+				>
+					<SearchTextField
+						placeholder="Search scenarios..."
+						variant="outlined"
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon color="action" />
+								</InputAdornment>
+							),
+						}}
+						size="small"
+						sx={{ flexGrow: 1, maxWidth: { xs: "100%", sm: 320 } }}
+					/>
+
+					<Button
+						variant="contained"
+						component={Link}
+						href="/pages/customflow"
+						startIcon={<AddIcon />}
+						sx={{
+							borderRadius: "10px",
+							textTransform: "none",
+							boxShadow: "0 8px 16px rgba(85, 105, 255, 0.2)",
+							py: 1,
+							px: 2.5,
+						}}
+					>
+						Create New Scenario
+					</Button>
+				</Box>
+
+				<Divider sx={{ mb: 3 }} />
+
+				{/* Content */}
+				{isLoading ? (
+					<Box
+						display="flex"
+						justifyContent="center"
+						alignItems="center"
+						my={8}
+					>
+						<CircularProgress size={40} color="primary" />
+					</Box>
+				) : (
+					<FlowList
+						flows={flows}
+						activeFlowId={activeFlowId}
+						onToggleActive={handleToggleActive}
+						onDeleteFlow={handleDeleteFlow}
+						searchTerm={searchTerm}
+					/>
+				)}
+			</Box>
 		</Box>
 	);
 };

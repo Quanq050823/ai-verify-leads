@@ -339,7 +339,7 @@
 	color: var(--darkBodyColor) !important;
 }
 .dark-theme .footer-area {
-	background-color: var(--darkCardBg);
+	background-color: rgb(12, 20, 39);
 } /*# sourceMappingURL=dark.css.map */
 .dark-theme .epicCard {
 	background-color: inherit;
@@ -660,6 +660,12 @@
 
 .dark-theme .bg-bar {
 	background-color: #303c53 !important;
+}
+.dark-theme .flow-card-content {
+	background-color: #0b152c !important;
+}
+.dark-theme .lighter-bg {
+	background-color: #0b152c !important;
 }
 
 /* Apply theme to sidebar */

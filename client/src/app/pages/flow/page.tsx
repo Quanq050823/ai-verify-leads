@@ -207,7 +207,7 @@ const FlowList: React.FC<FlowListProps> = ({
 
 	if (filteredFlows.length === 0) {
 		return (
-			<EmptyState>
+			<EmptyState className="lighter-bg">
 				<Layers sx={{ fontSize: 48, color: "#9ca3af", mb: 2 }} />
 				<Typography variant="h6" color="textSecondary" gutterBottom>
 					{searchTerm

@@ -703,39 +703,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 					</Panel>
 
 					{/* Toggle Theme Button */}
-					<Panel
-						position="bottom-right"
-						style={{ marginBottom: 200, marginRight: 20 }}
-					>
-						<Tooltip
-							title={
-								isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"
-							}
-							placement="left"
-						>
-							<IconButton
-								onClick={toggleTheme}
-								className="lead-board"
-								sx={{
-									backdropFilter: "blur(12px)",
-									borderRadius: "10px",
-									width: "40px",
-									height: "40px",
-									"&:hover": {
-										boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
-									},
-								}}
-							>
-								{isDarkMode ? (
-									<LightModeIcon color="primary" />
-								) : (
-									<DarkModeIcon color="primary" />
-								)}
-							</IconButton>
-						</Tooltip>
-					</Panel>
-
-					{/* Flow execution progress bar */}
 					{isRunning && (
 						<Box
 							sx={{

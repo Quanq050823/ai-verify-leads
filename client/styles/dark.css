@@ -661,3 +661,9 @@
 .dark-theme .bg-bar {
 	background-color: #303c53 !important;
 }
+
+/* Apply theme to sidebar */
+.dark-theme .sidebar {
+	background-color: rgb(37, 49, 74);
+	box-shadow: var(--sidebar-shadow);
+}

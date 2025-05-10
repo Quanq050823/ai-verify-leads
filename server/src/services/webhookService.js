@@ -103,6 +103,7 @@ const processLeadEvent = async (lead) => {
                 flowId: getObjectId(flow._id),
                 leadData: convertedData,
                 nodeId: currentNode.id,
+                source: "facebook",
             });
 
             await importedLeads.save();

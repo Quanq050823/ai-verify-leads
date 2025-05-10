@@ -14,18 +14,18 @@
 	--controls-button-color: #64748b;
 	--controls-button-hover-bg: rgba(0, 0, 0, 0.05);
 	--connection-path-color: #3b82f6;
-	--background-pattern-color: #e2e8f0;
+	--background-pattern-color: #dfeaf9;
 	--edge-path-color: #94a3b8;
 	--edge-label-bg-color: rgba(255, 255, 255, 0.8);
 	--edge-label-text-color: #334155;
 	--node-handle-color: #3b82f6;
 	--panel-bg-color: rgba(255, 255, 255, 0.8);
-	--panel-border-color: rgba(226, 232, 240, 0.8);
+	--panel-border-color: rgba(6, 1, 2, 0.8);
 	--panel-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 	--tooltip-bg-color: rgba(255, 255, 255, 0.9);
 	--tooltip-text-color: #334155;
 	--sidebar-bg-color: rgba(255, 255, 255, 0.9);
-	--sidebar-border-color: rgba(226, 232, 240, 1);
+	--sidebar-border-color: rgb(14, 26, 41);
 	--sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
 	--properties-panel-bg-color: rgba(255, 255, 255, 0.95);
 	--properties-panel-border-color: rgba(226, 232, 240, 1);
@@ -42,13 +42,13 @@ html.dark-theme .react-flow {
 	);
 	--node-bg-color: rgba(51, 65, 85, 0.9);
 	--node-border-color: rgba(71, 85, 105, 0.6);
-	--node-color: #e2e8f0;
+	--node-color: #000c1c;
 	--minimap-mask-color: rgba(15, 23, 42, 0.6);
 	--controls-bg-color: rgba(51, 65, 85, 0.8);
-	--controls-button-color: #cbd5e1;
+	--controls-button-color: #081b32;
 	--controls-button-hover-bg: rgba(255, 255, 255, 0.1);
 	--connection-path-color: #5597f3;
-	--background-pattern-color: #475569;
+	--background-pattern-color: #152233;
 	--edge-path-color: #5597f3;
 	--edge-label-bg-color: rgba(51, 65, 85, 0.8);
 	--edge-label-text-color: #5597f3;
@@ -58,10 +58,10 @@ html.dark-theme .react-flow {
 	--panel-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 	--tooltip-bg-color: rgba(51, 65, 85, 0.9);
 	--tooltip-text-color: #202b39;
-	--sidebar-bg-color: rgba(30, 41, 59, 0.9);
+	--sidebar-bg-color: rgb(37, 49, 74);
 	--sidebar-border-color: rgba(13, 24, 39, 0.6);
 	--sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-	--properties-panel-bg-color: rgba(30, 41, 59, 0.95);
+	--properties-panel-bg-color: rgb(37, 49, 74);
 	--properties-panel-border-color: rgba(71, 85, 105, 0.6);
 	--properties-panel-shadow: 0 0 20px rgba(0, 0, 0, 0.24);
 }
@@ -125,15 +125,13 @@ html.dark-theme .react-flow {
 
 /* Apply theme to sidebar */
 .sidebar {
-	background-color: var(--sidebar-bg-color);
-	border-color: var(--sidebar-border-color);
+	background-color: #25314a;
 	box-shadow: var(--sidebar-shadow);
 }
 
 /* Apply theme to properties panel */
 .properties-panel {
 	background-color: var(--properties-panel-bg-color);
-	border-color: var(--properties-panel-border-color);
 	box-shadow: var(--properties-panel-shadow);
 	color: var(--node-color);
 }

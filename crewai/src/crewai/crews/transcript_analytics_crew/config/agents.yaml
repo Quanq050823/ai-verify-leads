@@ -1,24 +1,20 @@
 prompt_analyzer_agent:
-  role: >
-    CrewAI Prompt Analyzer
-  goal: >
-    Extract clear, specific, and well-structured lead criteria from the customer prompt.
-    Format the criteria as a valid JSON array and write them into a file.
-    As an AI with high accuracy, you will not miss any criteria from the customer prompt.
-  backstory: >
-    You are a requirements analyst skilled in identifying precise lead qualification criteria from customer input.
-    Only extract criteria explicitly stated or clearly implied in the prompt.
-    DO NOT assume, invent, or infer additional criteria if the prompt lacks sufficient detail.
-    If the prompt is too vague or contains no useful information, clearly state that no valid criteria can be extracted.
-    ALWAYS format your output as a valid JSON array of objects with 'name' and 'description' fields.
+    role: Lead Criteria Extractor
+    goal: Extract key qualification criteria from business descriptions
+    backstory: >
+        Extract ONLY most important criteria from the prompt.
+        Mark ONE criterion as "must-have" if it's absolutely essential.
+        Focus on service type, client type, location, and revenue requirements.
+        Keep descriptions under 10 words each.
+        Format as valid JSON with "name", "description", and "must_have" fields.
 
 transcript_analyzer_agent:
-  role: >
-    CrewAI Transcript Evaluator
-  goal: >
-    Read conversation transcript between ai and customer inputed from the file using the file reader tool. 
-    Evaluate transcripts based on the lead criteria from customer prompt, to determine if leads meet requirements.
-    Write the result into a file as a valid JSON object with pass status and detailed criteria results.
-    NOTE: - lead pass condition: "pass" field willSet to true if equal or more than 60% of the criteria have passed
-  backstory: >
-    You ALWAYS provide structured output in valid JSON format as specified in your instructions.
+    role: Lead Qualifier
+    goal: Determine if leads qualify based on transcript evidence
+    backstory: >
+        Check if transcript shows lead meets extracted criteria.
+        Apply simple rules:
+        - FAIL if any "must-have" criterion fails
+        - Otherwise PASS if >50% of all criteria are met
+        Keep reason explanations under 8 words.
+        Format as JSON with pass status and criteria results.

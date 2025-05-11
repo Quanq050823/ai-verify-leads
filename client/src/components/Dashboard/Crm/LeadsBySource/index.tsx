@@ -68,9 +68,9 @@ const LeadsBySource: React.FC = () => {
 	// Dynamic colors based on number of sources
 	const getChartColors = () => {
 		const defaultColors = [
-			"#605DFF",
-			"#AD63F6",
-			"#0dcaf0",
+			"#0866ff",
+			"#34a853",
+			"#016e3c",
 			"#ff6384",
 			"#36a2eb",
 		];
@@ -237,7 +237,6 @@ const LeadsBySource: React.FC = () => {
 										>
 											<Typography
 												component="span"
-												className={index === 0 ? "bg-primary" : "bg-purple"}
 												sx={{
 													width: "11px",
 													height: "11px",

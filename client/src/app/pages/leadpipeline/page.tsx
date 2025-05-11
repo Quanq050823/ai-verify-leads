@@ -48,6 +48,8 @@ import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { getLeads, fetchLeadsByNodes } from "../../../services/leadServices";
 import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
+import { useFlow } from "@/context/FlowContext";
+import FlowSelector from "@/components/common/FlowSelector";
 
 // Extend the Column type to include nodeType
 interface ExtendedColumn extends Column {
@@ -121,6 +123,7 @@ export default function LeadPipelinePage() {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterType, setFilterType] = useState("all");
 	const [nodeTypes, setNodeTypes] = useState<string[]>([]);
+	const { selectedFlowId } = useFlow();
 
 	const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 	const [activeColumn, setActiveColumn] = useState<ExtendedColumn | null>(null);
@@ -210,16 +213,20 @@ export default function LeadPipelinePage() {
 		});
 	}
 
+	// Lưu trữ tất cả leads để có thể lọc lại
+	const [allLeads, setAllLeads] = useState<Lead[]>([]);
+
 	// Fetch leads data and organize by node type
 	useEffect(() => {
 		const loadLeads = async () => {
 			setLoading(true);
 			try {
-				// Tải leads từ API
+				// Lấy tất cả leads thay vì lọc theo flowId
 				let data = await getLeads();
 				console.log("All leads:", data);
 
-				// Xử lý dữ liệu sau khi tải
+				// Lưu tất cả leads vào state
+				setAllLeads(data);
 				processLeadData(data);
 			} catch (err) {
 				console.error("Error loading leads:", err);
@@ -229,13 +236,20 @@ export default function LeadPipelinePage() {
 			}
 		};
 
+		// Reset columns khi khởi động component
+		setColumns([]);
 		loadLeads();
 	}, []);
 
 	// Xử lý dữ liệu lead và tạo cột
 	const processLeadData = (data: Lead[]) => {
+		// Lọc dữ liệu theo flowId nếu có
+		const filteredData = selectedFlowId
+			? data.filter((lead) => lead.flowId === selectedFlowId)
+			: data;
+
 		// 1. Trích xuất và chuẩn hóa nodeType từ mỗi lead
-		const processedLeads: ProcessedLead[] = data.map((lead) => ({
+		const processedLeads: ProcessedLead[] = filteredData.map((lead) => ({
 			...lead,
 			// Thêm trường nodeBase để tránh tính toán lặp lại
 			nodeBase: extractNodeBase(lead.nodeId),
@@ -412,11 +426,23 @@ export default function LeadPipelinePage() {
 		setFilterType(event.target.value);
 	};
 
+	// Theo dõi thay đổi của flowId để lọc lại dữ liệu
+	useEffect(() => {
+		if (allLeads.length > 0) {
+			console.log("Filtering leads by flowId:", selectedFlowId);
+			// Lọc lại dữ liệu sử dụng tất cả leads đã lưu
+			processLeadData(allLeads);
+		}
+	}, [selectedFlowId, allLeads]);
+
 	const handleRefresh = async () => {
 		setLoading(true);
 		try {
 			const data = await getLeads();
 			console.log("Refreshed leads:", data);
+			// Lưu tất cả leads vào state
+			setAllLeads(data);
+			// Xử lý dữ liệu với flowId hiện tại
 			processLeadData(data);
 		} catch (err) {
 			console.error("Error refreshing leads:", err);
@@ -499,36 +525,6 @@ export default function LeadPipelinePage() {
 
 		return nodeType.toLowerCase();
 	};
-
-	if (loading) {
-		return (
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "center",
-					alignItems: "center",
-					height: "70vh",
-				}}
-			>
-				<CircularProgress />
-			</Box>
-		);
-	}
-
-	if (error) {
-		return (
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "center",
-					alignItems: "center",
-					height: "70vh",
-				}}
-			>
-				<Typography color="error">{error}</Typography>
-			</Box>
-		);
-	}
 
 	const renderCustomColumnContainer = (column: ExtendedColumn) => {
 		const enhancedColumn = {
@@ -668,6 +664,51 @@ export default function LeadPipelinePage() {
 
 			<Divider sx={{ mb: 3 }} />
 
+			{/* Flow Selector */}
+			<Paper
+				elevation={0}
+				sx={{
+					p: 3,
+					mb: 3,
+					borderRadius: 2,
+					backgroundColor: "background.paper",
+					boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+				}}
+			>
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: { xs: "column", md: "row" },
+						gap: 2,
+						alignItems: { xs: "flex-start", md: "center" },
+						justifyContent: "space-between",
+					}}
+				>
+					<Box>
+						<Typography variant="h6" sx={{ mb: 0.5, fontWeight: 600 }}>
+							Select Flow to View Leads
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							Lead pipeline data will be filtered according to the flow you
+							choose.
+						</Typography>
+					</Box>
+
+					<Box>
+						<FlowSelector />
+						{!loading && (
+							<Box sx={{ mt: 1, textAlign: "right" }}>
+								<Typography variant="caption" color="text.secondary">
+									{selectedFlowId
+										? `Showing ${leads.length} leads for selected flow`
+										: `Showing all ${leads.length} leads`}
+								</Typography>
+							</Box>
+						)}
+					</Box>
+				</Box>
+			</Paper>
+
 			<Paper
 				elevation={0}
 				sx={{
@@ -696,7 +737,7 @@ export default function LeadPipelinePage() {
 									ml: "auto",
 								}}
 							>
-								<IconButton size="small" title="Refresh leads">
+								<IconButton size="small" title="Search leads">
 									<SearchIcon />
 								</IconButton>
 							</Box>
@@ -747,41 +788,127 @@ export default function LeadPipelinePage() {
 				</Box>
 
 				<Box sx={{ p: 2 }} className={"lead-board-insight"}>
-					<DndContext
-						sensors={sensors}
-						onDragStart={handleDragStart}
-						onDragEnd={onDragEnd}
-						onDragCancel={handleDragCancel}
-						collisionDetection={closestCorners}
-					>
+					{loading ? (
 						<Box
 							sx={{
-								minHeight: "calc(100vh - 300px)",
 								display: "flex",
-								flexDirection: "column",
+								justifyContent: "center",
+								alignItems: "center",
+								height: "200px",
+								width: "100%",
 							}}
 						>
+							<CircularProgress />
+						</Box>
+					) : error ? (
+						<Box
+							sx={{
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "center",
+								height: "200px",
+								width: "100%",
+							}}
+						>
+							<Typography color="error">{error}</Typography>
+						</Box>
+					) : leads.length === 0 ? (
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "column",
+								justifyContent: "center",
+								alignItems: "center",
+								height: "200px",
+								width: "100%",
+							}}
+						>
+							<Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+								{selectedFlowId
+									? "No leads found for this flow"
+									: "No leads found. You can view all leads or select a specific flow."}
+							</Typography>
+							{selectedFlowId && allLeads.length > 0 && (
+								<Typography variant="body2" color="text.secondary">
+									There are {allLeads.length} leads in the system. Try selecting
+									a different flow.
+								</Typography>
+							)}
+						</Box>
+					) : (
+						<DndContext
+							sensors={sensors}
+							onDragStart={handleDragStart}
+							onDragEnd={onDragEnd}
+							onDragCancel={handleDragCancel}
+							collisionDetection={closestCorners}
+						>
 							<Box
-								style={{
-									overflowX: "auto",
-									overflowY: "hidden",
-									width: "100%",
-									padding: "8px 4px",
+								sx={{
+									minHeight: "calc(100vh - 300px)",
+									display: "flex",
+									flexDirection: "column",
 								}}
 							>
 								<Box
-									display="flex"
-									flexDirection="row"
-									alignItems="flex-start"
-									gap="20px"
-									sx={{ pb: 2 }}
+									style={{
+										overflowX: "auto",
+										overflowY: "hidden",
+										width: "100%",
+										padding: "8px 4px",
+									}}
 								>
-									<SortableContext items={columnsId}>
-										{columns.map((column) => (
+									<Box
+										display="flex"
+										flexDirection="row"
+										alignItems="flex-start"
+										gap="20px"
+										sx={{ pb: 2 }}
+									>
+										<SortableContext items={columnsId}>
+											{columns.map((column) => (
+												<ColumnContainer
+													key={column.id}
+													column={{
+														...column,
+														title: (
+															<Box
+																sx={{ display: "flex", alignItems: "center" }}
+																className="column-header"
+															>
+																<IconBox
+																	sx={{
+																		backgroundColor:
+																			column.iconColor || "#9e9e9e",
+																		width: 32,
+																		height: 32,
+																	}}
+																>
+																	{renderNodeIcon(column.nodeType)}
+																</IconBox>
+																<Typography component="span" sx={{ ml: 1 }}>
+																	{column.nodeType
+																		? getNodeTypeDisplayName(column.nodeType)
+																		: column.title}
+																</Typography>
+															</Box>
+														),
+													}}
+													deleteColumn={deleteColumn}
+												/>
+											))}
+										</SortableContext>
+									</Box>
+								</Box>
+							</Box>
+
+							{typeof document !== "undefined" &&
+								createPortal(
+									<DragOverlay>
+										{activeColumn && (
 											<ColumnContainer
-												key={column.id}
 												column={{
-													...column,
+													...activeColumn,
 													title: (
 														<Box
 															sx={{ display: "flex", alignItems: "center" }}
@@ -790,66 +917,31 @@ export default function LeadPipelinePage() {
 															<IconBox
 																sx={{
 																	backgroundColor:
-																		column.iconColor || "#9e9e9e",
+																		activeColumn.iconColor || "#9e9e9e",
 																	width: 32,
 																	height: 32,
 																}}
 															>
-																{renderNodeIcon(column.nodeType)}
+																{renderNodeIcon(activeColumn.nodeType)}
 															</IconBox>
 															<Typography component="span" sx={{ ml: 1 }}>
-																{column.nodeType
-																	? getNodeTypeDisplayName(column.nodeType)
-																	: column.title}
+																{activeColumn.nodeType
+																	? getNodeTypeDisplayName(
+																			activeColumn.nodeType
+																	  )
+																	: activeColumn.title}
 															</Typography>
 														</Box>
 													),
 												}}
 												deleteColumn={deleteColumn}
 											/>
-										))}
-									</SortableContext>
-								</Box>
-							</Box>
-						</Box>
-
-						{typeof document !== "undefined" &&
-							createPortal(
-								<DragOverlay>
-									{activeColumn && (
-										<ColumnContainer
-											column={{
-												...activeColumn,
-												title: (
-													<Box
-														sx={{ display: "flex", alignItems: "center" }}
-														className="column-header"
-													>
-														<IconBox
-															sx={{
-																backgroundColor:
-																	activeColumn.iconColor || "#9e9e9e",
-																width: 32,
-																height: 32,
-															}}
-														>
-															{renderNodeIcon(activeColumn.nodeType)}
-														</IconBox>
-														<Typography component="span" sx={{ ml: 1 }}>
-															{activeColumn.nodeType
-																? getNodeTypeDisplayName(activeColumn.nodeType)
-																: activeColumn.title}
-														</Typography>
-													</Box>
-												),
-											}}
-											deleteColumn={deleteColumn}
-										/>
-									)}
-								</DragOverlay>,
-								document.body
-							)}
-					</DndContext>
+										)}
+									</DragOverlay>,
+									document.body
+								)}
+						</DndContext>
+					)}
 				</Box>
 			</Paper>
 

@@ -100,10 +100,9 @@ const getRandomColor = (name: string) => {
 interface LeadCardProps {
 	lead: Lead;
 	onDelete?: (id: string) => void;
-	onEdit?: (lead: Lead) => void;
 }
 
-const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
+const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 	const [openDetails, setOpenDetails] = useState(false);
 	const [detailedLead, setDetailedLead] = useState<Lead | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -149,14 +148,6 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 			setOpenDetails(false);
 		}
 	};
-
-	const handleEdit = (e: React.MouseEvent) => {
-		e.stopPropagation();
-		if (onEdit) {
-			onEdit(lead);
-		}
-	};
-
 	const leadName =
 		lead.leadData["full name"] || lead.leadData.name || "Unknown";
 	const leadEmail = lead.leadData.email || "";
@@ -275,13 +266,6 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 							{timeAgo}
 						</Typography>
 						<Box>
-							{onEdit && (
-								<Tooltip title="Edit">
-									<IconButton size="small" onClick={handleEdit}>
-										<EditIcon fontSize="small" />
-									</IconButton>
-								</Tooltip>
-							)}
 							{onDelete && (
 								<Tooltip title="Delete">
 									<IconButton size="small" onClick={handleOpenDeleteConfirm}>
@@ -750,21 +734,6 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 					)}
 				</DialogContent>
 				<DialogActions sx={{ p: 2 }} className="column-header">
-					{onEdit && (
-						<Button
-							startIcon={<EditIcon />}
-							onClick={handleEdit}
-							color="primary"
-							variant="outlined"
-							sx={{
-								textTransform: "none",
-								borderRadius: "8px",
-								fontWeight: "500",
-							}}
-						>
-							Edit
-						</Button>
-					)}
 					{onDelete && (
 						<Button
 							startIcon={<DeleteIcon />}

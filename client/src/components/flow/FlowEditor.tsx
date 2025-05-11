@@ -17,6 +17,7 @@ import {
 	ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import "@/styles/reactflow-theme.css"; // Import custom theme
 import {
 	Box,
 	CssBaseline,
@@ -34,7 +35,12 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { alpha } from "@mui/material/styles";
-import { Map as MapIcon, VisibilityOff } from "@mui/icons-material";
+import {
+	Map as MapIcon,
+	VisibilityOff,
+	DarkMode as DarkModeIcon,
+	LightMode as LightModeIcon,
+} from "@mui/icons-material";
 
 import Sidebar from "./Sidebar";
 import PropertiesPanel from "./PropertiesPanel";
@@ -54,30 +60,66 @@ import {
 } from "./nodes/NodeTypes";
 import { CustomEdgeData } from "./edges/CustomEdge";
 import { getFlowById, createFlow, updateFlow } from "@/services/flowServices";
+import { useTheme } from "@/context/ThemeContext";
 
-// Define theme for MUI
-const theme = createTheme({
-	palette: {
-		primary: {
-			main: "#3b82f6",
+// Define MUI themes
+const getLightTheme = () =>
+	createTheme({
+		palette: {
+			mode: "light",
+			primary: {
+				main: "#3b82f6",
+			},
+			secondary: {
+				main: "#10b981",
+			},
+			error: {
+				main: "#ef4444",
+			},
+			warning: {
+				main: "#f59e0b",
+			},
+			info: {
+				main: "#6366f1",
+			},
+			success: {
+				main: "#22c55e",
+			},
 		},
-		secondary: {
-			main: "#10b981",
+	});
+
+const getDarkTheme = () =>
+	createTheme({
+		palette: {
+			mode: "dark",
+			primary: {
+				main: "#60a5fa",
+			},
+			secondary: {
+				main: "#34d399",
+			},
+			error: {
+				main: "#f87171",
+			},
+			warning: {
+				main: "#fbbf24",
+			},
+			info: {
+				main: "#818cf8",
+			},
+			success: {
+				main: "#4ade80",
+			},
+			background: {
+				default: "#1e293b",
+				paper: "#334155",
+			},
+			text: {
+				primary: "#f1f5f9",
+				secondary: "#cbd5e1",
+			},
 		},
-		error: {
-			main: "#ef4444",
-		},
-		warning: {
-			main: "#f59e0b",
-		},
-		info: {
-			main: "#6366f1",
-		},
-		success: {
-			main: "#22c55e",
-		},
-	},
-});
+	});
 
 // Define node types
 const nodeTypes = {
@@ -122,6 +164,7 @@ interface FlowEditorProps {
 }
 
 const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
+	const { isDarkMode, toggleTheme } = useTheme();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -561,8 +604,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				display: "flex",
 				position: "relative",
 				overflow: "hidden",
-				background:
-					"linear-gradient(135deg, rgba(240,249,255,0.9), rgba(224,242,254,0.9), rgba(236,254,255,0.8))",
 			}}
 		>
 			{/* Sidebar with node types */}
@@ -597,11 +638,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 							marginBottom: 20,
 							marginRight: 20,
 							padding: 5,
-							boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
 							borderRadius: 12,
-							background: "rgba(255,255,255,0.8)",
-							backdropFilter: "blur(12px)",
-							border: "1px solid rgba(226, 232, 240, 0.8)",
 						}}
 					/>
 
@@ -626,15 +663,10 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 										return "#94A3B8";
 								}
 							}}
-							maskColor="rgba(240, 245, 250, 0.5)"
 							style={{
 								marginBottom: 20,
 								marginRight: 20,
 								borderRadius: 12,
-								boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-								border: "1px solid rgba(226, 232, 240, 0.8)",
-								background: "rgba(255,255,255,0.8)",
-								backdropFilter: "blur(12px)",
 							}}
 						/>
 					)}
@@ -650,16 +682,13 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 						>
 							<IconButton
 								onClick={toggleMiniMap}
+								className="lead-board"
 								sx={{
-									backgroundColor: "rgba(255, 255, 255, 0.9)",
 									backdropFilter: "blur(12px)",
-									border: "1px solid rgba(226, 232, 240, 0.8)",
-									boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
 									borderRadius: "10px",
 									width: "40px",
 									height: "40px",
 									"&:hover": {
-										backgroundColor: alpha("#ffffff", 0.95),
 										boxShadow: "0 6px 16px rgba(0,0,0,0.12)",
 									},
 								}}
@@ -673,7 +702,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 						</Tooltip>
 					</Panel>
 
-					{/* Flow execution progress bar */}
+					{/* Toggle Theme Button */}
 					{isRunning && (
 						<Box
 							sx={{
@@ -757,6 +786,9 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 
 // Wrap the component with ReactFlowProvider and ThemeProvider
 const FlowEditor: React.FC<FlowEditorProps> = ({ flowId }) => {
+	const { isDarkMode } = useTheme();
+	const theme = isDarkMode ? getDarkTheme() : getLightTheme();
+
 	return (
 		<ThemeProvider theme={theme}>
 			<CssBaseline />
@@ -765,7 +797,6 @@ const FlowEditor: React.FC<FlowEditorProps> = ({ flowId }) => {
 					height: "100vh",
 					width: "100%",
 					overflow: "hidden",
-					bgcolor: "grey.50",
 				}}
 			>
 				<ReactFlowProvider>

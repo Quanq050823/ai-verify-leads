@@ -160,7 +160,7 @@ const FlowList: React.FC<FlowListProps> = ({
 							borderRadius: "8px",
 							backgroundColor: "#f9f9f9",
 						}}
-						className="scenario flow-item"
+						className="scenario flow-item flow-card-content"
 					>
 						<Grid container alignItems="center">
 							<Grid item xs={2}>

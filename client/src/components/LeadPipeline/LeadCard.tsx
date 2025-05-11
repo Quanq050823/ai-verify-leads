@@ -58,7 +58,7 @@ const getStatusText = (status: number) => {
 		case 9:
 			return "Done";
 		default:
-			return "Unknown";
+			return "Error";
 	}
 };
 
@@ -183,6 +183,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 					cursor: "pointer",
 				}}
 				onClick={handleOpenDetails}
+				className={"lead-card"}
 			>
 				<CardContent>
 					<Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
@@ -306,7 +307,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 					},
 				}}
 			>
-				<DialogTitle sx={{ p: "16px 24px" }}>
+				<DialogTitle sx={{ p: "16px 24px" }} className="lead-info-dialog">
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<Avatar
 							sx={{
@@ -343,7 +344,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 							<Typography>Loading lead details...</Typography>
 						</Box>
 					) : (
-						<Box sx={{ p: 3 }}>
+						<Box sx={{ p: 3 }} className="column-header">
 							<Grid container spacing={3}>
 								<Grid item xs={12} md={6}>
 									<Paper
@@ -354,6 +355,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 											borderRadius: "12px",
 											border: "1px solid #E5E7EB",
 										}}
+										className="column-header"
 									>
 										<Typography
 											variant="subtitle1"
@@ -492,6 +494,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 											borderRadius: "12px",
 											border: "1px solid #E5E7EB",
 										}}
+										className="column-header"
 									>
 										<Typography
 											variant="subtitle1"
@@ -583,6 +586,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 										borderRadius: "12px",
 										border: "1px solid #E5E7EB",
 									}}
+									className="column-header"
 								>
 									<Typography
 										variant="subtitle1"
@@ -602,11 +606,13 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 											maxHeight: "200px",
 											overflow: "auto",
 										}}
+										className="transcript-bg"
 									>
 										<Typography
 											variant="body2"
 											whiteSpace="pre-line"
 											sx={{ fontSize: "13px", color: "#424242" }}
+											className="white-text"
 										>
 											{detailedLead.leadData.transcript}
 										</Typography>
@@ -622,6 +628,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 									borderRadius: "12px",
 									border: "1px solid #E5E7EB",
 								}}
+								className="column-header"
 							>
 								<Typography
 									variant="subtitle1"
@@ -714,6 +721,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 										border: "1px solid #FFCDD2",
 										bgcolor: "#FFF5F5",
 									}}
+									className="column-header"
 								>
 									<Typography
 										variant="subtitle1"
@@ -730,13 +738,18 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 										<Typography variant="body2">
 											Retry Count: {lead.error.retryCount}
 										</Typography>
+										{lead.error.message && (
+											<Typography variant="body2">
+												Message: {lead.error.message}
+											</Typography>
+										)}
 									</Box>
 								</Paper>
 							)}
 						</Box>
 					)}
 				</DialogContent>
-				<DialogActions sx={{ p: 2 }}>
+				<DialogActions sx={{ p: 2 }} className="column-header">
 					{onEdit && (
 						<Button
 							startIcon={<EditIcon />}

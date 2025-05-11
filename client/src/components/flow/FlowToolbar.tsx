@@ -34,8 +34,11 @@ import {
 	Sync,
 	MoreVert,
 	SaveAlt,
+	DarkMode as DarkModeIcon,
+	LightMode as LightModeIcon,
 } from "@mui/icons-material";
 import { TransitionProps } from "@mui/material/transitions";
+import { useTheme } from "@/context/ThemeContext";
 
 type FlowToolbarProps = {
 	onSave: () => void;
@@ -59,7 +62,6 @@ const ToolbarButton = styled(Button)(({ theme }) => ({
 
 const ToolbarContainer = styled(Paper)(({ theme }) => ({
 	display: "flex",
-	backgroundColor: alpha(theme.palette.background.paper, 0.85),
 	backdropFilter: "blur(12px)",
 	borderRadius: "14px",
 	boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
@@ -110,6 +112,7 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 	onRename,
 }) => {
 	const { zoomIn, zoomOut, fitView } = useReactFlow();
+	const { isDarkMode, toggleTheme } = useTheme();
 	const [renameDialogOpen, setRenameDialogOpen] = useState(false);
 	const [newName, setNewName] = useState(flowName);
 	const [isEditing, setIsEditing] = useState(false);
@@ -148,7 +151,7 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 
 	return (
 		<>
-			<ToolbarContainer elevation={2}>
+			<ToolbarContainer elevation={2} className="lead-board">
 				{onRename && (
 					<>
 						<FlowNameContainer>
@@ -275,6 +278,18 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 						</ToolbarButton>
 					</Tooltip>
 				</ButtonGroup>
+
+				<Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+
+				<Tooltip title="Toggle Theme" arrow>
+					<ToolbarButton onClick={toggleTheme}>
+						{isDarkMode ? (
+							<LightModeIcon fontSize="small" />
+						) : (
+							<DarkModeIcon fontSize="small" />
+						)}
+					</ToolbarButton>
+				</Tooltip>
 
 				<Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 

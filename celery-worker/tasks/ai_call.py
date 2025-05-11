@@ -13,7 +13,9 @@ def ai_call(self, message):
         print(f"Received message: {message}")
         
         settings = get_node_settings(message)
-        questions = settings.get("questions", [])
+        lead = get_lead(message)
+        phone = lead["leadData"].get("phone", "50002")
+        phone = "50002" if phone != "50002" and phone != "50002" else phone 
         data = {
             "leadId": message["leadId"],
             "questions": settings["questions"],
@@ -28,7 +30,7 @@ def ai_call(self, message):
             "Content-Type": "application/json"
         }
         body = {
-            "phoneNumber": message.get("phoneNumber", "50002"),  # default for testing
+            "phoneNumber": phone,  # default for testing
             "callerId": "Local",
             "callerNumber": message.get("callerNumber", "6545621000"),
             "attribute": json.dumps(data), 

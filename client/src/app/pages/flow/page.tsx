@@ -45,6 +45,7 @@ import Phone from "@mui/icons-material/Phone";
 import Settings from "@mui/icons-material/Settings";
 import ErrorOutline from "@mui/icons-material/ErrorOutline";
 import Layers from "@mui/icons-material/Layers";
+import UpdateIcon from "@mui/icons-material/Update";
 import Link from "next/link";
 import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
 import {
@@ -59,7 +60,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
 	transition: "all 0.3s ease",
 	borderRadius: "12px",
 	overflow: "hidden",
-	border: "1px solid #E5E7EB",
 	height: "100%",
 	"&:hover": {
 		transform: "translateY(-4px)",
@@ -136,6 +136,7 @@ interface Flow {
 	creator: string;
 	status: number;
 	components: Component[];
+	updatedAt?: string;
 }
 
 interface FlowListProps {
@@ -206,7 +207,7 @@ const FlowList: React.FC<FlowListProps> = ({
 
 	if (filteredFlows.length === 0) {
 		return (
-			<EmptyState>
+			<EmptyState className="lighter-bg">
 				<Layers sx={{ fontSize: 48, color: "#9ca3af", mb: 2 }} />
 				<Typography variant="h6" color="textSecondary" gutterBottom>
 					{searchTerm
@@ -239,6 +240,7 @@ const FlowList: React.FC<FlowListProps> = ({
 									display: "flex",
 									flexDirection: "column",
 								}}
+								className="flow-card-footer"
 							>
 								{/* Header with status and menu */}
 								<Box
@@ -247,9 +249,9 @@ const FlowList: React.FC<FlowListProps> = ({
 										display: "flex",
 										justifyContent: "space-between",
 										alignItems: "center",
-										borderBottom: "1px solid #E5E7EB",
 										bgcolor: "#FAFBFC",
 									}}
+									className="flow-card-header"
 								>
 									<Chip
 										label={flow.status === 2 ? "Active" : "Inactive"}
@@ -302,6 +304,7 @@ const FlowList: React.FC<FlowListProps> = ({
 										alignItems: "flex-start",
 										justifyContent: "flex-start",
 									}}
+									className="flow-card-content"
 								>
 									<Box sx={{ p: 2.5, width: "100%" }}>
 										{/* Flow name */}
@@ -323,7 +326,11 @@ const FlowList: React.FC<FlowListProps> = ({
 
 										{/* Flow info */}
 										<Box
-											sx={{ display: "flex", alignItems: "center", mb: 2.5 }}
+											sx={{
+												display: "flex",
+												flexDirection: "column",
+												alignItems: "flex-start",
+											}}
 										>
 											<Typography
 												variant="body2"
@@ -333,6 +340,7 @@ const FlowList: React.FC<FlowListProps> = ({
 													color: "#6B7280",
 													fontSize: "0.8125rem",
 													mr: 2,
+													mb: 0.5,
 												}}
 											>
 												<CalendarMonthIcon
@@ -340,19 +348,30 @@ const FlowList: React.FC<FlowListProps> = ({
 												/>
 												{flow.date}
 											</Typography>
+										</Box>
+
+										<Box
+											sx={{
+												display: "flex",
+												flexDirection: "column",
+												alignItems: "flex-start",
+												mb: 2.5,
+											}}
+										>
 											<Typography
 												variant="body2"
 												sx={{
 													display: "flex",
 													alignItems: "center",
 													color: "#6B7280",
-													fontSize: "0.8125rem",
+													fontSize: "0.75rem",
+													mr: 2,
 												}}
 											>
-												<PersonIcon
-													sx={{ fontSize: 16, mr: 0.5, color: "#9CA3AF" }}
+												<UpdateIcon
+													sx={{ fontSize: 14, mr: 0.5, color: "#9CA3AF" }}
 												/>
-												{flow.creator}
+												Updated: {flow.updatedAt}
 											</Typography>
 										</Box>
 
@@ -548,6 +567,7 @@ const ScenarioPage: React.FC = () => {
 							id: flow._id || flow.id,
 							name: flow.name,
 							date: new Date(flow.createdAt).toLocaleDateString(),
+							updatedAt: formatTimeAgo(flow.updatedAt || flow.createdAt),
 							creator: flow.userId || "Unknown",
 							status: flow.status,
 							components:
@@ -598,122 +618,175 @@ const ScenarioPage: React.FC = () => {
 		}
 	};
 
+	const formatTimeAgo = (dateString: string): string => {
+		const date = new Date(dateString);
+		const now = new Date();
+		const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+		let interval = Math.floor(seconds / 31536000);
+		if (interval >= 1) {
+			return interval === 1 ? `${interval} year ago` : `${interval} years ago`;
+		}
+
+		interval = Math.floor(seconds / 2592000);
+		if (interval >= 1) {
+			return interval === 1
+				? `${interval} month ago`
+				: `${interval} months ago`;
+		}
+
+		interval = Math.floor(seconds / 86400);
+		if (interval >= 1) {
+			return interval === 1 ? `${interval} day ago` : `${interval} days ago`;
+		}
+
+		interval = Math.floor(seconds / 3600);
+		if (interval >= 1) {
+			return interval === 1 ? `${interval} hour ago` : `${interval} hours ago`;
+		}
+
+		interval = Math.floor(seconds / 60);
+		if (interval >= 1) {
+			return interval === 1
+				? `${interval} minute ago`
+				: `${interval} minutes ago`;
+		}
+
+		return seconds <= 5 ? "just now" : `${Math.floor(seconds)} seconds ago`;
+	};
+
 	return (
-		<Box
-			sx={{
-				minHeight: "80vh",
-				display: "flex",
-				flexDirection: "column",
-				px: 1,
-			}}
-		>
-			{/* Breadcrumbs */}
-			<Breadcrumbs
-				separator={<NavigateNextIcon fontSize="small" />}
-				aria-label="breadcrumb"
-				sx={{ mb: 2 }}
+		<Box sx={{ mb: 3 }}>
+			<Box
+				sx={{
+					minHeight: "80vh",
+					display: "flex",
+					flexDirection: "column",
+					px: 1,
+				}}
 			>
-				<Link href="/app/dashboard" passHref style={{ textDecoration: "none" }}>
-					<Typography
-						color="text.secondary"
-						sx={{ display: "flex", alignItems: "center", fontSize: "0.875rem" }}
+				{/* Breadcrumbs */}
+				<Breadcrumbs
+					separator={<NavigateNextIcon fontSize="small" />}
+					aria-label="breadcrumb"
+					sx={{ mb: 2 }}
+				>
+					<Link
+						href="/app/dashboard"
+						passHref
+						style={{ textDecoration: "none" }}
 					>
-						<HomeIcon sx={{ mr: 0.5, fontSize: "0.875rem" }} />
-						Dashboard
+						<Typography
+							color="text.secondary"
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								fontSize: "0.875rem",
+							}}
+						>
+							<HomeIcon sx={{ mr: 0.5, fontSize: "0.875rem" }} />
+							Dashboard
+						</Typography>
+					</Link>
+					<Typography color="text.primary" sx={{ fontSize: "0.875rem" }}>
+						Scenarios
 					</Typography>
-				</Link>
-				<Typography color="text.primary" sx={{ fontSize: "0.875rem" }}>
-					Scenarios
-				</Typography>
-			</Breadcrumbs>
+				</Breadcrumbs>
 
-			{/* Header */}
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-					mb: 3,
-				}}
-			>
-				<Typography variant="h5" sx={{ fontWeight: 700 }}>
-					All Scenarios
-				</Typography>
-
-				<Button
-					variant="outlined"
-					startIcon={<DeleteOutlineIcon />}
-					href="/pages/trash/"
+				{/* Header */}
+				<Box
 					sx={{
-						borderRadius: "10px",
-						textTransform: "none",
-						boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)",
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+						mb: 3,
 					}}
 				>
-					Trash
-				</Button>
-			</Box>
+					<Typography variant="h5" sx={{ fontWeight: 700 }}>
+						All Scenarios
+					</Typography>
 
-			{/* Search and Add */}
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-					mb: 3,
-					flexWrap: "wrap",
-					gap: 2,
-				}}
-			>
-				<SearchTextField
-					placeholder="Search scenarios..."
-					variant="outlined"
-					value={searchTerm}
-					onChange={(e) => setSearchTerm(e.target.value)}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon color="action" />
-							</InputAdornment>
-						),
-					}}
-					size="small"
-					sx={{ flexGrow: 1, maxWidth: { xs: "100%", sm: 320 } }}
-				/>
-
-				<Button
-					variant="contained"
-					component={Link}
-					href="/pages/customflow"
-					startIcon={<AddIcon />}
-					sx={{
-						borderRadius: "10px",
-						textTransform: "none",
-						boxShadow: "0 8px 16px rgba(85, 105, 255, 0.2)",
-						py: 1,
-						px: 2.5,
-					}}
-				>
-					Create New Scenario
-				</Button>
-			</Box>
-
-			<Divider sx={{ mb: 3 }} />
-
-			{/* Content */}
-			{isLoading ? (
-				<Box display="flex" justifyContent="center" alignItems="center" my={8}>
-					<CircularProgress size={40} color="primary" />
+					<Button
+						variant="outlined"
+						component={Link}
+						startIcon={<DeleteOutlineIcon />}
+						href="/pages/trash/"
+						sx={{
+							borderRadius: "10px",
+							textTransform: "none",
+							boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)",
+						}}
+					>
+						Trash
+					</Button>
 				</Box>
-			) : (
-				<FlowList
-					flows={flows}
-					activeFlowId={activeFlowId}
-					onToggleActive={handleToggleActive}
-					onDeleteFlow={handleDeleteFlow}
-					searchTerm={searchTerm}
-				/>
-			)}
+
+				{/* Search and Add */}
+				<Box
+					sx={{
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+						mb: 3,
+						flexWrap: "wrap",
+						gap: 2,
+					}}
+				>
+					<SearchTextField
+						placeholder="Search scenarios..."
+						variant="outlined"
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon color="action" />
+								</InputAdornment>
+							),
+						}}
+						size="small"
+						sx={{ flexGrow: 1, maxWidth: { xs: "100%", sm: 320 } }}
+					/>
+
+					<Button
+						variant="contained"
+						component={Link}
+						href="/pages/customflow"
+						startIcon={<AddIcon />}
+						sx={{
+							borderRadius: "10px",
+							textTransform: "none",
+							boxShadow: "0 8px 16px rgba(85, 105, 255, 0.2)",
+							py: 1,
+							px: 2.5,
+						}}
+					>
+						Create New Scenario
+					</Button>
+				</Box>
+
+				<Divider sx={{ mb: 3 }} />
+
+				{/* Content */}
+				{isLoading ? (
+					<Box
+						display="flex"
+						justifyContent="center"
+						alignItems="center"
+						my={8}
+					>
+						<CircularProgress size={40} color="primary" />
+					</Box>
+				) : (
+					<FlowList
+						flows={flows}
+						activeFlowId={activeFlowId}
+						onToggleActive={handleToggleActive}
+						onDeleteFlow={handleDeleteFlow}
+						searchTerm={searchTerm}
+					/>
+				)}
+			</Box>
 		</Box>
 	);
 };

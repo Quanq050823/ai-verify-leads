@@ -27,6 +27,7 @@ export type Lead = {
 	error?: {
 		status: boolean;
 		retryCount: number;
+		message?: string;
 	};
 };
 

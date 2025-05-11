@@ -185,10 +185,11 @@ const BaseNode = ({ data, selected, id }: BaseNodeProps) => {
 				<Typography
 					variant="body2"
 					sx={{ fontWeight: 500, color: "text.primary" }}
+					className="dark-text"
 				>
 					{data.label}
 				</Typography>
-				<ActionLabel>{actionName}</ActionLabel>
+				<ActionLabel className="dark-text">{actionName}</ActionLabel>
 			</NodeLabel>
 
 			{inputPositions.map((pos, index) => (

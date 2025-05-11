@@ -133,7 +133,7 @@ const LeftSidebarMenu: React.FC<LeftSidebarProps> = ({ toggleActive }) => {
 								</Typography>
 							</Link>
 
-							<Link
+							{/* <Link
 								href="/pages/analytics/"
 								className={`sidebar-menu-link ${
 									pathname === "/pages/analytics/" ? "active" : ""
@@ -143,7 +143,7 @@ const LeftSidebarMenu: React.FC<LeftSidebarProps> = ({ toggleActive }) => {
 								<Typography component={"span"} className="title">
 									Analytics
 								</Typography>
-							</Link>
+							</Link> */}
 
 							{/* 
 							<Link

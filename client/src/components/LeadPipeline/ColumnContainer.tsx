@@ -211,7 +211,7 @@ function ColumnContainer(props: Props) {
 								badgeContent={column.leads?.length || 0}
 								color="primary"
 								sx={{
-									ml: 1.5,
+									ml: 2.5,
 									"& .MuiBadge-badge": {
 										fontSize: "11px",
 										height: "18px",
@@ -288,6 +288,7 @@ function ColumnContainer(props: Props) {
 								borderRadius: "10px",
 							},
 						}}
+						className="column-header"
 					>
 						{leads.filter((lead) => {
 							// Nếu có filter text, lọc theo tên, email, hoặc phone
@@ -385,6 +386,7 @@ function ColumnContainer(props: Props) {
 							background: "#FFFFFF",
 							borderTop: "1px solid #E5E7EB",
 						}}
+						className="column-header"
 					>
 						<Button
 							onClick={handleClickOpenCreateLead}

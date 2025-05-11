@@ -112,7 +112,7 @@ const RevenueGrowth: React.FC = () => {
 					padding: { xs: "18px", sm: "20px", lg: "25px" },
 					overflow: "visible",
 				}}
-				className="rmui-card"
+				className="rmui-card lighter-bg"
 			>
 				<Box
 					sx={{

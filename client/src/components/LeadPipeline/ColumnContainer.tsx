@@ -83,7 +83,10 @@ function ColumnContainer(props: Props) {
 	const [filterText, setFilterText] = useState("");
 
 	useEffect(() => {
-		if (column.leads) {
+		if (
+			column.leads &&
+			JSON.stringify(column.leads) !== JSON.stringify(leads)
+		) {
 			setLeads(column.leads);
 		}
 	}, [column.leads]);

@@ -50,6 +50,7 @@ import { getLeads, fetchLeadsByNodes } from "../../../services/leadServices";
 import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
 import { useFlow } from "@/context/FlowContext";
 import FlowSelector from "@/components/common/FlowSelector";
+import { getFlowById } from "../../../services/flowServices";
 
 // Extend the Column type to include nodeType
 interface ExtendedColumn extends Column {
@@ -190,7 +191,7 @@ export default function LeadPipelinePage() {
 		}
 	};
 
-	function onDragEnd(event: DragEndEvent) {
+	const onDragEnd = (event: DragEndEvent) => {
 		setActiveColumn(null);
 
 		const { active, over } = event;
@@ -211,23 +212,25 @@ export default function LeadPipelinePage() {
 
 			return arrayMove(columns, activeColumnIndex, overColumnIndex);
 		});
-	}
+	};
 
 	// Lưu trữ tất cả leads để có thể lọc lại
 	const [allLeads, setAllLeads] = useState<Lead[]>([]);
 
-	// Fetch leads data and organize by node type
+	// Lưu trữ thông tin về các node từ flow hiện tại
+	const [flowNodes, setFlowNodes] = useState<any[]>([]);
+
+	// Fetch leads data khi component mount
 	useEffect(() => {
 		const loadLeads = async () => {
 			setLoading(true);
 			try {
-				// Lấy tất cả leads thay vì lọc theo flowId
+				// Lấy tất cả leads
 				let data = await getLeads();
 				console.log("All leads:", data);
 
 				// Lưu tất cả leads vào state
 				setAllLeads(data);
-				processLeadData(data);
 			} catch (err) {
 				console.error("Error loading leads:", err);
 				setError("Failed to load leads. Please try again.");
@@ -236,72 +239,214 @@ export default function LeadPipelinePage() {
 			}
 		};
 
-		// Reset columns khi khởi động component
-		setColumns([]);
 		loadLeads();
 	}, []);
 
-	// Xử lý dữ liệu lead và tạo cột
-	const processLeadData = (data: Lead[]) => {
-		// Lọc dữ liệu theo flowId nếu có
-		const filteredData = selectedFlowId
-			? data.filter((lead) => lead.flowId === selectedFlowId)
-			: data;
+	// Theo dõi thay đổi của flowId để lấy thông tin node và tạo cột
+	useEffect(() => {
+		const fetchFlowData = async () => {
+			if (!selectedFlowId) {
+				// Khi không có flow được chọn, tạo cột dựa trên dữ liệu lead hiện có
+				createColumnsFromLeads(allLeads);
+				return;
+			}
 
-		// 1. Trích xuất và chuẩn hóa nodeType từ mỗi lead
-		const processedLeads: ProcessedLead[] = filteredData.map((lead) => ({
+			try {
+				// Sử dụng hàm getFlowById từ flowServices
+				const flowData = await getFlowById(selectedFlowId);
+				console.log("Flow data fetched:", flowData);
+
+				if (flowData && flowData.nodeData && flowData.nodeData.nodes) {
+					const nodes = flowData.nodeData.nodes;
+					console.log("Flow nodes:", nodes);
+					setFlowNodes(nodes);
+
+					// Tạo cột dựa trên node từ flow
+					createColumnsFromFlow(nodes);
+				}
+			} catch (error) {
+				console.error("Error fetching flow nodes:", error);
+			}
+		};
+
+		fetchFlowData();
+	}, [selectedFlowId]);
+
+	// Theo dõi để cập nhật leads vào các cột khi có thay đổi
+	useEffect(() => {
+		if (columns.length > 0 && allLeads.length > 0) {
+			const filteredLeads = selectedFlowId
+				? allLeads.filter((lead) => lead.flowId === selectedFlowId)
+				: allLeads;
+
+			distributeLeadsToColumns(filteredLeads);
+		}
+	}, [columns, allLeads, selectedFlowId, searchTerm, filterType]);
+
+	// Tạo cột dựa trên các leads hiện có
+	const createColumnsFromLeads = (leadsData: Lead[]) => {
+		// Trích xuất và chuẩn hóa nodeType từ mỗi lead
+		const processedLeads = leadsData.map((lead) => ({
 			...lead,
-			// Thêm trường nodeBase để tránh tính toán lặp lại
 			nodeBase: extractNodeBase(lead.nodeId),
 		}));
 
-		// 2. Tìm các loại node duy nhất
-		const uniqueNodeTypes = Array.from(
+		// Tìm các loại node duy nhất từ leads
+		const nodeTypesFromLeads = Array.from(
 			new Set(processedLeads.map((lead) => lead.nodeBase || "unassigned"))
+		).filter((type) => type !== "hidden");
+
+		console.log("Node types from leads:", nodeTypesFromLeads);
+
+		createColumnsFromNodeTypes(nodeTypesFromLeads);
+	};
+
+	// Tạo cột dựa trên các node từ flow
+	const createColumnsFromFlow = (nodes: any[]) => {
+		// Trích xuất các loại node từ flow
+		const nodeTypes = nodes
+			.map((node) => {
+				// Trong flowData.nodeData.nodes, node type thường được lưu trong node.type
+				return extractNodeBase(node.type || node.id || "");
+			})
+			.filter((type) => type !== "hidden" && type !== "unassigned");
+
+		// Loại bỏ các node type trùng lặp
+		const uniqueNodeTypes = Array.from(new Set(nodeTypes));
+		console.log("Unique node types from flow:", uniqueNodeTypes);
+
+		createColumnsFromNodeTypes(uniqueNodeTypes);
+	};
+
+	// Hàm chung để tạo cột từ danh sách node types
+	const createColumnsFromNodeTypes = (nodeTypes: string[]) => {
+		// Reset columns
+		setColumns([]);
+
+		// Lọc bỏ facebook ads từ danh sách node types
+		const filteredNodeTypes = nodeTypes.filter(
+			(nodeType) => !nodeType.toLowerCase().includes("facebookleadads")
 		);
-		console.log("Unique node types:", uniqueNodeTypes);
-		setNodeTypes(uniqueNodeTypes);
 
-		// 3. Tạo cột cho mỗi loại node
-		if (columns.length === 0 && uniqueNodeTypes.length > 0) {
-			// Lọc bỏ facebook ads từ danh sách node types
-			const filteredNodeTypes = uniqueNodeTypes.filter(
-				(nodeType) => !nodeType.toLowerCase().includes("facebookleadads")
-			);
-
-			const initialColumns: ExtendedColumn[] = filteredNodeTypes.map(
-				(nodeType, index) => {
-					const baseType = getBaseNodeType(nodeType);
-					return {
-						id: index + 1,
-						title: nodeType,
-						nodeType: nodeType,
-						iconColor: getNodeTypeColor(baseType),
-					};
-				}
-			);
-
-			initialColumns.push({
-				id: initialColumns.length + 1,
-				title: "Fail",
-				nodeType: "fail",
-				iconColor: nodeTypeColors.fail,
-				filterByStatus: 0, // Status 0 cho Fail
-			});
-
-			initialColumns.push({
-				id: initialColumns.length + 2,
-				title: "Success",
-				nodeType: "success",
-				iconColor: nodeTypeColors.success,
-				filterByStatus: 9, // Status 9 cho Success
-			});
-
-			console.log("Initial columns:", initialColumns);
-			setColumns(initialColumns);
+		if (filteredNodeTypes.length === 0) {
+			console.log("No valid node types found");
+			return;
 		}
 
+		// Tạo columns từ các loại node
+		const newColumns: ExtendedColumn[] = filteredNodeTypes.map(
+			(nodeType, index) => {
+				const baseType = getBaseNodeType(nodeType);
+				return {
+					id: index + 1,
+					title: nodeType,
+					nodeType: nodeType,
+					iconColor: getNodeTypeColor(baseType),
+					leads: [], // Khởi tạo với mảng leads rỗng
+				};
+			}
+		);
+
+		// Thêm cột Fail và Success
+		newColumns.push({
+			id: newColumns.length + 1,
+			title: "Fail",
+			nodeType: "fail",
+			iconColor: nodeTypeColors.fail,
+			filterByStatus: 0, // Status 0 cho Fail
+			leads: [],
+		});
+
+		newColumns.push({
+			id: newColumns.length + 1,
+			title: "Success",
+			nodeType: "success",
+			iconColor: nodeTypeColors.success,
+			filterByStatus: 9, // Status 9 cho Success
+			leads: [],
+		});
+
+		console.log("Created columns:", newColumns);
+		setColumns(newColumns);
+	};
+
+	// Hàm phân phối leads vào các cột tương ứng
+	const distributeLeadsToColumns = (leadsData: Lead[]) => {
+		if (columns.length === 0 || leadsData.length === 0) {
+			return;
+		}
+
+		console.log("Distributing leads to columns:", leadsData.length);
+
+		// Xử lý leads để thêm nodeBase
+		const processedLeads: ProcessedLead[] = leadsData.map((lead) => ({
+			...lead,
+			nodeBase: extractNodeBase(lead.nodeId),
+		}));
+
+		// Cập nhật leads
 		setLeads(processedLeads);
+
+		// Phân phối leads vào các cột
+		const updatedColumns = columns.map((column) => {
+			const columnNodeBase = column.nodeType
+				? normalizeNodeType(column.nodeType.split("_")[0])
+				: null;
+
+			const columnLeads = processedLeads.filter((lead) => {
+				// Lọc bỏ leads từ facebookleadads
+				if (
+					lead.nodeBase &&
+					lead.nodeBase.toLowerCase().includes("facebookleadads")
+				) {
+					return false;
+				}
+
+				// Áp dụng bộ lọc tìm kiếm
+				const matchesSearch = searchTerm
+					? (lead.leadData?.["full name"] || "")
+							.toLowerCase()
+							.includes(searchTerm.toLowerCase()) ||
+					  (lead.leadData?.email || "")
+							.toLowerCase()
+							.includes(searchTerm.toLowerCase())
+					: true;
+
+				// Nếu cột có filterByStatus, chỉ hiển thị leads có status tương ứng
+				if (column.filterByStatus !== undefined) {
+					return matchesSearch && lead.status === column.filterByStatus;
+				}
+
+				// Bỏ qua các leads có status 0 hoặc 9 cho các cột thông thường
+				if (lead.status === 0 || lead.status === 9) {
+					return false;
+				}
+
+				// Kiểm tra nodeType khớp với cột
+				const nodeTypeMatch = columnNodeBase
+					? lead.nodeBase === columnNodeBase
+					: lead.nodeBase === "unassigned";
+
+				// Áp dụng bộ lọc status nếu được chọn
+				const statusMatch =
+					filterType === "all"
+						? true
+						: lead.status === parseInt(filterType, 10);
+
+				return matchesSearch && nodeTypeMatch && statusMatch;
+			});
+
+			console.log(
+				`Column ${column.nodeType || "unknown"} has ${columnLeads.length} leads`
+			);
+
+			return {
+				...column,
+				leads: columnLeads,
+			};
+		});
+
+		setColumns(updatedColumns);
 	};
 
 	const extractNodeBase = (nodeId: string | undefined): string => {
@@ -309,6 +454,14 @@ export default function LeadPipelinePage() {
 
 		if (nodeId.toLowerCase().includes("facebookleadads")) {
 			return "hidden"; // Gán một giá trị đặc biệt để lead này không hiển thị
+		}
+
+		// Xử lý node.type từ flow data
+		// Node từ flow có thể có dạng: "googleSheets", "email", "aiCall"...
+		// trong khi nodeId từ lead có dạng: "email_123456", "sms_123456"
+		if (!nodeId.includes("_")) {
+			// Có thể là node.type từ flow data
+			return normalizeNodeType(nodeId);
 		}
 
 		const parts = nodeId.split("_");
@@ -360,81 +513,6 @@ export default function LeadPipelinePage() {
 		return parts[0];
 	};
 
-	useEffect(() => {
-		if (leads.length > 0 && columns.length > 0) {
-			console.log(
-				"Distributing leads:",
-				leads.length,
-				"to columns:",
-				columns.length
-			);
-
-			const updatedColumns = columns.map((column) => {
-				const columnNodeBase = column.nodeType
-					? normalizeNodeType(column.nodeType.split("_")[0])
-					: null;
-
-				const columnLeads = leads.filter((lead) => {
-					if (
-						lead.nodeBase &&
-						lead.nodeBase.toLowerCase().includes("facebookleadads")
-					) {
-						return false;
-					}
-
-					const matchesSearch = searchTerm
-						? (lead.leadData?.["full name"] || "")
-								.toLowerCase()
-								.includes(searchTerm.toLowerCase()) ||
-						  (lead.leadData?.email || "")
-								.toLowerCase()
-								.includes(searchTerm.toLowerCase())
-						: true;
-
-					if (column.filterByStatus !== undefined) {
-						return matchesSearch && lead.status === column.filterByStatus;
-					}
-					if (lead.status === 0 || lead.status === 9) {
-						return false;
-					}
-
-					const nodeTypeMatch = columnNodeBase
-						? lead.nodeBase === columnNodeBase
-						: lead.nodeBase === "unassigned";
-
-					if (lead.nodeBase?.includes("aicall")) {
-						console.log(
-							`Lead nodeId: ${lead.nodeId}, Base: ${lead.nodeBase}`,
-							`Column nodeType: ${column.nodeType}, Base: ${columnNodeBase}`,
-							`Match: ${nodeTypeMatch}`
-						);
-					}
-
-					// Filter by status if filter type is not "all"
-					const statusMatch =
-						filterType === "all"
-							? true
-							: lead.status === parseInt(filterType, 10);
-
-					return matchesSearch && nodeTypeMatch && statusMatch;
-				});
-
-				console.log(
-					`Column ${column.nodeType || "unknown"} has ${
-						columnLeads.length
-					} leads`
-				);
-
-				return {
-					...column,
-					leads: columnLeads,
-				};
-			});
-
-			setColumns(updatedColumns);
-		}
-	}, [leads, searchTerm, filterType]);
-
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchTerm(event.target.value);
 	};
@@ -442,15 +520,6 @@ export default function LeadPipelinePage() {
 	const handleFilterChange = (event: SelectChangeEvent<string>) => {
 		setFilterType(event.target.value);
 	};
-
-	// Theo dõi thay đổi của flowId để lọc lại dữ liệu
-	useEffect(() => {
-		if (allLeads.length > 0) {
-			console.log("Filtering leads by flowId:", selectedFlowId);
-			// Lọc lại dữ liệu sử dụng tất cả leads đã lưu
-			processLeadData(allLeads);
-		}
-	}, [selectedFlowId, allLeads]);
 
 	const handleRefresh = async () => {
 		setLoading(true);
@@ -460,7 +529,16 @@ export default function LeadPipelinePage() {
 			// Lưu tất cả leads vào state
 			setAllLeads(data);
 			// Xử lý dữ liệu với flowId hiện tại
-			processLeadData(data);
+			if (selectedFlowId) {
+				// Nếu có flow được chọn, tạo cột từ flow đó
+				const flowData = await getFlowById(selectedFlowId);
+				if (flowData && flowData.nodeData && flowData.nodeData.nodes) {
+					createColumnsFromFlow(flowData.nodeData.nodes);
+				}
+			} else {
+				// Nếu không có flow được chọn, tạo cột từ tất cả leads
+				createColumnsFromLeads(data);
+			}
 		} catch (err) {
 			console.error("Error refreshing leads:", err);
 			setError("Failed to refresh leads. Please try again.");
@@ -477,7 +555,7 @@ export default function LeadPipelinePage() {
 		setOpen(false);
 	};
 
-	function createNewColumn() {
+	const createNewColumn = () => {
 		const columnToAdd: ExtendedColumn = {
 			id: generateId(),
 			title: `Custom Column ${columns.length + 1}`,
@@ -486,16 +564,16 @@ export default function LeadPipelinePage() {
 		};
 
 		setColumns([...columns, columnToAdd]);
-	}
+	};
 
-	function generateId() {
+	const generateId = () => {
 		return Math.floor(Math.random() * 10001);
-	}
+	};
 
-	function deleteColumn(id: Id) {
+	const deleteColumn = (id: Id) => {
 		const filteredColumns = columns.filter((col) => col.id !== id);
 		setColumns(filteredColumns);
-	}
+	};
 
 	// Method to render the node icon for a column header
 	const renderNodeIcon = (nodeType: string | undefined) => {
@@ -773,7 +851,6 @@ export default function LeadPipelinePage() {
 										<MenuItem value="1">Pending</MenuItem>
 										<MenuItem value="2">In Progress</MenuItem>
 										<MenuItem value="3">Success</MenuItem>
-										<MenuItem value="9">Done</MenuItem>
 									</Select>
 								</FormControl>
 							</Box>

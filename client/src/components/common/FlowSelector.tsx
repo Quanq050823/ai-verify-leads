@@ -136,7 +136,7 @@ const FlowSelector: React.FC = () => {
 					labelId="flow-select-label"
 					id="flow-select"
 					value={selectedFlowId || ""}
-					label="Chọn Flow"
+					label="Select Flow"
 					onChange={handleChange}
 					disabled={loading}
 					renderValue={(selected) => {
@@ -144,7 +144,7 @@ const FlowSelector: React.FC = () => {
 						return (
 							<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 								<Typography variant="body1">
-									{selectedFlow ? selectedFlow.name : "Chọn flow"}
+									{selectedFlow ? selectedFlow.name : "Select Flow"}
 								</Typography>
 								{selectedFlow && (
 									<StyledChip

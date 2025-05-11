@@ -17,16 +17,16 @@ export default function Page() {
 	const { selectedFlowId } = useFlow();
 
 	return (
-		<>
+		<Box sx={{ minHeight: "85vh" }}>
 			<Paper
 				elevation={0}
 				sx={{
 					p: 3,
 					mb: 3,
 					borderRadius: 2,
-					backgroundColor: "background.paper",
 					boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
 				}}
+				className="lighter-bg"
 			>
 				<Box
 					sx={{
@@ -77,6 +77,6 @@ export default function Page() {
 					<LeadsBySource />
 				</Grid>
 			</Grid>
-		</>
+		</Box>
 	);
 }

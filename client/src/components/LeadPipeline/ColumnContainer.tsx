@@ -145,6 +145,7 @@ function ColumnContainer(props: Props) {
 							opacity: "0.6",
 							border: "2px dashed #0dcaf0",
 						}}
+						className="dragging-column"
 					>
 						<Box
 							sx={{
@@ -171,13 +172,14 @@ function ColumnContainer(props: Props) {
 				<Paper
 					elevation={0}
 					sx={{
-						borderRadius: "16px",
 						mb: "25px",
 						width: "320px",
-						background: "#F9FAFB",
-						border: "1px solid #E5E7EB",
 						overflow: "hidden",
+						borderRadius: 2,
+						backgroundColor: "background.paper",
+						boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
 					}}
+					className="lighter-bg"
 				>
 					{/* Column Header */}
 					<Box
@@ -186,11 +188,9 @@ function ColumnContainer(props: Props) {
 							alignItems: "center",
 							justifyContent: "space-between",
 							p: "16px 20px",
-							background: "#FFFFFF",
-							borderBottom: "1px solid #E5E7EB",
 							cursor: "grab",
 						}}
-						className="column-header"
+						className="flow-card-header"
 						{...attributes}
 						{...listeners}
 						onClick={handleColumnHeaderClick}
@@ -201,7 +201,6 @@ function ColumnContainer(props: Props) {
 								sx={{
 									fontWeight: 600,
 									fontSize: "15px",
-									color: "#121828",
 								}}
 							>
 								{column.title}
@@ -278,7 +277,7 @@ function ColumnContainer(props: Props) {
 					<Box
 						sx={{
 							p: "16px",
-							maxHeight: "calc(100vh - 200px)",
+							maxHeight: "80vh",
 							overflowY: "auto",
 							"&::-webkit-scrollbar": {
 								width: "6px",
@@ -288,7 +287,7 @@ function ColumnContainer(props: Props) {
 								borderRadius: "10px",
 							},
 						}}
-						className="column-header"
+						className="flow-column-content"
 					>
 						{leads.filter((lead) => {
 							// Nếu có filter text, lọc theo tên, email, hoặc phone
@@ -335,7 +334,6 @@ function ColumnContainer(props: Props) {
 									<LeadCard
 										key={lead._id.toString()}
 										lead={lead}
-										onEdit={handleEditLead}
 										onDelete={handleDeleteLead}
 									/>
 								))
@@ -377,37 +375,6 @@ function ColumnContainer(props: Props) {
 								)}
 							</Box>
 						)}
-					</Box>
-
-					{/* Add Lead button at bottom */}
-					<Box
-						sx={{
-							p: "12px 16px",
-							background: "#FFFFFF",
-							borderTop: "1px solid #E5E7EB",
-						}}
-						className="column-header"
-					>
-						<Button
-							onClick={handleClickOpenCreateLead}
-							variant="outlined"
-							startIcon={<AddIcon />}
-							sx={{
-								textTransform: "none",
-								borderRadius: "8px",
-								fontWeight: "500",
-								fontSize: "13px",
-								padding: "8px 16px",
-								width: "100%",
-								color: "primary.main",
-								borderColor: "primary.main",
-								"&:hover": {
-									backgroundColor: "primary.lighter",
-								},
-							}}
-						>
-							Add Lead
-						</Button>
 					</Box>
 				</Paper>
 			</Box>

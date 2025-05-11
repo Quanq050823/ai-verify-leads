@@ -609,7 +609,7 @@ export default function LeadPipelinePage() {
 
 	return (
 		<>
-			<Box sx={{ mb: 3 }}>
+			<Box sx={{ minHeight: "85vh" }}>
 				<Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
 					<Link
 						underline="hover"
@@ -676,75 +676,109 @@ export default function LeadPipelinePage() {
 						</Button>
 					</Box>
 				</Box>
-			</Box>
 
-			<Divider sx={{ mb: 3 }} />
+				<Divider sx={{ mb: 3 }} />
 
-			{/* Flow Selector */}
-			<Paper
-				elevation={0}
-				sx={{
-					p: 3,
-					mb: 3,
-					borderRadius: 2,
-					backgroundColor: "background.paper",
-					boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-				}}
-			>
-				<Box
+				{/* Flow Selector */}
+				<Paper
+					elevation={0}
 					sx={{
-						display: "flex",
-						flexDirection: { xs: "column", md: "row" },
-						gap: 2,
-						alignItems: { xs: "flex-start", md: "center" },
-						justifyContent: "space-between",
+						p: 3,
+						mb: 3,
+						borderRadius: 2,
+						backgroundColor: "background.paper",
+						boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
 					}}
+					className="lighter-bg"
 				>
-					<Box>
-						<Typography variant="h6" sx={{ mb: 0.5, fontWeight: 600 }}>
-							Select Flow to View Leads
-						</Typography>
-						<Typography variant="body2" color="text.secondary">
-							Lead pipeline data will be filtered according to the flow you
-							choose.
-						</Typography>
-					</Box>
+					<Box
+						sx={{
+							display: "flex",
+							flexDirection: { xs: "column", md: "row" },
+							gap: 2,
+							alignItems: { xs: "flex-start", md: "center" },
+							justifyContent: "space-between",
+						}}
+					>
+						<Box>
+							<Typography variant="h6" sx={{ mb: 0.5, fontWeight: 600 }}>
+								Select Flow to View Leads
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Lead pipeline data will be filtered according to the flow you
+								choose.
+							</Typography>
+						</Box>
 
-					<Box>
-						<FlowSelector />
-						{!loading && (
-							<Box sx={{ mt: 1, textAlign: "right" }}>
-								<Typography variant="caption" color="text.secondary">
-									{selectedFlowId
-										? `Showing ${leads.length} leads for selected flow`
-										: `Showing all ${leads.length} leads`}
-								</Typography>
+						<Box>
+							<FlowSelector />
+							{!loading && (
+								<Box sx={{ mt: 1, textAlign: "right" }}>
+									<Typography variant="caption" color="text.secondary">
+										{selectedFlowId
+											? `Showing ${leads.length} leads for selected flow`
+											: `Showing all ${leads.length} leads`}
+									</Typography>
+								</Box>
+							)}
+						</Box>
+					</Box>
+				</Paper>
+
+				<Paper elevation={0} sx={{ mb: 3 }} className={"lighter-bg"}>
+					<Box
+						sx={{
+							borderTopRightRadius: "12px",
+							borderTopLeftRadius: "12px",
+							p: "16px 24px",
+							overflow: "hidden",
+						}}
+						className={"flow-card-header"}
+					>
+						<Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+							<Box sx={{ display: "flex", flexDirection: "row" }}>
+								<Box
+									sx={{
+										display: "flex",
+										gap: 1,
+										alignItems: "center",
+										ml: "auto",
+									}}
+								>
+									<IconButton size="small" title="Search leads">
+										<SearchIcon />
+									</IconButton>
+								</Box>
+								<SearchTextField
+									placeholder="Search leads..."
+									size="small"
+									value={searchTerm}
+									onChange={handleSearchChange}
+									className="white-text"
+									sx={{ minWidth: "250px" }}
+								/>
+
+								<FormControl
+									size="small"
+									sx={{ minWidth: "150px", marginLeft: "20px" }}
+								>
+									<InputLabel id="status-filter-label">Status</InputLabel>
+									<Select
+										labelId="status-filter-label"
+										value={filterType}
+										label="Status"
+										onChange={handleFilterChange}
+									>
+										<MenuItem value="all">All Statuses</MenuItem>
+										<MenuItem value="1">Pending</MenuItem>
+										<MenuItem value="2">In Progress</MenuItem>
+										<MenuItem value="3">Success</MenuItem>
+										<MenuItem value="9">Done</MenuItem>
+									</Select>
+								</FormControl>
 							</Box>
-						)}
-					</Box>
-				</Box>
-			</Paper>
 
-			<Paper
-				elevation={0}
-				sx={{
-					borderRadius: "16px",
-					border: "1px solid #E5E7EB",
-					overflow: "hidden",
-					mb: 3,
-					p: 0,
-				}}
-			>
-				<Box
-					sx={{
-						p: "16px 24px",
-						backgroundColor: "#F9FAFB",
-						borderBottom: "1px solid #E5E7EB",
-					}}
-					className={"lead-board"}
-				>
-					<Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-						<Box sx={{ display: "flex", flexDirection: "row" }}>
+							{/* Status indicator chips */}
 							<Box
 								sx={{
 									display: "flex",
@@ -753,140 +787,150 @@ export default function LeadPipelinePage() {
 									ml: "auto",
 								}}
 							>
-								<IconButton size="small" title="Search leads">
-									<SearchIcon />
+								<IconButton
+									size="small"
+									onClick={handleRefresh}
+									title="Refresh leads"
+								>
+									<RefreshIcon />
 								</IconButton>
 							</Box>
-							<SearchTextField
-								placeholder="Search leads..."
-								size="small"
-								value={searchTerm}
-								onChange={handleSearchChange}
-								className="white-text"
-								sx={{ minWidth: "250px" }}
-							/>
-
-							<FormControl size="small" sx={{ minWidth: "150px" }}>
-								<InputLabel id="status-filter-label">Status</InputLabel>
-								<Select
-									labelId="status-filter-label"
-									value={filterType}
-									label="Status"
-									onChange={handleFilterChange}
-								>
-									<MenuItem value="all">All Statuses</MenuItem>
-									<MenuItem value="1">Pending</MenuItem>
-									<MenuItem value="2">In Progress</MenuItem>
-									<MenuItem value="3">Success</MenuItem>
-									<MenuItem value="9">Done</MenuItem>
-								</Select>
-							</FormControl>
-						</Box>
-
-						{/* Status indicator chips */}
-						<Box
-							sx={{
-								display: "flex",
-								gap: 1,
-								alignItems: "center",
-								ml: "auto",
-							}}
-						>
-							<IconButton
-								size="small"
-								onClick={handleRefresh}
-								title="Refresh leads"
-							>
-								<RefreshIcon />
-							</IconButton>
 						</Box>
 					</Box>
-				</Box>
 
-				<Box sx={{ p: 2 }} className={"lead-board-insight"}>
-					{loading ? (
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-								height: "200px",
-								width: "100%",
-							}}
-						>
-							<CircularProgress />
-						</Box>
-					) : error ? (
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center",
-								height: "200px",
-								width: "100%",
-							}}
-						>
-							<Typography color="error">{error}</Typography>
-						</Box>
-					) : leads.length === 0 ? (
-						<Box
-							sx={{
-								display: "flex",
-								flexDirection: "column",
-								justifyContent: "center",
-								alignItems: "center",
-								height: "200px",
-								width: "100%",
-							}}
-						>
-							<Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-								{selectedFlowId
-									? "No leads found for this flow"
-									: "No leads found. You can view all leads or select a specific flow."}
-							</Typography>
-							{selectedFlowId && allLeads.length > 0 && (
-								<Typography variant="body2" color="text.secondary">
-									There are {allLeads.length} leads in the system. Try selecting
-									a different flow.
-								</Typography>
-							)}
-						</Box>
-					) : (
-						<DndContext
-							sensors={sensors}
-							onDragStart={handleDragStart}
-							onDragEnd={onDragEnd}
-							onDragCancel={handleDragCancel}
-							collisionDetection={closestCorners}
-						>
+					<Box
+						sx={{
+							p: 2,
+							borderBottomLeftRadius: "12px",
+							borderBottomRightRadius: "12px",
+							overflow: "hidden",
+						}}
+						className={"lead-board-insight"}
+					>
+						{loading ? (
 							<Box
 								sx={{
-									minHeight: "calc(100vh - 300px)",
 									display: "flex",
-									flexDirection: "column",
+									justifyContent: "center",
+									alignItems: "center",
+									height: "200px",
+									width: "100%",
 								}}
 							>
+								<CircularProgress />
+							</Box>
+						) : error ? (
+							<Box
+								sx={{
+									display: "flex",
+									justifyContent: "center",
+									alignItems: "center",
+									height: "200px",
+									width: "100%",
+								}}
+							>
+								<Typography color="error">{error}</Typography>
+							</Box>
+						) : leads.length === 0 ? (
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "column",
+									justifyContent: "center",
+									alignItems: "center",
+									height: "200px",
+									width: "100%",
+								}}
+							>
+								<Typography
+									variant="body1"
+									color="text.secondary"
+									sx={{ mb: 1 }}
+								>
+									{selectedFlowId
+										? "No leads found for this flow"
+										: "No leads found. You can view all leads or select a specific flow."}
+								</Typography>
+								{selectedFlowId && allLeads.length > 0 && (
+									<Typography variant="body2" color="text.secondary">
+										There are {allLeads.length} leads in the system. Try
+										selecting a different flow.
+									</Typography>
+								)}
+							</Box>
+						) : (
+							<DndContext
+								sensors={sensors}
+								onDragStart={handleDragStart}
+								onDragEnd={onDragEnd}
+								onDragCancel={handleDragCancel}
+								collisionDetection={closestCorners}
+							>
 								<Box
-									style={{
-										overflowX: "auto",
-										overflowY: "hidden",
-										width: "100%",
-										padding: "8px 4px",
+									sx={{
+										display: "flex",
+										flexDirection: "column",
 									}}
 								>
 									<Box
-										display="flex"
-										flexDirection="row"
-										alignItems="flex-start"
-										gap="20px"
-										sx={{ pb: 2 }}
+										style={{
+											overflowX: "auto",
+											overflowY: "hidden",
+											width: "100%",
+											padding: "8px 4px",
+										}}
 									>
-										<SortableContext items={columnsId}>
-											{columns.map((column) => (
+										<Box
+											display="flex"
+											flexDirection="row"
+											alignItems="flex-start"
+											gap="20px"
+											sx={{ pb: 2 }}
+										>
+											<SortableContext items={columnsId}>
+												{columns.map((column) => (
+													<ColumnContainer
+														key={column.id}
+														column={{
+															...column,
+															title: (
+																<Box
+																	sx={{ display: "flex", alignItems: "center" }}
+																	className="column-header"
+																>
+																	<IconBox
+																		sx={{
+																			backgroundColor:
+																				column.iconColor || "#9e9e9e",
+																			width: 32,
+																			height: 32,
+																		}}
+																	>
+																		{renderNodeIcon(column.nodeType)}
+																	</IconBox>
+																	<Typography component="span" sx={{ ml: 1 }}>
+																		{column.nodeType
+																			? getNodeTypeDisplayName(column.nodeType)
+																			: column.title}
+																	</Typography>
+																</Box>
+															),
+														}}
+														deleteColumn={deleteColumn}
+													/>
+												))}
+											</SortableContext>
+										</Box>
+									</Box>
+								</Box>
+
+								{typeof document !== "undefined" &&
+									createPortal(
+										<DragOverlay>
+											{activeColumn && (
 												<ColumnContainer
-													key={column.id}
 													column={{
-														...column,
+														...activeColumn,
 														title: (
 															<Box
 																sx={{ display: "flex", alignItems: "center" }}
@@ -895,88 +939,51 @@ export default function LeadPipelinePage() {
 																<IconBox
 																	sx={{
 																		backgroundColor:
-																			column.iconColor || "#9e9e9e",
+																			activeColumn.iconColor || "#9e9e9e",
 																		width: 32,
 																		height: 32,
 																	}}
 																>
-																	{renderNodeIcon(column.nodeType)}
+																	{renderNodeIcon(activeColumn.nodeType)}
 																</IconBox>
 																<Typography component="span" sx={{ ml: 1 }}>
-																	{column.nodeType
-																		? getNodeTypeDisplayName(column.nodeType)
-																		: column.title}
+																	{activeColumn.nodeType
+																		? getNodeTypeDisplayName(
+																				activeColumn.nodeType
+																		  )
+																		: activeColumn.title}
 																</Typography>
 															</Box>
 														),
 													}}
 													deleteColumn={deleteColumn}
 												/>
-											))}
-										</SortableContext>
-									</Box>
-								</Box>
-							</Box>
+											)}
+										</DragOverlay>,
+										document.body
+									)}
+							</DndContext>
+						)}
+					</Box>
+				</Paper>
 
-							{typeof document !== "undefined" &&
-								createPortal(
-									<DragOverlay>
-										{activeColumn && (
-											<ColumnContainer
-												column={{
-													...activeColumn,
-													title: (
-														<Box
-															sx={{ display: "flex", alignItems: "center" }}
-															className="column-header"
-														>
-															<IconBox
-																sx={{
-																	backgroundColor:
-																		activeColumn.iconColor || "#9e9e9e",
-																	width: 32,
-																	height: 32,
-																}}
-															>
-																{renderNodeIcon(activeColumn.nodeType)}
-															</IconBox>
-															<Typography component="span" sx={{ ml: 1 }}>
-																{activeColumn.nodeType
-																	? getNodeTypeDisplayName(
-																			activeColumn.nodeType
-																	  )
-																	: activeColumn.title}
-															</Typography>
-														</Box>
-													),
-												}}
-												deleteColumn={deleteColumn}
-											/>
-										)}
-									</DragOverlay>,
-									document.body
-								)}
-						</DndContext>
-					)}
-				</Box>
-			</Paper>
-
-			<Dialog
-				open={open}
-				onClose={handleClose}
-				fullWidth
-				maxWidth="lg"
-				PaperProps={{
-					sx: {
-						borderRadius: "16px",
-						boxShadow: "0px 24px 48px rgba(0, 0, 0, 0.2)",
-					},
-				}}
-			>
-				<DialogContent sx={{ p: 0 }}>
-					<ImportLeadContent />
-				</DialogContent>
-			</Dialog>
+				<Dialog
+					open={open}
+					onClose={handleClose}
+					fullWidth
+					maxWidth="lg"
+					PaperProps={{
+						sx: {
+							borderRadius: "16px",
+							boxShadow: "0px 24px 48px rgba(0, 0, 0, 0.2)",
+						},
+					}}
+				>
+					<DialogContent sx={{ p: 0 }}>
+						<ImportLeadContent />
+					</DialogContent>
+				</Dialog>
+			</Box>
 		</>
 	);
 }

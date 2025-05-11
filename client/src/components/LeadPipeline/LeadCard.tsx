@@ -174,7 +174,7 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 					cursor: "pointer",
 				}}
 				onClick={handleOpenDetails}
-				className={"lead-card"}
+				className={"card-lead"}
 			>
 				<CardContent>
 					<Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>

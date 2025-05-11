@@ -1,31 +1,25 @@
+# Editor settings
 .vscode/
-node_modules/
 
+# Environment files
 .env
+*/.env
+*/venv
 
-client/node_modules/
-client/.env
-client/.vscode
+# Node.js
+*/node_modules
+*/build
 
-server/node_modules/
-server/.env
-server/.vscode
-server/build
-
-client/node_modules/
-client/.env
-client/.vscode
+# Client specific
 client/.next
-client/build
 
+# Celery worker
 celery-worker/__pycache__/
 celery-worker/*.log
 celery-worker/*.pid
-celery-worker/env/
-celery-worker/.env
 celery-worker/celery-env
 
-# Python cache files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -33,4 +27,3 @@ __pycache__/
 .Python
 *.egg-info/
 *.egg
-

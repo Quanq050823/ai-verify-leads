@@ -1,0 +1,25 @@
+{
+  "transcript_pass_result": false,
+  "criteria_results": [
+    {
+      "criterion": "Location",
+      "passed": false,
+      "reason": "The lead's location is not mentioned, and therefore cannot be determined if based in or around Ho Chi Minh City."
+    },
+    {
+      "criterion": "Business Type",
+      "passed": true,
+      "reason": "The lead is a small business, which aligns with the target client description."
+    },
+    {
+      "criterion": "Revenue Level",
+      "passed": false,
+      "reason": "The lead's annual revenue of $500K does not meet the requirement of over $10 million."
+    },
+    {
+      "criterion": "Service Requirement",
+      "passed": true,
+      "reason": "The lead is seeking assistance with tax preparation, matching the service requirement."
+    }
+  ]
+}

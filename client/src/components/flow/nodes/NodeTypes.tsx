@@ -45,6 +45,7 @@ export const FacebookLeadAdsNode = memo(({ data, selected, id }: any) => {
 				type: "Input",
 				subType: isLeadAds ? "LeadAds" : "Ads",
 				color: "#1877F2",
+				inputs: 0,
 			}}
 			selected={selected}
 			id={id}

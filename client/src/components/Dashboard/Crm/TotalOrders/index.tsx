@@ -107,13 +107,12 @@ const TotalOrders: React.FC = () => {
 					sx={{
 						display: "flex",
 						justifyContent: "space-between",
-						mb: "30px",
 						position: "relative",
 					}}
 				>
 					<Box>
 						<Typography component="span" sx={{ mb: "3px", display: "block" }}>
-							Verified This Week
+							Unverified Lead
 						</Typography>
 
 						<Typography
@@ -124,7 +123,7 @@ const TotalOrders: React.FC = () => {
 							}}
 							className="text-black"
 						>
-							127
+							1
 						</Typography>
 					</Box>
 
@@ -146,35 +145,6 @@ const TotalOrders: React.FC = () => {
 								width={"100%"}
 							/>
 						)}
-					</Box>
-				</Box>
-
-				<Box>
-					<Box
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "space-between",
-							mt: "5px",
-						}}
-					>
-						<Box
-							sx={{
-								bgcolor: "#d8ffc8",
-								color: "success.main",
-								border: "1px solid #82FC5A",
-								borderRadius: "100px",
-								fontSize: "13px",
-								padding: "1.3px 8.3px",
-							}}
-							component="span"
-						>
-							+8% from yesterday
-						</Box>
-
-						<Typography component="span" sx={{ fontSize: "13px" }}>
-							Last 2 days
-						</Typography>
 					</Box>
 				</Box>
 			</Card>

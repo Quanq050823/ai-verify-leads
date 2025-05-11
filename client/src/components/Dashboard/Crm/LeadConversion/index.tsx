@@ -118,13 +118,12 @@ const LeadConversion: React.FC = () => {
 					sx={{
 						display: "flex",
 						justifyContent: "space-between",
-						mb: "30px",
 						position: "relative",
 					}}
 				>
 					<Box>
 						<Typography component="span" sx={{ mb: "3px", display: "block" }}>
-							Conversion Rate
+							Verified Lead
 						</Typography>
 
 						<Typography
@@ -135,7 +134,7 @@ const LeadConversion: React.FC = () => {
 							}}
 							className="text-black"
 						>
-							48.79%
+							2
 						</Typography>
 					</Box>
 
@@ -157,34 +156,6 @@ const LeadConversion: React.FC = () => {
 								width={"100%"}
 							/>
 						)}
-					</Box>
-				</Box>
-
-				<Box>
-					<Box
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "space-between",
-							mt: "5px",
-						}}
-					>
-						<Box
-							sx={{
-								bgcolor: "#ffe1dd",
-								color: "error.main",
-								border: "1px solid #ffcea9",
-								borderRadius: "100px",
-								fontSize: "13px",
-								padding: "1.3px 8.3px",
-							}}
-						>
-							-15%
-						</Box>
-
-						<Typography component="span" sx={{ fontSize: "13px" }}>
-							Last 30 days
-						</Typography>
 					</Box>
 				</Box>
 			</Card>

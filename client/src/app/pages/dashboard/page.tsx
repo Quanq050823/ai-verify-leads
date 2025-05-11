@@ -1,3 +1,4 @@
+"use client";
 import * as React from "react";
 import Grid from "@mui/material/Grid";
 import RevenueGrowth from "@/components/Dashboard/Crm/RevenueGrowth";
@@ -6,10 +7,67 @@ import TotalOrders from "@/components/Dashboard/Crm/TotalOrders";
 import AnnualProfit from "@/components/Dashboard/Crm/AnnualProfit";
 import BalanceOverview from "@/components/Dashboard/Crm/BalanceOverview";
 import LeadsBySource from "@/components/Dashboard/Crm/LeadsBySource";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import FlowSelector from "@/components/common/FlowSelector";
+import { useFlow } from "@/context/FlowContext";
 
 export default function Page() {
+	const { selectedFlowId } = useFlow();
+
 	return (
 		<>
+			<Paper
+				elevation={0}
+				sx={{
+					p: 3,
+					mb: 3,
+					borderRadius: 2,
+					backgroundColor: "background.paper",
+					boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+				}}
+			>
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: { xs: "column", md: "row" },
+						gap: 2,
+						alignItems: { xs: "flex-start", md: "center" },
+						justifyContent: "space-between",
+					}}
+				>
+					<Box>
+						<Typography variant="h6" sx={{ mb: 0.5, fontWeight: 600 }}>
+							Select Flow to Analyze Data
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							Dashboard data will be filtered according to the flow you choose.
+						</Typography>
+					</Box>
+
+					<FlowSelector />
+				</Box>
+
+				{selectedFlowId && (
+					<Box sx={{ mt: 2 }}>
+						<Typography
+							variant="body2"
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								color: "success.main",
+							}}
+						>
+							<span style={{ fontWeight: 600, marginRight: "4px" }}>
+								Flow ID selecting:
+							</span>{" "}
+							{selectedFlowId}
+						</Typography>
+					</Box>
+				)}
+			</Paper>
+
 			<Grid container columnSpacing={{ xs: 1, sm: 2, md: 2, lg: 3 }}>
 				<Grid item xs={12} sm={6} md={6} lg={6} xl={3}>
 					<RevenueGrowth />

@@ -118,7 +118,6 @@ const RevenueGrowth: React.FC = () => {
 					sx={{
 						display: "flex",
 						justifyContent: "space-between",
-						mb: "30px",
 						position: "relative",
 					}}
 				>
@@ -157,34 +156,6 @@ const RevenueGrowth: React.FC = () => {
 								width={"100%"}
 							/>
 						)}
-					</Box>
-				</Box>
-
-				<Box>
-					<Box
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "space-between",
-							mt: "5px",
-						}}
-					>
-						<Box
-							sx={{
-								bgcolor: "#d8ffc8",
-								color: "success.main",
-								border: "1px solid #82FC5A",
-								borderRadius: "100px",
-								fontSize: "13px",
-								padding: "1.3px 8.3px",
-							}}
-						>
-							+10% from last month
-						</Box>
-
-						<Typography component="span" sx={{ fontSize: "13px" }}>
-							Last 7 days
-						</Typography>
 					</Box>
 				</Box>
 			</Card>

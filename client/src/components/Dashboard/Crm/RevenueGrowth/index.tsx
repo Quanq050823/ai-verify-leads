@@ -3,17 +3,45 @@
 import React, { useEffect, useState } from "react";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { Card, Box, Typography } from "@mui/material";
+import { Card, Box, Typography, CircularProgress } from "@mui/material";
+import { getBasicMetrics } from "@/services/analyticsServices";
+import { useFlow } from "@/context/FlowContext";
 
 // Dynamically import react-apexcharts with Next.js dynamic import
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const RevenueGrowth: React.FC = () => {
 	const [isChartLoaded, setChartLoaded] = useState(false);
+	const [totalLeads, setTotalLeads] = useState<number | null>(null);
+	const [loading, setLoading] = useState(false);
+	const { selectedFlowId } = useFlow();
 
 	useEffect(() => {
 		setChartLoaded(true);
 	}, []);
+
+	useEffect(() => {
+		const fetchData = async () => {
+			if (!selectedFlowId) {
+				setTotalLeads(null);
+				return;
+			}
+
+			try {
+				setLoading(true);
+				const data = await getBasicMetrics(selectedFlowId);
+				if (data) {
+					setTotalLeads(data.totalLead);
+				}
+			} catch (error) {
+				console.error("Error fetching total leads:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData();
+	}, [selectedFlowId]);
 
 	const series = [
 		{
@@ -131,10 +159,21 @@ const RevenueGrowth: React.FC = () => {
 							sx={{
 								fontSize: { xs: "18px", lg: "20px" },
 								fontWeight: 700,
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
 							}}
 							className="text-black"
 						>
-							2,451
+							{loading ? (
+								<CircularProgress size={16} />
+							) : !selectedFlowId ? (
+								"Please select a flow"
+							) : totalLeads === null ? (
+								"No data"
+							) : (
+								totalLeads
+							)}
 						</Typography>
 					</Box>
 

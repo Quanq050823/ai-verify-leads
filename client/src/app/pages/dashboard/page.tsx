@@ -48,24 +48,6 @@ export default function Page() {
 
 					<FlowSelector />
 				</Box>
-
-				{selectedFlowId && (
-					<Box sx={{ mt: 2 }}>
-						<Typography
-							variant="body2"
-							sx={{
-								display: "flex",
-								alignItems: "center",
-								color: "success.main",
-							}}
-						>
-							<span style={{ fontWeight: 600, marginRight: "4px" }}>
-								Flow ID selecting:
-							</span>{" "}
-							{selectedFlowId}
-						</Typography>
-					</Box>
-				)}
 			</Paper>
 
 			<Grid container columnSpacing={{ xs: 1, sm: 2, md: 2, lg: 3 }}>

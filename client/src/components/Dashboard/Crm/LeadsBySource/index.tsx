@@ -3,25 +3,90 @@
 import React, { useEffect, useState } from "react";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { Grid, Card, Box, Typography } from "@mui/material";
+import { Grid, Card, Box, Typography, CircularProgress } from "@mui/material";
 import CustomDropdown from "./CustomDropdown";
+import { getLeadBySource } from "@/services/analyticsServices";
+import { useFlow } from "@/context/FlowContext";
 
 // Dynamically import react-apexcharts with Next.js dynamic import
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
+interface LeadSource {
+	source: string;
+	count: number;
+}
+
 const LeadsBySource: React.FC = () => {
 	// Chart
 	const [isChartLoaded, setChartLoaded] = useState(false);
+	const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [timeFilter, setTimeFilter] = useState("This Month");
+	const { selectedFlowId } = useFlow();
 
 	useEffect(() => {
 		setChartLoaded(true);
 	}, []);
 
-	const series = [150, 320];
+	useEffect(() => {
+		const fetchData = async () => {
+			if (!selectedFlowId) {
+				setLeadSources([]);
+				return;
+			}
+
+			try {
+				setLoading(true);
+				const data = await getLeadBySource(selectedFlowId);
+				if (data && Array.isArray(data)) {
+					setLeadSources(data);
+				} else {
+					setLeadSources([]);
+				}
+			} catch (error) {
+				console.error("Error fetching lead sources:", error);
+				setLeadSources([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData();
+	}, [selectedFlowId, timeFilter]);
+
+	// Prepare chart data from API response
+	const getChartSeries = () => {
+		if (leadSources.length === 0) return [1, 1]; // Default for empty state
+		return leadSources.map((source) => source.count);
+	};
+
+	const getChartLabels = () => {
+		if (leadSources.length === 0) return ["No Data", "No Data"]; // Default for empty state
+		return leadSources.map((source) => source.source);
+	};
+
+	// Dynamic colors based on number of sources
+	const getChartColors = () => {
+		const defaultColors = [
+			"#605DFF",
+			"#AD63F6",
+			"#0dcaf0",
+			"#ff6384",
+			"#36a2eb",
+		];
+		if (leadSources.length === 0) return ["#e0e0e0", "#f5f5f5"]; // Gray for empty state
+
+		// If we have more sources than colors, repeat colors
+		return leadSources.map(
+			(_, index) => defaultColors[index % defaultColors.length]
+		);
+	};
+
+	const series = getChartSeries();
 
 	const options: ApexOptions = {
-		labels: ["Facebook Lead Sync", "Import Direct"],
-		colors: ["#605DFF", "#AD63F6"],
+		labels: getChartLabels(),
+		colors: getChartColors(),
 		stroke: {
 			width: 1,
 			show: true,
@@ -76,6 +141,12 @@ const LeadsBySource: React.FC = () => {
 		},
 	};
 
+	const handleTimeFilterChange = (value: string) => {
+		setTimeFilter(value);
+		// In a real app, we would update the API call to include the time filter
+		console.log(`Time filter changed to: ${value}`);
+	};
+
 	return (
 		<>
 			<Card
@@ -109,104 +180,90 @@ const LeadsBySource: React.FC = () => {
 					<Box>
 						<CustomDropdown
 							options={["This Week", "This Month", "This Year"]} // Need to change the options also in CustomDropdown file
-							onSelect={(value) => console.log(value)}
+							onSelect={handleTimeFilterChange}
 							defaultLabel="This Month"
 						/>
 					</Box>
 				</Box>
 
-				<Box
-					sx={{
-						marginTop: "-15px",
-						marginBottom: "-15px",
-					}}
-				>
-					{isChartLoaded && (
-						<Chart
-							options={options}
-							series={series}
-							type="donut"
-							height={282}
-							width={"100%"}
-						/>
-					)}
-				</Box>
-
-				<Grid container spacing={4} sx={{ mt: "0" }}>
-					<Grid item xs={6}>
-						<Box>
-							<Typography
-								component="span"
-								sx={{
-									display: "flex",
-									alignItems: "center",
-									gap: "8px",
-									fontSize: "13px",
-									mb: "8px",
-								}}
-							>
-								<Typography
-									component="span"
-									className="bg-primary"
-									sx={{
-										width: "11px",
-										height: "11px",
-										borderRadius: "3px",
-									}}
-								></Typography>
-								Facebook Lead Sync
-							</Typography>
-
-							<Typography
-								variant="h6"
-								mb={0}
-								fontSize={18}
-								fontWeight={500}
-								lineHeight={1}
-								className="text-black"
-							>
-								320
-							</Typography>
+				{loading ? (
+					<Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+						<CircularProgress />
+					</Box>
+				) : !selectedFlowId ? (
+					<Box sx={{ textAlign: "center", py: 5 }}>
+						<Typography variant="body1" color="text.secondary">
+							Please select a flow to view lead sources
+						</Typography>
+					</Box>
+				) : leadSources.length === 0 ? (
+					<Box sx={{ textAlign: "center", py: 5 }}>
+						<Typography variant="body1" color="text.secondary">
+							No lead source data available for this flow
+						</Typography>
+					</Box>
+				) : (
+					<>
+						<Box
+							sx={{
+								marginTop: "-15px",
+								marginBottom: "-15px",
+							}}
+						>
+							{isChartLoaded && (
+								<Chart
+									options={options}
+									series={series}
+									type="donut"
+									height={282}
+									width={"100%"}
+								/>
+							)}
 						</Box>
-					</Grid>
 
-					<Grid item xs={6}>
-						<Box>
-							<Typography
-								component="span"
-								sx={{
-									display: "flex",
-									alignItems: "center",
-									gap: "8px",
-									fontSize: "13px",
-									mb: "8px",
-								}}
-							>
-								<Typography
-									component="span"
-									className="bg-purple"
-									sx={{
-										width: "11px",
-										height: "11px",
-										borderRadius: "3px",
-									}}
-								></Typography>
-								Import Direct
-							</Typography>
+						<Grid container spacing={4} sx={{ mt: "0" }}>
+							{leadSources.map((source, index) => (
+								<Grid item xs={6} key={source.source}>
+									<Box>
+										<Typography
+											component="span"
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												gap: "8px",
+												fontSize: "13px",
+												mb: "8px",
+											}}
+										>
+											<Typography
+												component="span"
+												className={index === 0 ? "bg-primary" : "bg-purple"}
+												sx={{
+													width: "11px",
+													height: "11px",
+													borderRadius: "3px",
+													backgroundColor: getChartColors()[index],
+												}}
+											></Typography>
+											{source.source}
+										</Typography>
 
-							<Typography
-								variant="h6"
-								mb={0}
-								fontSize={18}
-								fontWeight={500}
-								lineHeight={1}
-								className="text-black"
-							>
-								30
-							</Typography>
-						</Box>
-					</Grid>
-				</Grid>
+										<Typography
+											variant="h6"
+											mb={0}
+											fontSize={18}
+											fontWeight={500}
+											lineHeight={1}
+											className="text-black"
+										>
+											{source.count}
+										</Typography>
+									</Box>
+								</Grid>
+							))}
+						</Grid>
+					</>
+				)}
 			</Card>
 		</>
 	);

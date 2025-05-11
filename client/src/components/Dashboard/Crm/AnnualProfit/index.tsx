@@ -3,21 +3,49 @@
 import React, { useEffect, useState } from "react";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { Card, Box, Typography } from "@mui/material";
+import { Card, Box, Typography, CircularProgress } from "@mui/material";
+import { getBasicMetrics } from "@/services/analyticsServices";
+import { useFlow } from "@/context/FlowContext";
 
 // Dynamically import react-apexcharts with Next.js dynamic import
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const AnnualProfit: React.FC = () => {
 	const [isChartLoaded, setChartLoaded] = useState(false);
+	const [conversionRate, setConversionRate] = useState<number | null>(null);
+	const [loading, setLoading] = useState(false);
+	const { selectedFlowId } = useFlow();
 
 	useEffect(() => {
 		setChartLoaded(true);
 	}, []);
 
+	useEffect(() => {
+		const fetchData = async () => {
+			if (!selectedFlowId) {
+				setConversionRate(null);
+				return;
+			}
+
+			try {
+				setLoading(true);
+				const data = await getBasicMetrics(selectedFlowId);
+				if (data) {
+					setConversionRate(data.conversionRate);
+				}
+			} catch (error) {
+				console.error("Error fetching conversion rate:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData();
+	}, [selectedFlowId]);
+
 	const series = [
 		{
-			name: "Sucess Rate",
+			name: "Success Rate",
 			data: [90, 80, 85, 90, 95, 98, 89],
 		},
 	];
@@ -130,10 +158,21 @@ const AnnualProfit: React.FC = () => {
 							sx={{
 								fontSize: { xs: "18px", lg: "20px" },
 								fontWeight: 700,
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
 							}}
 							className="text-black"
 						>
-							85%
+							{loading ? (
+								<CircularProgress size={16} />
+							) : !selectedFlowId ? (
+								"Please select a flow"
+							) : conversionRate === null ? (
+								"No data"
+							) : (
+								`${conversionRate}%`
+							)}
 						</Typography>
 					</Box>
 

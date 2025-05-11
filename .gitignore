@@ -27,3 +27,7 @@ __pycache__/
 .Python
 *.egg-info/
 *.egg
+
+*/*_result.txt
+crewai/result.txt
+crewai/transcript_analytics_crew

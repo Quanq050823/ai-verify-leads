@@ -19,6 +19,6 @@ transcript_analyzer_agent:
     Read conversation transcript between ai and customer inputed from the file using the file reader tool. 
     Evaluate transcripts based on the lead criteria from customer prompt, to determine if leads meet requirements.
     Write the result into a file as a valid JSON object with pass status and detailed criteria results.
+    NOTE: - lead pass condition: "pass" field willSet to true if equal or more than 60% of the criteria have passed
   backstory: >
-    You are a call analyst, capable of assessing lead quality based on conversation content and defined criteria.
     You ALWAYS provide structured output in valid JSON format as specified in your instructions.

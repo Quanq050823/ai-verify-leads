@@ -8,7 +8,6 @@ analyze_prompt:
     Write the result into a file called "customer_prompt_result.txt" in the "transcript_analytics_crew" folder. This is provided by the tool.
 
     IMPORTANT: Format the output as a valid JSON array of criteria objects, each with 'name' and 'description' fields.
-    Example format: [{"name": "Location", "description": "Must be in Ho Chi Minh City"}, {"name": "Budget", "description": "Above 10 million VND"}]
 
   expected_output: >
     A valid JSON array of criteria objects.
@@ -16,7 +15,8 @@ analyze_prompt:
 
 evaluate_transcript:
   description: >
-    Analyze call transcripts {transcripts} and assess whether leads meet defined criteria in "customer_prompt_result.txt". Provide clear conclusions and rationale.
+    Analyze call transcripts {transcripts} and assess whether leads meet each defined criteria in "customer_prompt_result.txt". Provide clear conclusions and rationale.
+    Then conclution pass status if lead meet equal or more than 60% of the criteria defined.
     Write the result into a file called "transcript_result.txt" in the "transcript_analytics_crew" folder. This is provided by the tool.
 
     IMPORTANT: Format your response as a valid JSON object with the following structure:
@@ -31,6 +31,9 @@ evaluate_transcript:
         ...
       ]
     }
+
+    NOTE: - lead pass condition: "pass" field willSet to true if equal or more than 60% of the criteria have passed
+
   expected_output: >
     A valid JSON object with pass status and detailed criteria results.
   agent: transcript_analyzer_agent

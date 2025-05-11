@@ -58,23 +58,13 @@ def plot():
 
 
 def analyze_transcript(customer_prompt, transcript):
-    """
-    Analyze transcript with given customer prompt
-    
-    Args:
-        customer_prompt (str): The prompt for customer requirements
-        transcript (str): The transcript to analyze
-        
-    Returns:
-        dict: Analysis result in JSON format
-    """
+
     analyze_flow = TranscriptFlow()
     analyze_flow.state.customer_prompt = customer_prompt
     analyze_flow.state.transcript = transcript
     analyze_flow.kickoff()
     
-    # Đọc file kết quả trực tiếp để đảm bảo định dạng JSON
-    result_file_path = os.path.join("transcript_analytics_crew", "transcript_result.txt")
+    result_file_path = "result.txt"
     
     try:
         with open(result_file_path, "r") as f:
@@ -82,7 +72,6 @@ def analyze_transcript(customer_prompt, transcript):
             return result_json
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error parsing result file: {str(e)}")
-        # Trả về kết quả dạng string nếu không đọc được file JSON
         return {
             "error": "Could not parse result as JSON",
             "raw_result": analyze_flow.state.customer_prompt_result

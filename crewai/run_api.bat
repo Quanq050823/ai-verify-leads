@@ -1,12 +1,21 @@
 @echo off
-echo Khởi động CrewAI Transcript Analysis API...
+echo Run crewAi API server
 echo.
 
-echo Kiểm tra và cài đặt các thư viện cần thiết...
+echo Install required packages
 pip install -r requirements.txt
 
+echo Checking if virtual environment exists...
+if not exist venv (
+    echo Creating virtual environment...
+    python -m venv venv
+)
+
+echo Activating virtual environment...
+call venv\Scripts\activate
+
 echo.
-echo Khởi động server tại địa chỉ http://localhost:5000
+echo Multi-agents online at http://localhost:5000
 echo.
 python api_server.py
 

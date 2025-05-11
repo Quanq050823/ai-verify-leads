@@ -58,8 +58,8 @@ export const retrieveLead = async (req, res, next) => {
 
 export const transcribe = async (req, res, next) => {
     try {
-        const result = await services.getTranscript(req.body);
         res.status(StatusCodes.OK).json({ message: "Transcription request received" });
+        await services.getTranscript(req.body);
     } catch (err) {
         next(err);
     }

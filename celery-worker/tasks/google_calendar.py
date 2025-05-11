@@ -133,14 +133,19 @@ def format_meeting_description(lead_data):
     lines = []
     
     lines.append("Meeting Details:")
-    lines.append(f"Dear {lead_data['full name']}, this is automatic meet created from Whine." )
+    lines.append(f"Dear {lead_data['full_name']}, this is automatic meet created from Whine." )
     lines.append("\n This is our opportunity to discuss mutual interests and explore potential collaboration.")
     lines.append("Please tell us if you have any questions or need to reschedule.")
     # Add general fields
     for key, value in lead_data.items():
         if key == "transcript":
             continue  # skip transcript
-        pretty_key = key.replace("_", " ").title()  # e.g., "phone_number" → "Phone Number"
+        if key == "custom_fields":
+            for custom_key, custom_value in value.items():
+                pretty_key = custom_key.replace("_", " ").title()
+                lines.append(f"{pretty_key}: {custom_value}")
+            continue
+        pretty_key = key.replace("_", " ").title()
         lines.append(f"{pretty_key}: {value}")
 
     return "\n".join(lines)
@@ -149,7 +154,7 @@ def refresh_tokens_if_needed(credentials, tokens, message, connection):
     """Update tokens in the database if they were refreshed."""
     if credentials.token != tokens['access_token']:
         print("Token was refreshed, updating in database...")
-        update_tokens(message["userId"], connection, {
+        update_tokens(message['userId'], connection, {
             'access_token': credentials.token,
             'refresh_token': credentials.refresh_token,
             'expiry_date': credentials.expiry,

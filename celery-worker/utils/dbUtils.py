@@ -6,9 +6,9 @@ def get_flow(message):
     db = client.get_default_database()
     collection = db["flows"]
     
-    flow = collection.find_one({"_id": ObjectId(message["flowId"])})
+    flow = collection.find_one({"_id": ObjectId(message['flowId'])})
     if not flow:
-        raise ValueError(f"Flow with ID {message.get("flowId")} not found.")
+        raise ValueError(f"Flow with ID {message.get('flowId')} not found.")
     
     return flow
 
@@ -17,9 +17,9 @@ def get_lead(message):
     db = client.get_default_database()
     collection = db["leads"]
     
-    lead = collection.find_one({"_id": ObjectId(message["leadId"])})
+    lead = collection.find_one({"_id": ObjectId(message['leadId'])})
     if not lead:
-        raise ValueError(f"Lead with ID {message.get("leadId")} not found.")
+        raise ValueError(f"Lead with ID {message.get('leadId')} not found.")
     
     return lead
 
@@ -28,9 +28,9 @@ def get_node_settings(message):
     db = client.get_default_database()
     collection = db["flows"]
     
-    flow = collection.find_one({"_id": ObjectId(message["flowId"])})
+    flow = collection.find_one({"_id": ObjectId(message['flowId'])})
     if not flow:
-        raise ValueError(f"Flow with ID {message.get("flowId")} not found.")
+        raise ValueError(f"Flow with ID {message.get('flowId')} not found.")
     
     nodes = flow["nodeData"]["nodes"]
     settings = {}
@@ -41,7 +41,7 @@ def get_node_settings(message):
             # print (f"questions: {settings}")
             break
     else:
-        raise ValueError(f"Node with ID {message.get("nodeId")} not found.")
+        raise ValueError(f"Node with ID {message.get('nodeId')} not found.")
     
     return settings
 
@@ -50,9 +50,9 @@ def get_user_calendar_conn(message, connectionId):
     db = client.get_default_database()
     collection = db["users"]
     
-    user = collection.find_one({"_id": ObjectId(message["userId"])})
+    user = collection.find_one({"_id": ObjectId(message['userId'])})
     if not user:
-        raise ValueError(f"User with ID {message.get("userId")} not found.")
+        raise ValueError(f"User with ID {message.get('userId')} not found.")
     
     connections = user["calendarConnection"]
     conn = {}
@@ -92,7 +92,7 @@ def update_lead_status_and_current_node(leadId, status, currentNode):
     if not lead:
         raise ValueError(f"Lead with ID {leadId} not found.")
     
-    collection.update_one({"_id": ObjectId(leadId)}, {"$set": {"status": status, "nodeId": currentNode}})
+    collection.update_one({"_id": ObjectId(leadId)}, {"$set": {"status": status, 'nodeId': currentNode}})
     
     
 

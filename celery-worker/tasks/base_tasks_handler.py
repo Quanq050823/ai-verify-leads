@@ -6,7 +6,7 @@ import traceback
 class BaseTaskHandler(Task):
     def before_start(self, task_id, args, kwargs):
         message = kwargs["message"]
-        update_lead_status_and_current_node(message["leadId"], 2, message["targetNode"])
+        update_lead_status_and_current_node(message['leadId'], 2, message["targetNode"])
     
     def on_success(self, retval, task_id, args, kwargs):
         data = kwargs["message"]
@@ -16,12 +16,12 @@ class BaseTaskHandler(Task):
         
         if is_not_finished:
             if "aiCall" not in self.name:
-                update_lead_status_and_current_node(data["leadId"], 3, data["targetNode"])
+                update_lead_status_and_current_node(data['leadId'], 3, data["targetNode"])
             print (f"Task {self.name} succeeded. Flow continue.")
             print("-" * 50)  # Print a horizontal line of 50 dashes
         else: 
             if "aiCall" not in self.name:
-                update_lead_status_and_current_node(data["leadId"], 9, data["targetNode"])
+                update_lead_status_and_current_node(data['leadId'], 9, data["targetNode"])
             print (f"Task {self.name} succeeded. Flow finished.")
         
         super().on_success(retval, task_id, args, kwargs)
@@ -52,5 +52,5 @@ class BaseTaskHandler(Task):
             },
         }
         
-        update_lead(data["leadId"], update_field)
+        update_lead(data['leadId'], update_field)
         super().on_failure(exc, task_id, args, kwargs, einfo)

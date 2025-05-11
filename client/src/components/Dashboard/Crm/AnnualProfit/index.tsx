@@ -167,7 +167,7 @@ const AnnualProfit: React.FC = () => {
 							{loading ? (
 								<CircularProgress size={16} />
 							) : !selectedFlowId ? (
-								"Please select a flow"
+								"Null"
 							) : conversionRate === null ? (
 								"No data"
 							) : (

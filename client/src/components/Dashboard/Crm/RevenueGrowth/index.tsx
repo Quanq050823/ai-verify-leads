@@ -168,7 +168,7 @@ const RevenueGrowth: React.FC = () => {
 							{loading ? (
 								<CircularProgress size={16} />
 							) : !selectedFlowId ? (
-								"Please select a flow"
+								"Null"
 							) : totalLeads === null ? (
 								"No data"
 							) : (

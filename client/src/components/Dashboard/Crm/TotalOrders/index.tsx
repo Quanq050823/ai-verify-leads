@@ -157,7 +157,7 @@ const TotalOrders: React.FC = () => {
 							{loading ? (
 								<CircularProgress size={16} />
 							) : !selectedFlowId ? (
-								"Please select a flow"
+								"Null"
 							) : unverifiedLeads === null ? (
 								"No data"
 							) : (

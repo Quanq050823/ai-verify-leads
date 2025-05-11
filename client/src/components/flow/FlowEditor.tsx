@@ -749,6 +749,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 					selectedNode={selectedNode}
 					onChange={onNodeDataChange}
 					onClose={() => setShowPropertiesPanel(false)}
+					flowId={flowId || undefined}
+					flowName={flowName}
 				/>
 			)}
 

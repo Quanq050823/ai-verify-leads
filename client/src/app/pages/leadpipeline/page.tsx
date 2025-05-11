@@ -264,7 +264,12 @@ export default function LeadPipelinePage() {
 
 		// 3. Tạo cột cho mỗi loại node
 		if (columns.length === 0 && uniqueNodeTypes.length > 0) {
-			const initialColumns: ExtendedColumn[] = uniqueNodeTypes.map(
+			// Lọc bỏ facebook ads từ danh sách node types
+			const filteredNodeTypes = uniqueNodeTypes.filter(
+				(nodeType) => !nodeType.toLowerCase().includes("facebookleadads")
+			);
+
+			const initialColumns: ExtendedColumn[] = filteredNodeTypes.map(
 				(nodeType, index) => {
 					const baseType = getBaseNodeType(nodeType);
 					return {
@@ -301,6 +306,11 @@ export default function LeadPipelinePage() {
 
 	const extractNodeBase = (nodeId: string | undefined): string => {
 		if (!nodeId) return "unassigned";
+
+		if (nodeId.toLowerCase().includes("facebookleadads")) {
+			return "hidden"; // Gán một giá trị đặc biệt để lead này không hiển thị
+		}
+
 		const parts = nodeId.split("_");
 		return normalizeNodeType(parts[0]);
 	};
@@ -365,6 +375,13 @@ export default function LeadPipelinePage() {
 					: null;
 
 				const columnLeads = leads.filter((lead) => {
+					if (
+						lead.nodeBase &&
+						lead.nodeBase.toLowerCase().includes("facebookleadads")
+					) {
+						return false;
+					}
+
 					const matchesSearch = searchTerm
 						? (lead.leadData?.["full name"] || "")
 								.toLowerCase()
@@ -498,7 +515,6 @@ export default function LeadPipelinePage() {
 		const baseType = getBaseNodeType(nodeType);
 		const iconMappings: Record<string, string> = {
 			facebookleadads: "facebookLeadAds",
-			facebookads: "facebookAds",
 			facebook: "facebookLeadAds",
 			email: "email",
 			sms: "sms",

@@ -35,15 +35,15 @@ import { formatDistance } from "date-fns";
 const getStatusColor = (status: number) => {
 	switch (status) {
 		case 1:
-			return "#FF9800"; // Pending - Orange
+			return "#FF9800";
 		case 2:
-			return "#2196F3"; // In-progress - Blue
+			return "#2196F3";
 		case 3:
-			return "#4CAF50"; // Success - Green
+			return "#4CAF50";
 		case 9:
-			return "#9C27B0"; // Done-process - Purple
+			return "#10b981";
 		default:
-			return "#9E9E9E"; // Default - Grey
+			return "#ff5252";
 	}
 };
 

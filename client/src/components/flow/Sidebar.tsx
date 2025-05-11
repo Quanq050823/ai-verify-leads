@@ -193,23 +193,24 @@ const SidebarFooter = styled(Box)(({ theme }) => ({
 
 const ToggleButton = styled(IconButton)(({ theme }) => ({
 	position: "absolute",
-	right: "-12px",
+	right: "-16px",
 	top: "50%",
 	transform: "translateY(-50%)",
-	boxShadow: "0px 3px 8px rgba(0,0,0,0.12)",
-	border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-	width: "28px",
-	height: "28px",
+	backgroundColor: theme.palette.background.paper,
+	boxShadow: "0px 3px 8px rgba(0,0,0,0.15)",
+	border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+	width: "32px",
+	height: "32px",
 	borderRadius: "50%",
 	"&:hover": {
-		backgroundColor: alpha(theme.palette.primary.main, 0.05),
-		boxShadow: "0px 4px 12px rgba(0,0,0,0.16)",
+		backgroundColor: alpha(theme.palette.primary.main, 0.08),
+		boxShadow: "0px 4px 12px rgba(0,0,0,0.2)",
 	},
 	"&:active": {
 		boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
 	},
 	"& .MuiSvgIcon-root": {
-		fontSize: "18px",
+		fontSize: "20px",
 		color: theme.palette.primary.main,
 	},
 	zIndex: 20,
@@ -448,176 +449,68 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 
 	if (collapsed) {
 		return (
-			<CollapsedSidebar elevation={3} className="lead-board">
-				<Tooltip title="Back to Flow List" placement="right">
-					<IconButton
-						component={Link}
-						href="/pages/flow/"
-						size="small"
-						sx={{ mt: 1, mb: 2 }}
-					>
-						<ArrowBack fontSize="small" />
-					</IconButton>
-				</Tooltip>
+			<Box sx={{ display: "flex", position: "relative" }}>
+				<CollapsedSidebar elevation={3} className="lead-board">
+					<Tooltip title="Back to Flow List" placement="right">
+						<IconButton
+							component={Link}
+							href="/pages/flow/"
+							size="small"
+							sx={{ mt: 1, mb: 2 }}
+						>
+							<ArrowBack fontSize="small" />
+						</IconButton>
+					</Tooltip>
 
-				<Divider sx={{ width: "80%", mb: 2 }} />
+					<Divider sx={{ width: "80%", mb: 2 }} />
 
-				{loading ? (
-					<CircularProgress size={24} sx={{ my: 2 }} />
-				) : (
-					<Box
-						sx={{
-							overflowY: "auto",
-							width: "100%",
-							display: "flex",
-							flexDirection: "column",
-							alignItems: "center",
-						}}
-					>
-						{nodeCategories.map((category) => (
-							<Box
-								key={category.title}
-								sx={{
-									mb: 1,
-									width: "100%",
-									display: "flex",
-									flexDirection: "column",
-									alignItems: "center",
-								}}
-							>
-								<Typography
-									variant="caption"
+					{loading ? (
+						<CircularProgress size={24} sx={{ my: 2 }} />
+					) : (
+						<Box
+							sx={{
+								overflowY: "auto",
+								width: "100%",
+								display: "flex",
+								flexDirection: "column",
+								alignItems: "center",
+							}}
+						>
+							{nodeCategories.map((category) => (
+								<Box
+									key={category.title}
 									sx={{
-										mb: 0.5,
-										fontSize: "8px",
-										color: "text.secondary",
-										textTransform: "uppercase",
-										letterSpacing: "0.5px",
-										opacity: 0.7,
+										mb: 1,
+										width: "100%",
+										display: "flex",
+										flexDirection: "column",
+										alignItems: "center",
 									}}
 								>
-									{category.title.slice(0, 1)}
-								</Typography>
-
-								{category.items.map((item) => (
-									<Tooltip
-										key={item.type}
-										title={item.label}
-										placement="right"
-										arrow
-										enterDelay={200}
-										leaveDelay={100}
+									<Typography
+										variant="caption"
+										sx={{
+											mb: 0.5,
+											fontSize: "8px",
+											color: "text.secondary",
+											textTransform: "uppercase",
+											letterSpacing: "0.5px",
+											opacity: 0.7,
+										}}
 									>
-										<CollapsedNodeItem
-											bgcolor={item.color}
-											onDragStart={(event) => handleDragStart(event, item.type)}
-											draggable
-											disablePadding
-										>
-											<NodeIconContainer bgcolor={item.color}>
-												{item.icon}
-											</NodeIconContainer>
-										</CollapsedNodeItem>
-									</Tooltip>
-								))}
-							</Box>
-						))}
-					</Box>
-				)}
+										{category.title.slice(0, 1)}
+									</Typography>
 
-				<ToggleButton
-					onClick={toggleCollapse}
-					size="small"
-					className="lead-button"
-				>
-					<ChevronRight />
-				</ToggleButton>
-			</CollapsedSidebar>
-		);
-	}
-
-	return (
-		<SidebarContainer
-			elevation={3}
-			sx={{ overflowY: "hidden" }}
-			className="lead-board"
-		>
-			<Button
-				href="/pages/flow/"
-				component={Link}
-				startIcon={<ArrowBack />}
-				variant="text"
-				color="primary"
-				sx={{
-					mb: 2,
-					ml: 0,
-					justifyContent: "flex-start",
-					textTransform: "none",
-					fontWeight: 500,
-					borderRadius: "8px",
-					"&:hover": {
-						backgroundColor: alpha("#3b82f6", 0.08),
-					},
-				}}
-				className="lead-card"
-			>
-				Back to Flow List
-			</Button>
-
-			<Typography
-				variant="h6"
-				sx={{
-					mb: 2,
-					fontWeight: 600,
-					color: "text.primary",
-					display: "flex",
-					alignItems: "center",
-					gap: 1,
-				}}
-			>
-				Flow Components
-			</Typography>
-
-			{loading ? (
-				<Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-					<CircularProgress size={28} color="primary" />
-				</Box>
-			) : (
-				<Box sx={{ overflowY: "auto", flex: 1, pr: 1 }}>
-					{nodeCategories.map((category) => (
-						<Box key={category.title} sx={{ mb: 2 }}>
-							<CategoryHeader onClick={() => toggleCategory(category.title)}>
-								<Typography
-									variant="subtitle2"
-									sx={{
-										color: "text.primary",
-										fontWeight: 600,
-										fontSize: "13px",
-										letterSpacing: "0.3px",
-										textTransform: "uppercase",
-									}}
-								>
-									{category.title}
-								</Typography>
-								{expandedCategories[category.title] ? (
-									<ExpandLess color="action" />
-								) : (
-									<ExpandMore color="action" />
-								)}
-							</CategoryHeader>
-
-							<Collapse in={expandedCategories[category.title]} timeout="auto">
-								<List disablePadding>
 									{category.items.map((item) => (
 										<Tooltip
 											key={item.type}
-											title={item.description || item.label}
+											title={item.label}
 											placement="right"
 											arrow
 											enterDelay={200}
 											leaveDelay={100}
 										>
-											<NodeItem
+											<CollapsedNodeItem
 												bgcolor={item.color}
 												onDragStart={(event) =>
 													handleDragStart(event, item.type)
@@ -625,54 +518,175 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 												draggable
 												disablePadding
 											>
-												<ListItemIcon sx={{ minWidth: 36 }}>
-													<NodeIconContainer bgcolor={item.color}>
-														{item.icon}
-													</NodeIconContainer>
-												</ListItemIcon>
-												<ListItemText
-													primary={item.label}
-													primaryTypographyProps={{
-														variant: "body2",
-														sx: { fontWeight: 500 },
-													}}
-												/>
-											</NodeItem>
+												<NodeIconContainer bgcolor={item.color}>
+													{item.icon}
+												</NodeIconContainer>
+											</CollapsedNodeItem>
 										</Tooltip>
 									))}
-								</List>
-							</Collapse>
+								</Box>
+							))}
 						</Box>
-					))}
-				</Box>
-			)}
+					)}
+				</CollapsedSidebar>
 
-			<SidebarFooter>
-				<Typography
-					variant="caption"
-					color="text.secondary"
-					paragraph
-					sx={{ opacity: 0.7 }}
-				>
-					Drag components to the canvas to build your workflow
-				</Typography>
-				<Typography
-					variant="caption"
-					color="text.secondary"
-					sx={{ opacity: 0.7 }}
-				>
-					Connect nodes by dragging between the handles
-				</Typography>
-			</SidebarFooter>
+				<Tooltip title="Mở rộng thanh bên" placement="left">
+					<ToggleButton
+						onClick={toggleCollapse}
+						size="small"
+						className="lead-button"
+					>
+						<ChevronRight />
+					</ToggleButton>
+				</Tooltip>
+			</Box>
+		);
+	}
 
-			<ToggleButton
-				onClick={toggleCollapse}
-				size="small"
-				className="lead-button"
+	return (
+		<Box sx={{ display: "flex", position: "relative" }}>
+			<SidebarContainer
+				elevation={3}
+				sx={{ overflowY: "hidden" }}
+				className="lead-board"
 			>
-				<ChevronLeft />
-			</ToggleButton>
-		</SidebarContainer>
+				<Button
+					href="/pages/flow/"
+					component={Link}
+					startIcon={<ArrowBack />}
+					variant="text"
+					color="primary"
+					sx={{
+						mb: 2,
+						ml: 0,
+						justifyContent: "flex-start",
+						textTransform: "none",
+						fontWeight: 500,
+						borderRadius: "8px",
+						"&:hover": {
+							backgroundColor: alpha("#3b82f6", 0.08),
+						},
+					}}
+					className="lead-card"
+				>
+					Back to Flow List
+				</Button>
+
+				<Typography
+					variant="h6"
+					sx={{
+						mb: 2,
+						fontWeight: 600,
+						color: "text.primary",
+						display: "flex",
+						alignItems: "center",
+						gap: 1,
+					}}
+				>
+					Flow Components
+				</Typography>
+
+				{loading ? (
+					<Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+						<CircularProgress size={28} color="primary" />
+					</Box>
+				) : (
+					<Box sx={{ overflowY: "auto", flex: 1, pr: 1 }}>
+						{nodeCategories.map((category) => (
+							<Box key={category.title} sx={{ mb: 2 }}>
+								<CategoryHeader onClick={() => toggleCategory(category.title)}>
+									<Typography
+										variant="subtitle2"
+										sx={{
+											color: "text.primary",
+											fontWeight: 600,
+											fontSize: "13px",
+											letterSpacing: "0.3px",
+											textTransform: "uppercase",
+										}}
+									>
+										{category.title}
+									</Typography>
+									{expandedCategories[category.title] ? (
+										<ExpandLess color="action" />
+									) : (
+										<ExpandMore color="action" />
+									)}
+								</CategoryHeader>
+
+								<Collapse
+									in={expandedCategories[category.title]}
+									timeout="auto"
+								>
+									<List disablePadding>
+										{category.items.map((item) => (
+											<Tooltip
+												key={item.type}
+												title={item.description || item.label}
+												placement="right"
+												arrow
+												enterDelay={200}
+												leaveDelay={100}
+											>
+												<NodeItem
+													bgcolor={item.color}
+													onDragStart={(event) =>
+														handleDragStart(event, item.type)
+													}
+													draggable
+													disablePadding
+												>
+													<ListItemIcon sx={{ minWidth: 36 }}>
+														<NodeIconContainer bgcolor={item.color}>
+															{item.icon}
+														</NodeIconContainer>
+													</ListItemIcon>
+													<ListItemText
+														primary={item.label}
+														primaryTypographyProps={{
+															variant: "body2",
+															sx: { fontWeight: 500 },
+														}}
+													/>
+												</NodeItem>
+											</Tooltip>
+										))}
+									</List>
+								</Collapse>
+							</Box>
+						))}
+					</Box>
+				)}
+
+				<SidebarFooter>
+					<Typography
+						variant="caption"
+						color="text.secondary"
+						paragraph
+						sx={{ opacity: 0.7 }}
+					>
+						Drag components to the canvas to build your workflow
+					</Typography>
+					<Typography
+						variant="caption"
+						color="text.secondary"
+						sx={{ opacity: 0.7 }}
+					>
+						Connect nodes by dragging between the handles
+					</Typography>
+				</SidebarFooter>
+			</SidebarContainer>
+
+			<Tooltip title="Thu gọn thanh bên" placement="left">
+				<ToggleButton
+					onClick={toggleCollapse}
+					size="small"
+					className="lead-button"
+				>
+					<ChevronLeft />
+				</ToggleButton>
+			</Tooltip>
+		</Box>
 	);
 };
 

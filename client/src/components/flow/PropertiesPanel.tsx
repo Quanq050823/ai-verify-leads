@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Node } from "@xyflow/react";
 import {
 	Box,
@@ -33,6 +33,7 @@ import {
 	Add,
 	Call,
 	Remove,
+	Save,
 } from "@mui/icons-material";
 import {
 	useFacebookConnections,
@@ -47,12 +48,15 @@ import {
 	openGoogleCalendarConnect,
 } from "@/services/googleCalendarServices";
 import { toast } from "react-toastify";
-import { callLead, LeadData } from "@/services/flowServices";
+import { callLead, LeadData, updateFlow } from "@/services/flowServices";
+import { useReactFlow } from "@xyflow/react";
 
 type PropertiesPanelProps = {
 	selectedNode: Node | null;
 	onChange: (id: string, data: any) => void;
 	onClose: () => void;
+	flowId?: string;
+	flowName?: string;
 };
 
 interface NodeSettings {
@@ -922,12 +926,17 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	selectedNode,
 	onChange,
 	onClose,
+	flowId,
+	flowName = "Untitled Flow",
 }) => {
 	const [localSettings, setLocalSettings] = useState<NodeSettings>({});
 	const [isTestingCall, setIsTestingCall] = useState<boolean>(false);
 	const [callResult, setCallResult] = useState<any>(null);
 	const [openCallResultDialog, setOpenCallResultDialog] =
 		useState<boolean>(false);
+	const [hasChanges, setHasChanges] = useState<boolean>(false);
+	const [isSaving, setIsSaving] = useState<boolean>(false);
+	const reactFlowInstance = useReactFlow();
 
 	if (!selectedNode) {
 		return null;
@@ -1016,6 +1025,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			} else {
 				setLocalSettings(nodeSettings as NodeSettings);
 			}
+			setHasChanges(false);
 		}
 	}, [selectedNode]);
 
@@ -1025,12 +1035,70 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	) => {
 		const updatedSettings = { ...localSettings, [key]: value };
 		setLocalSettings(updatedSettings);
+		setHasChanges(true);
+	};
 
-		// Update the node data
+	const handleSaveChanges = async () => {
+		// Update locally first
 		onChange(selectedNode.id, {
 			...selectedNode.data,
-			settings: updatedSettings,
+			settings: localSettings,
 		});
+
+		// If we have a flowId, also update on the server
+		if (flowId) {
+			try {
+				setIsSaving(true);
+
+				// Get current flow data directly from the React Flow instance
+				const currentFlowData = reactFlowInstance.toObject();
+
+				// Update the specific node's settings in the current flow data
+				const updatedNodes = currentFlowData.nodes.map((node: any) => {
+					if (node.id === selectedNode.id) {
+						return {
+							...node,
+							data: {
+								...node.data,
+								settings: localSettings,
+							},
+						};
+					}
+					return node;
+				});
+
+				// Prepare the data for API call (similar to onSave in FlowEditor)
+				const flowUpdateData = {
+					flowName: flowName,
+					nodeData: {
+						...currentFlowData,
+						nodes: updatedNodes,
+					},
+				};
+
+				// Save to localStorage for consistency with FlowEditor
+				localStorage.setItem(
+					"flow-data",
+					JSON.stringify({
+						...currentFlowData,
+						nodes: updatedNodes,
+					})
+				);
+
+				// Call API to update the flow on the server
+				await updateFlow(flowId, flowUpdateData);
+			} catch (error) {
+				console.error("Error saving node settings:", error);
+				toast.error("Failed to save settings to server");
+			} finally {
+				setIsSaving(false);
+				setHasChanges(false);
+			}
+		} else {
+			// No flowId, just update locally
+			toast.success(`${selectedNode.type} node settings saved locally!`);
+			setHasChanges(false);
+		}
 	};
 
 	const handleTextChange =
@@ -1918,17 +1986,33 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
 			<Divider sx={{ my: 2 }} />
 
-			<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-				<Chip
-					size="small"
-					label={`ID: ${selectedNode.id.slice(0, 8)}`}
-					variant="outlined"
-				/>
-				<Chip
-					size="small"
-					label={`Type: ${selectedNode.type}`}
-					variant="outlined"
-				/>
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					mb: 2,
+				}}
+			>
+				<Box>
+					<Chip
+						size="small"
+						label={`Type: ${selectedNode.type}`}
+						variant="outlined"
+						sx={{ ml: 1 }}
+					/>
+				</Box>
+				<Button
+					variant="contained"
+					color="primary"
+					startIcon={
+						isSaving ? <CircularProgress size={16} color="inherit" /> : <Save />
+					}
+					onClick={handleSaveChanges}
+					disabled={!hasChanges || isSaving}
+				>
+					{isSaving ? "Saving..." : "Save Changes"}
+				</Button>
 			</Box>
 		</PanelContainer>
 	);

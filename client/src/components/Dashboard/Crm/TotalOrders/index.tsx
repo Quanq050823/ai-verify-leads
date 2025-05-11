@@ -3,17 +3,45 @@
 import React, { useEffect, useState } from "react";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { Card, Box, Typography } from "@mui/material";
+import { Card, Box, Typography, CircularProgress } from "@mui/material";
+import { getBasicMetrics } from "@/services/analyticsServices";
+import { useFlow } from "@/context/FlowContext";
 
 // Dynamically import react-apexcharts with Next.js dynamic import
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const TotalOrders: React.FC = () => {
 	const [isChartLoaded, setChartLoaded] = useState(false);
+	const [unverifiedLeads, setUnverifiedLeads] = useState<number | null>(null);
+	const [loading, setLoading] = useState(false);
+	const { selectedFlowId } = useFlow();
 
 	useEffect(() => {
 		setChartLoaded(true);
 	}, []);
+
+	useEffect(() => {
+		const fetchData = async () => {
+			if (!selectedFlowId) {
+				setUnverifiedLeads(null);
+				return;
+			}
+
+			try {
+				setLoading(true);
+				const data = await getBasicMetrics(selectedFlowId);
+				if (data) {
+					setUnverifiedLeads(data.unverifiedLead);
+				}
+			} catch (error) {
+				console.error("Error fetching unverified leads:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData();
+	}, [selectedFlowId]);
 
 	const series = [
 		{
@@ -107,13 +135,12 @@ const TotalOrders: React.FC = () => {
 					sx={{
 						display: "flex",
 						justifyContent: "space-between",
-						mb: "30px",
 						position: "relative",
 					}}
 				>
 					<Box>
 						<Typography component="span" sx={{ mb: "3px", display: "block" }}>
-							Verified This Week
+							Unverified Lead
 						</Typography>
 
 						<Typography
@@ -121,10 +148,21 @@ const TotalOrders: React.FC = () => {
 							sx={{
 								fontSize: { xs: "18px", lg: "20px" },
 								fontWeight: 700,
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
 							}}
 							className="text-black"
 						>
-							127
+							{loading ? (
+								<CircularProgress size={16} />
+							) : !selectedFlowId ? (
+								"Null"
+							) : unverifiedLeads === null ? (
+								"No data"
+							) : (
+								unverifiedLeads
+							)}
 						</Typography>
 					</Box>
 
@@ -146,35 +184,6 @@ const TotalOrders: React.FC = () => {
 								width={"100%"}
 							/>
 						)}
-					</Box>
-				</Box>
-
-				<Box>
-					<Box
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "space-between",
-							mt: "5px",
-						}}
-					>
-						<Box
-							sx={{
-								bgcolor: "#d8ffc8",
-								color: "success.main",
-								border: "1px solid #82FC5A",
-								borderRadius: "100px",
-								fontSize: "13px",
-								padding: "1.3px 8.3px",
-							}}
-							component="span"
-						>
-							+8% from yesterday
-						</Box>
-
-						<Typography component="span" sx={{ fontSize: "13px" }}>
-							Last 2 days
-						</Typography>
 					</Box>
 				</Box>
 			</Card>

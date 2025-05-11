@@ -1587,3 +1587,6 @@ table tfoot tr p {
 .flow-card-header {
 	background-color: #e9ecf4 !important;
 }
+.border-custom {
+	border: 1px solid #e5e7eb;
+}

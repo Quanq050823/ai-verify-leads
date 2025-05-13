@@ -42,11 +42,14 @@ const config = {
         calendarClientId: process.env.GOOGLE_CALENDAR_CLIENT_ID,
         calendarClientSecret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
         calendarRedirectUri: `${process.env.GOOGLE_CALENDAR_REDIRECT_URI}`,
+
+        connectRedirectPath: process.env.GOOGLE_CONNECT_REDIRECT_PATH,
     },
     facebookAuthConfig: {
         appId: process.env.FACEBOOK_APP_ID,
         appSecret: process.env.FACEBOOK_APP_SECRET,
         callBackUrl: process.env.FACEBOOK_CALLBACK_URL,
+        connectRedirectPath: process.env.FACEBOOK_CONNECT_REDIRECT_PATH,
     },
     env: process.env.ENV,
     rabbitMQConfig: {

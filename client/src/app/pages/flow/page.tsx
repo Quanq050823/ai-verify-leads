@@ -656,7 +656,7 @@ const ScenarioPage: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ mb: 3 }}>
+		<Box sx={{ minHeight: "85vh" }}>
 			<Box
 				sx={{
 					minHeight: "80vh",

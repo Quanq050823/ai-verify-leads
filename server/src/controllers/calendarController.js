@@ -28,7 +28,8 @@ export const handleAuthCallback = async (req, res, next) => {
         // Save tokens and calendarId to the database for the user
         // await saveTokensAndCalendarId(userId, tokens, calendarId);
 
-        res.status(StatusCodes.OK).json(tokens);
+        // res.status(StatusCodes.OK).json(tokens);
+        res.redirect(`${config.feUrl}${config.googleAuthConfig.connectRedirectPath}`);
     } catch (err) {
         next(err);
     }

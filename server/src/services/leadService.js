@@ -38,36 +38,52 @@ export const getLeadByNodes = async (userId, flowId) => {
 
         let mergeNodes = [];
 
-        if (flow?.nodeData?.nodes?.length) {
-            mergeNodes = flow.nodeData.nodes.map((node) => {
-                const nodesLeads = leads.filter(
-                    (lead) => lead.nodeId === node.id && lead.status !== 9 && lead.status !== 0
-                );
-                return {
-                    id: node.id,
-                    type: node.type,
-                    label: node.data.label,
-                    leads: nodesLeads,
-                };
-            });
+        const labeledLeads = leads.map((lead) => {
+            const node = flow.nodeData.nodes.find((node) => node.id === lead.nodeId);
+            return { ...lead.toObject(), label: node?.data?.label };
+        });
+
+        const inProgressLeads = [];
+        const qualifiedLeads = [];
+        const unqualifiedLeads = [];
+        const deadLeads = [];
+        for (const lead of labeledLeads) {
+            if (lead.status === 0) {
+                deadLeads.push(lead);
+                continue;
+            }
+
+            if (lead.isVerified == 2) qualifiedLeads.push(lead);
+            else if (lead.isVerified == 1) unqualifiedLeads.push(lead);
+            else inProgressLeads.push(lead);
         }
 
-        const deadLeads = leads.filter((lead) => lead.status === 0);
-        const successLeads = leads.filter((lead) => lead.status === 9);
-
-        mergeNodes.push({
-            id: "deadLead",
-            type: "deadLead",
-            label: "Dead Leads",
-            leads: deadLeads,
-        });
-
-        mergeNodes.push({
-            id: "successLead",
-            type: "successLead",
-            label: "Success Leads",
-            leads: successLeads,
-        });
+        mergeNodes.push(
+            {
+                id: "inProgressLeads",
+                type: "inProgressLeads",
+                label: "In Progress",
+                leads: inProgressLeads,
+            },
+            {
+                id: "qualifiedLeads",
+                type: "qualifiedLeads",
+                label: "Qualified Leads",
+                leads: qualifiedLeads,
+            },
+            {
+                id: "unqualifiedLeads",
+                type: "unqualifiedLeads",
+                label: "Unqualified Leads",
+                leads: unqualifiedLeads,
+            },
+            {
+                id: "deadLead",
+                type: "deadLead",
+                label: "Dead Leads",
+                leads: deadLeads,
+            }
+        );
 
         return mergeNodes;
     } catch (error) {

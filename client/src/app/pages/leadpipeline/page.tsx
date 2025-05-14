@@ -61,7 +61,6 @@ import { useFlow } from "@/context/FlowContext";
 import FlowSelector from "@/components/common/FlowSelector";
 import { getFlowById } from "../../../services/flowServices";
 
-// Map mặc định các loại node từ API sang định dạng hiển thị
 const nodeTypeMap: Record<string, NodeDisplay> = {
 	[NodeType.InProgressLeads]: {
 		title: "In Progress",
@@ -79,13 +78,13 @@ const nodeTypeMap: Record<string, NodeDisplay> = {
 		icon: "condition",
 	},
 	[NodeType.DeadLead]: {
-		title: "Error Leads",
+		title: "Dead Leads",
 		color: "#F44336",
 		icon: "error",
 	},
 };
 
-// Custom styled components
+// Custom styled componentsF
 const SearchTextField = styled(TextField)(({ theme }) => ({
 	"& .MuiOutlinedInput-root": {
 		borderRadius: "10px",
@@ -225,10 +224,10 @@ export default function LeadPipelinePage() {
 					console.log("Fetched lead data by nodes:", data);
 					createColumnsFromNodesData(data);
 				} else {
-					// Sử dụng API getAllLeads nếu không có flowId
-					const data = await getLeads();
-					console.log("All leads:", data);
-					categorizeAndCreateColumns(data);
+					// Khi không có flow được chọn, không load dữ liệu
+					setLeads([]);
+					setColumns([]);
+					setLoading(false);
 				}
 			} catch (err) {
 				console.error("Error fetching leads:", err);
@@ -300,74 +299,6 @@ export default function LeadPipelinePage() {
 		setColumns(newColumns);
 	};
 
-	// Phân loại lead và tạo columns khi sử dụng getAllLeads
-	const categorizeAndCreateColumns = (leadsData: Lead[]) => {
-		if (!leadsData || leadsData.length === 0) {
-			setLeads([]);
-			setColumns([]);
-			return;
-		}
-
-		// Lọc leads theo tìm kiếm
-		const filteredLeads = leadsData.filter((lead) => {
-			return searchTerm
-				? (lead.leadData?.["full name"] || "")
-						.toLowerCase()
-						.includes(searchTerm.toLowerCase()) ||
-						(lead.leadData?.email || "")
-							.toLowerCase()
-							.includes(searchTerm.toLowerCase())
-				: true;
-		});
-
-		setLeads(filteredLeads);
-
-		// Phân loại leads theo trạng thái
-		const inProgressLeads = filteredLeads.filter(
-			(lead) => lead.status === LeadStatus.InProgress
-		);
-		const qualifiedLeads = filteredLeads.filter(
-			(lead) => lead.isVerified === LeadVerification.Qualified
-		);
-		const unqualifiedLeads = filteredLeads.filter(
-			(lead) => lead.isVerified === LeadVerification.Unqualified
-		);
-		const errorLeads = filteredLeads.filter(
-			(lead) => lead.status === LeadStatus.Error
-		);
-
-		// Tạo các node giả lập từ backend API format
-		const mockNodesData = [
-			{
-				id: NodeType.InProgressLeads,
-				type: NodeType.InProgressLeads,
-				label: "In Progress",
-				leads: inProgressLeads,
-			},
-			{
-				id: NodeType.QualifiedLeads,
-				type: NodeType.QualifiedLeads,
-				label: "Qualified Leads",
-				leads: qualifiedLeads,
-			},
-			{
-				id: NodeType.UnqualifiedLeads,
-				type: NodeType.UnqualifiedLeads,
-				label: "Unqualified Leads",
-				leads: unqualifiedLeads,
-			},
-			{
-				id: NodeType.DeadLead,
-				type: NodeType.DeadLead,
-				label: "Error Leads",
-				leads: errorLeads,
-			},
-		];
-
-		// Tạo columns từ mock data
-		createColumnsFromNodesData(mockNodesData);
-	};
-
 	const handleRefresh = async () => {
 		setLoading(true);
 		try {
@@ -375,8 +306,9 @@ export default function LeadPipelinePage() {
 				const data = await fetchLeadsByNodes(selectedFlowId);
 				createColumnsFromNodesData(data);
 			} else {
-				const data = await getLeads();
-				categorizeAndCreateColumns(data);
+				// Khi không có flow được chọn, không refresh dữ liệu
+				setLeads([]);
+				setColumns([]);
 			}
 		} catch (err) {
 			console.error("Error refreshing leads:", err);
@@ -437,6 +369,40 @@ export default function LeadPipelinePage() {
 				return getNodeIcon("default");
 		}
 	};
+
+	// Nội dung hiển thị khi chưa chọn flow
+	const renderNoFlowSelected = () => (
+		<Box
+			sx={{
+				display: "flex",
+				flexDirection: "column",
+				alignItems: "center",
+				justifyContent: "center",
+				height: "400px",
+				width: "100%",
+			}}
+		>
+			<Paper
+				elevation={0}
+				sx={{
+					p: 4,
+					textAlign: "center",
+					maxWidth: "600px",
+					borderRadius: 3,
+					border: "1px dashed #d0d0d0",
+				}}
+				className="lighter-bg"
+			>
+				<Typography variant="h5" gutterBottom fontWeight="bold">
+					No Flow Selected
+				</Typography>
+				<Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+					Please select a flow from the dropdown above to view and manage leads.
+					Each flow will show its specific leads organized by processing stages.
+				</Typography>
+			</Paper>
+		</Box>
+	);
 
 	return (
 		<>
@@ -520,7 +486,7 @@ export default function LeadPipelinePage() {
 						backgroundColor: "background.paper",
 						boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
 					}}
-					className="lighter-bg"
+					className="lighter-bg flow-selector"
 				>
 					<Box
 						sx={{
@@ -543,12 +509,10 @@ export default function LeadPipelinePage() {
 
 						<Box>
 							<FlowSelector />
-							{!loading && (
+							{!loading && selectedFlowId && (
 								<Box sx={{ mt: 1, textAlign: "right" }}>
 									<Typography variant="caption" color="text.secondary">
-										{selectedFlowId
-											? `Showing ${leads.length} leads for selected flow`
-											: `Showing all ${leads.length} leads`}
+										{`Showing ${leads.length} leads for selected flow`}
 									</Typography>
 								</Box>
 							)}
@@ -567,28 +531,30 @@ export default function LeadPipelinePage() {
 						className={"flow-card-header"}
 					>
 						<Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-							<Box sx={{ display: "flex", flexDirection: "row" }}>
-								<Box
-									sx={{
-										display: "flex",
-										gap: 1,
-										alignItems: "center",
-										ml: "auto",
-									}}
-								>
-									<IconButton size="small" title="Search leads">
-										<SearchIcon />
-									</IconButton>
+							{selectedFlowId && (
+								<Box sx={{ display: "flex", flexDirection: "row" }}>
+									<Box
+										sx={{
+											display: "flex",
+											gap: 1,
+											alignItems: "center",
+											ml: "auto",
+										}}
+									>
+										<IconButton size="small" title="Search leads">
+											<SearchIcon />
+										</IconButton>
+									</Box>
+									<SearchTextField
+										placeholder="Search leads..."
+										size="small"
+										value={searchTerm}
+										onChange={handleSearchChange}
+										className="white-text"
+										sx={{ minWidth: "250px" }}
+									/>
 								</Box>
-								<SearchTextField
-									placeholder="Search leads..."
-									size="small"
-									value={searchTerm}
-									onChange={handleSearchChange}
-									className="white-text"
-									sx={{ minWidth: "250px" }}
-								/>
-							</Box>
+							)}
 
 							{/* Status indicator chips */}
 							<Box
@@ -599,13 +565,15 @@ export default function LeadPipelinePage() {
 									ml: "auto",
 								}}
 							>
-								<IconButton
-									size="small"
-									onClick={handleRefresh}
-									title="Refresh leads"
-								>
-									<RefreshIcon />
-								</IconButton>
+								{selectedFlowId && (
+									<IconButton
+										size="small"
+										onClick={handleRefresh}
+										title="Refresh leads"
+									>
+										<RefreshIcon />
+									</IconButton>
+								)}
 							</Box>
 						</Box>
 					</Box>
@@ -643,6 +611,8 @@ export default function LeadPipelinePage() {
 							>
 								<Typography color="error">{error}</Typography>
 							</Box>
+						) : !selectedFlowId ? (
+							renderNoFlowSelected()
 						) : leads.length === 0 ? (
 							<Box
 								sx={{
@@ -659,9 +629,7 @@ export default function LeadPipelinePage() {
 									color="text.secondary"
 									sx={{ mb: 1 }}
 								>
-									{selectedFlowId
-										? "No leads found for this flow"
-										: "No leads found. You can view all leads or select a specific flow."}
+									No leads found for this flow
 								</Typography>
 							</Box>
 						) : (
@@ -740,6 +708,16 @@ export default function LeadPipelinePage() {
 																sx={{ display: "flex", alignItems: "center" }}
 																className="column-header"
 															>
+																<IconBox
+																	sx={{
+																		backgroundColor:
+																			activeColumn.iconColor || "#9e9e9e",
+																		width: 32,
+																		height: 32,
+																	}}
+																>
+																	{getColumnIcon(activeColumn.type as string)}
+																</IconBox>
 																<Typography component="span" sx={{ ml: 1 }}>
 																	{activeColumn.title}
 																</Typography>

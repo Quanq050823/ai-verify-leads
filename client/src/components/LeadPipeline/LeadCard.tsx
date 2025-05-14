@@ -198,8 +198,7 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 			setOpenDetails(false);
 		}
 	};
-	const leadName =
-		lead.leadData["full name"] || lead.leadData.name || "Unknown";
+	const leadName = lead.leadData.full_name || "Unknown";
 	const leadEmail = lead.leadData.email || "";
 	const leadPhone = lead.leadData.phone || "";
 	const leadCompany = lead.leadData.company_name || lead.leadData.company || "";

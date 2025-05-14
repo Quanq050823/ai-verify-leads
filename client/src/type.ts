@@ -3,7 +3,7 @@ export type Id = string | number;
 // Thông tin lead data chuẩn hóa
 export type LeadData = {
 	email?: string;
-	"full name"?: string;
+	full_name?: string;
 	phone?: string;
 	name?: string;
 	company_name?: string;

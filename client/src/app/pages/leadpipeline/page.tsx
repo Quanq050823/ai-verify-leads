@@ -256,7 +256,7 @@ export default function LeadPipelinePage() {
 				if (!searchTerm) return true;
 
 				return (
-					(lead.leadData?.["full name"] || "")
+					(lead.leadData?.full_name || "")
 						.toLowerCase()
 						.includes(searchTerm.toLowerCase()) ||
 					(lead.leadData?.email || "")

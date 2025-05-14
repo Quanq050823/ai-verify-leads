@@ -31,6 +31,7 @@ import WorkIcon from "@mui/icons-material/Work";
 import LanguageIcon from "@mui/icons-material/Language";
 import { getLeadById } from "../../services/leadServices";
 import { formatDistance } from "date-fns";
+import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
 
 const getStatusColor = (status: number) => {
 	switch (status) {
@@ -97,6 +98,55 @@ const getRandomColor = (name: string) => {
 	return colors[hash % colors.length];
 };
 
+// Kiểm tra nodeId để xác định loại node
+const getNodeTypeFromId = (nodeId: string): string => {
+	if (!nodeId) return "default";
+
+	// Extract base node type from nodeId (email_123456 -> email)
+	const basePart = nodeId.split("_")[0]?.toLowerCase();
+
+	if (basePart.includes("email")) return "email";
+	if (basePart.includes("sms")) return "sms";
+	if (basePart.includes("facebook")) return "facebookLeadAds";
+	if (basePart.includes("google") && basePart.includes("sheet"))
+		return "googleSheets";
+	if (basePart.includes("google") && basePart.includes("calendar"))
+		return "googleCalendar";
+	if (basePart.includes("webhook")) return "sendWebhook";
+	if (basePart.includes("condition") || basePart.includes("verification"))
+		return "condition";
+	if (basePart.includes("aicall") || basePart.includes("call")) return "aiCall";
+	if (basePart.includes("delay")) return "config";
+
+	return "default";
+};
+
+// Lấy màu cho node
+const getNodeColorFromType = (nodeType: string): string => {
+	switch (nodeType) {
+		case "email":
+			return "#00BCD4";
+		case "sms":
+			return "#8BC34A";
+		case "facebookLeadAds":
+			return "#1877f2";
+		case "googleSheets":
+			return "#0F9D58";
+		case "googleCalendar":
+			return "#4285f4";
+		case "sendWebhook":
+			return "#8b5cf6";
+		case "condition":
+			return "#f59e0b";
+		case "aiCall":
+			return "#10b981";
+		case "config":
+			return "#795548";
+		default:
+			return "#9E9E9E";
+	}
+};
+
 interface LeadCardProps {
 	lead: Lead;
 	onDelete?: (id: string) => void;
@@ -148,8 +198,7 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 			setOpenDetails(false);
 		}
 	};
-	const leadName =
-		lead.leadData["full name"] || lead.leadData.name || "Unknown";
+	const leadName = lead.leadData.full_name || "Unknown";
 	const leadEmail = lead.leadData.email || "";
 	const leadPhone = lead.leadData.phone || "";
 	const leadCompany = lead.leadData.company_name || lead.leadData.company || "";
@@ -158,6 +207,10 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 	const timeAgo = formatDistance(new Date(lead.updatedAt), new Date(), {
 		addSuffix: true,
 	});
+
+	// Xác định loại node dựa trên dữ liệu
+	const nodeType = getNodeTypeFromId(lead.nodeId);
+	const nodeColor = getNodeColorFromType(nodeType);
 
 	return (
 		<>
@@ -206,7 +259,23 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 								</Typography>
 							</Box>
 						</Box>
-						<Box>
+						<Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+							<Tooltip title={`Source: ${nodeType}`}>
+								<Box
+									sx={{
+										bgcolor: `${nodeColor}20`,
+										color: nodeColor,
+										width: 28,
+										height: 28,
+										borderRadius: "50%",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									{getNodeIcon(nodeType)}
+								</Box>
+							</Tooltip>
 							<Chip
 								label={getStatusText(lead.status)}
 								size="small"

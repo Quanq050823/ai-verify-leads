@@ -11,6 +11,7 @@ import {
 	Settings,
 	ErrorOutline,
 	Layers,
+	VerifiedUser,
 } from "@mui/icons-material";
 
 // Function to determine the icon for a node type
@@ -37,6 +38,8 @@ export const getNodeIcon = (key: string) => {
 			return <Settings fontSize="small" />;
 		case "error":
 			return <ErrorOutline fontSize="small" />;
+		case "verified":
+			return <VerifiedUser fontSize="small" />;
 		default:
 			return <Layers fontSize="small" />;
 	}
@@ -66,6 +69,8 @@ export const getNodeColor = (key: string) => {
 			return "#795548";
 		case "error":
 			return "#F44336";
+		case "verified":
+			return "#4CAF50";
 		default:
 			return "#9E9E9E";
 	}

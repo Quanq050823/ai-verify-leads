@@ -213,7 +213,11 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 				<Box sx={{ display: "flex", width: "100%" }}>
 					<Select
 						value={value}
-						onChange={(e) => onChange(e.target.value)}
+						onChange={(e) => {
+							if (e.target.value !== "add_new") {
+								onChange(e.target.value);
+							}
+						}}
 						label="Choose Facebook Connection"
 						disabled={loading}
 						sx={{ flex: 1 }}
@@ -244,12 +248,12 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 								{isConnecting ? (
 									<>
 										<CircularProgress size={20} sx={{ mr: 1 }} />
-										Đang kết nối...
+										Connecting...
 									</>
 								) : (
 									<>
 										<Add fontSize="small" sx={{ mr: 1 }} />
-										Thêm kết nối Facebook mới
+										Add new connection
 									</>
 								)}
 							</MenuItem>
@@ -280,12 +284,12 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 									{isConnecting ? (
 										<>
 											<CircularProgress size={20} sx={{ mr: 1 }} />
-											Đang kết nối...
+											Connecting...
 										</>
 									) : (
 										<>
 											<Add fontSize="small" sx={{ mr: 1 }} />
-											Thêm kết nối Facebook mới
+											Add new connection
 										</>
 									)}
 								</MenuItem>,
@@ -726,7 +730,12 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 				<Box sx={{ display: "flex", width: "100%" }}>
 					<Select
 						value={value}
-						onChange={(e) => onChange(e.target.value)}
+						onChange={(e) => {
+							// Chỉ thay đổi giá trị khi không phải là "add_new"
+							if (e.target.value !== "add_new") {
+								onChange(e.target.value);
+							}
+						}}
 						label="Google Calendar Connection"
 						disabled={loading}
 						sx={{ flex: 1 }}
@@ -757,12 +766,12 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 								{isConnecting ? (
 									<>
 										<CircularProgress size={20} sx={{ mr: 1 }} />
-										Đang kết nối...
+										Connecting...
 									</>
 								) : (
 									<>
 										<Add fontSize="small" sx={{ mr: 1 }} />
-										Thêm kết nối Google Calendar mới
+										Add new connection
 									</>
 								)}
 							</MenuItem>
@@ -793,12 +802,12 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 									{isConnecting ? (
 										<>
 											<CircularProgress size={20} sx={{ mr: 1 }} />
-											Đang kết nối...
+											Connecting...
 										</>
 									) : (
 										<>
 											<Add fontSize="small" sx={{ mr: 1 }} />
-											Thêm kết nối Google Calendar mới
+											Add new connection
 										</>
 									)}
 								</MenuItem>,
@@ -1336,7 +1345,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									updateSettings("questions", newQuestions);
 								}}
 							>
-								Thêm câu hỏi
+								Add question
 							</Button>
 						</Box>
 
@@ -1547,7 +1556,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							value={localSettings.webhookUrl || ""}
 							onChange={(e) => {
 								let value = e.target.value;
-								// Nếu URL không có http/https, thêm https://
 								if (
 									value &&
 									!(value.startsWith("http://") || value.startsWith("https://"))

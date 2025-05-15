@@ -1730,12 +1730,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							<Box
 								key={index}
 								sx={{
-									border: "1px solid #e0e0e0",
-									borderRadius: "4px",
 									p: 2,
 									mb: 2,
-									backgroundColor: "#fafafa",
 								}}
+								className="criteria-info"
 							>
 								<Box
 									sx={{
@@ -1931,9 +1929,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							sx={{
 								mt: 2,
 								p: 2,
-								backgroundColor: "#f5f5f5",
 								borderRadius: "4px",
 							}}
+							className="criteria-info"
 						>
 							<Typography variant="caption" color="text.secondary">
 								Configure criteria to pre-verify leads before further
@@ -2010,17 +2008,23 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 						sx={{ ml: 1 }}
 					/>
 				</Box>
-				<Button
-					variant="contained"
-					color="primary"
-					startIcon={
-						isSaving ? <CircularProgress size={16} color="inherit" /> : <Save />
-					}
-					onClick={handleSaveChanges}
-					disabled={!hasChanges || isSaving}
-				>
-					{isSaving ? "Saving..." : "Save Changes"}
-				</Button>
+				{selectedNode.type !== "deadLead" && (
+					<Button
+						variant="contained"
+						color="primary"
+						startIcon={
+							isSaving ? (
+								<CircularProgress size={16} color="inherit" />
+							) : (
+								<Save />
+							)
+						}
+						onClick={handleSaveChanges}
+						disabled={!hasChanges || isSaving}
+					>
+						{isSaving ? "Saving..." : "Save Changes"}
+					</Button>
+				)}
 			</Box>
 		</PanelContainer>
 	);

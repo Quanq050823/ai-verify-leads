@@ -51,13 +51,13 @@ const GmailConnect: React.FC = () => {
 				>
 					<Box
 						sx={{
-							background: "#efecd287",
 							padding: "35px 25px",
 							textAlign: "center",
 							position: "relative",
 							overflow: "hidden",
 							borderBottom: "1px solid #e0e0e0",
 						}}
+						className="info-card-header"
 					>
 						<Box
 							sx={{
@@ -134,8 +134,8 @@ const GmailConnect: React.FC = () => {
 							flexDirection: "column",
 							alignItems: "center",
 							textAlign: "center",
-							background: "#ffffff",
 						}}
+						className="info-card-content"
 					>
 						{loading ? (
 							<Box

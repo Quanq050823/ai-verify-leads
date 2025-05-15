@@ -52,13 +52,13 @@ const FacebookConnect: React.FC = () => {
 				>
 					<Box
 						sx={{
-							background: "#6bb4ff80",
 							padding: "35px 25px",
 							textAlign: "center",
 							position: "relative",
 							overflow: "hidden",
 							borderBottom: "1px solid #e0e0e0",
 						}}
+						className="info-card-header"
 					>
 						<Box
 							sx={{
@@ -79,8 +79,8 @@ const FacebookConnect: React.FC = () => {
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									viewBox="0 0 48 48"
-									width="50"
-									height="50"
+									width="80"
+									height="80"
 								>
 									<linearGradient
 										id="Ld6sqrtcxMyckEl6xeDdMa"
@@ -137,8 +137,8 @@ const FacebookConnect: React.FC = () => {
 							flexDirection: "column",
 							alignItems: "center",
 							textAlign: "center",
-							background: "#ffffff",
 						}}
+						className="info-card-content"
 					>
 						{loading ? (
 							<Box

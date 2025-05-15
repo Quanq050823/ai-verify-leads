@@ -1590,3 +1590,12 @@ table tfoot tr p {
 .border-custom {
 	border: 1px solid #e5e7eb;
 }
+.criteria-info {
+	background-color: #e9e9e958 !important;
+}
+.info-card-header {
+	background-color: #e9e9e958 !important;
+}
+.info-card-content {
+	background-color: #e9e9e958 !important;
+}

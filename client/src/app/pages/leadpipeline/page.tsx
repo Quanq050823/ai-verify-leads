@@ -613,7 +613,7 @@ export default function LeadPipelinePage() {
 							</Box>
 						) : !selectedFlowId ? (
 							renderNoFlowSelected()
-						) : leads.length === 0 ? (
+						) : columns.length === 0 ? (
 							<Box
 								sx={{
 									display: "flex",
@@ -629,7 +629,7 @@ export default function LeadPipelinePage() {
 									color="text.secondary"
 									sx={{ mb: 1 }}
 								>
-									No leads found for this flow
+									No columns available for this flow
 								</Typography>
 							</Box>
 						) : (

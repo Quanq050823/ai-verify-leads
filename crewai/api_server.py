@@ -4,13 +4,15 @@ import sys
 import json
 import traceback
 
-# Thêm đường dẫn hiện tại vào sys.path để Python có thể tìm thấy các module
+# Add current path to sys.path for module discovery
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.crewai.transcript_analyze_agent import analyze_transcript
 from src.crewai.pre_verify_agent import preverify_lead
+from src.crewai.crews.agent_webscraper.agent_webscraper import WebScraper
 
 app = Flask(__name__)
+web_scraper = WebScraper()
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -25,18 +27,17 @@ def analyze():
     transcript = data['transcript']
     
     try:
-        # Gọi hàm phân tích transcript
+        # Call transcript analysis function
         result = analyze_transcript(customer_prompt, transcript)
         
-        # Kiểm tra xem kết quả đã ở dạng JSON chưa
+        # Check if result is JSON with error
         if isinstance(result, dict) and 'error' in result:
-            # Trả về lỗi với status code 500
             return jsonify(result), 500
         
-        # Trả về kết quả thành công
+        # Return successful result
         return jsonify(result)
     except Exception as e:
-        # Log lỗi chi tiết để debug
+        # Log detailed error for debugging
         error_traceback = traceback.format_exc()
         print(f"Error analyzing transcript: {str(e)}\n{error_traceback}")
         
@@ -58,27 +59,58 @@ def preverify():
     criteria_field = data.get('criteriaField', None)
     
     try:
-        # Chuyển đổi lead_data thành chuỗi JSON nếu nó là đối tượng
+        # Convert lead_data to JSON string if it's an object
         if isinstance(lead_data, dict):
             lead_data = json.dumps(lead_data)
             
-        # Gọi hàm xác minh trước lead
+        # Call lead pre-verification function
         result = preverify_lead(lead_data, criteria_field)
         
-        # Kiểm tra xem kết quả đã ở dạng JSON chưa
+        # Check if result is JSON with error
         if isinstance(result, dict) and 'error' in result:
-            # Trả về lỗi với status code 500
             return jsonify(result), 500
         
-        # Trả về kết quả thành công
+        # Return successful result
         return jsonify(result)
     except Exception as e:
-        # Log lỗi chi tiết để debug
+        # Log detailed error for debugging
         error_traceback = traceback.format_exc()
         print(f"Error preverifying lead: {str(e)}\n{error_traceback}")
         
         return jsonify({
             'error': 'Failed to preverify lead',
+            'message': str(e)
+        }), 500
+
+@app.route('/scrape', methods=['POST'])
+def scrape():
+    data = request.json
+    
+    if not data or 'url' not in data or 'promptCriteria' not in data:
+        return jsonify({
+            'error': 'Missing required fields: url and promptCriteria'
+        }), 400
+    
+    url = data['url']
+    prompt_criteria = data['promptCriteria']
+    
+    try:
+        # Call the scraping and analysis function
+        result = web_scraper.scrape_and_analyze(url, prompt_criteria)
+        
+        # Check if result contains error
+        if isinstance(result, dict) and 'error' in result:
+            return jsonify(result), 500
+        
+        # Return successful result
+        return jsonify(result)
+    except Exception as e:
+        # Log detailed error for debugging
+        error_traceback = traceback.format_exc()
+        print(f"Error scraping and analyzing: {str(e)}\n{error_traceback}")
+        
+        return jsonify({
+            'error': 'Failed to scrape and analyze website',
             'message': str(e)
         }), 500
 
@@ -90,10 +122,11 @@ def health_check():
         'available_endpoints': [
             '/analyze - Transcript analysis',
             '/preverify - Lead pre-verification',
+            '/scrape - Website scraping and analysis',
             '/health - Health check'
         ]
     })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True) 
+    app.run(host='0.0.0.0', port=port) 

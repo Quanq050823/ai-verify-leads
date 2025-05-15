@@ -97,6 +97,8 @@ interface NodeSettings {
 	endWorkDays?: number;
 	startTime?: string;
 	endTime?: string;
+	enableWebScraping?: boolean;
+	webScrapingPrompt?: string;
 	criteria?: Array<{
 		field: string;
 		type: string;
@@ -107,6 +109,7 @@ interface NodeSettings {
 	[key: string]:
 		| string
 		| number
+		| boolean
 		| Array<string>
 		| Array<{ [key: string]: any }>
 		| undefined;
@@ -1040,7 +1043,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
 	const updateSettings = (
 		key: string,
-		value: string | number | Array<string> | Array<{ [key: string]: any }>
+		value:
+			| string
+			| number
+			| boolean
+			| Array<string>
+			| Array<{ [key: string]: any }>
 	) => {
 		const updatedSettings = { ...localSettings, [key]: value };
 		setLocalSettings(updatedSettings);
@@ -1714,6 +1722,40 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 						<Typography variant="subtitle2" gutterBottom>
 							Configure Pre-verification Criteria
 						</Typography>
+
+						<Box sx={{ mt: 2, mb: 3 }}>
+							<FormControlLabel
+								control={
+									<Checkbox
+										checked={localSettings.enableWebScraping || false}
+										onChange={(e) => {
+											updateSettings("enableWebScraping", e.target.checked);
+										}}
+										size="small"
+									/>
+								}
+								label="Enable Web Scraping Verification"
+							/>
+							{localSettings.enableWebScraping && (
+								<TextField
+									fullWidth
+									size="small"
+									label="Web Scraping Prompt"
+									variant="outlined"
+									margin="normal"
+									multiline
+									rows={3}
+									value={localSettings.webScrapingPrompt || ""}
+									onChange={handleTextChange("webScrapingPrompt")}
+									placeholder="Enter prompt for web scraping verification"
+									helperText="This prompt will be used to give criteras for the web scraping verification process"
+								/>
+							)}
+						</Box>
+
+						<Divider sx={{ my: 2 }}>
+							<Chip label="Field Criteria" />
+						</Divider>
 
 						{/* Danh sách các tiêu chí */}
 						{(

@@ -109,9 +109,9 @@ const FlowSelector: React.FC = () => {
 	const getFlowStatusText = (status: number) => {
 		switch (status) {
 			case 1:
-				return "active";
-			case 2:
 				return "inactive";
+			case 2:
+				return "active";
 			default:
 				return "not found";
 		}
@@ -120,9 +120,9 @@ const FlowSelector: React.FC = () => {
 	const getFlowStatusColor = (status: number) => {
 		switch (status) {
 			case 1:
-				return "success";
-			case 2:
 				return "warning";
+			case 2:
+				return "success";
 			default:
 				return "default";
 		}

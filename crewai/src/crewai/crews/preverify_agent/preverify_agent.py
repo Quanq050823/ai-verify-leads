@@ -1,51 +1,62 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
-from crewai.agents.agent_builder.base_agent import BaseAgent
-from typing import List
+from crewai_tools import FileWriterTool
+
+
+
+file_writer_tool_lead_raw_data = FileWriterTool(
+    filename="lead_raw_data_result.txt",
+    directory="preverify_agent",
+)
+
+file_writer_tool_preverify_lead = FileWriterTool(
+    filename="preverify_lead_result.txt",
+    directory="preverify_agent",
+)
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
+
 @CrewBase
-class PreverifyAgent():
-    """PreverifyAgent crew"""
+class PreverifyAgent:
 
-    agents: List[BaseAgent]
-    tasks: List[Task]
+    agents_config = "config/agents.yaml"
+    tasks_config = "config/tasks.yaml"
 
     @agent
-    def researcher(self) -> Agent:
+    def read_lead_data_agent(self) -> Agent:
         return Agent(
-            config=self.agents_config['researcher'], # type: ignore[index]
-            verbose=True
+            config=self.agents_config["read_lead_data_agent"],  # type: ignore[index]
+            tools=[file_writer_tool_lead_raw_data],
         )
-
+    
     @agent
-    def reporting_analyst(self) -> Agent:
+    def preverify_lead_agent(self) -> Agent:
         return Agent(
-            config=self.agents_config['reporting_analyst'], # type: ignore[index]
-            verbose=True
+            config=self.agents_config["preverify_lead_agent"],  # type: ignore[index]
+            tools=[file_writer_tool_preverify_lead],
         )
 
     @task
-    def research_task(self) -> Task:
+    def read_lead(self) -> Task:
         return Task(
-            config=self.tasks_config['research_task'], # type: ignore[index]
+            config=self.tasks_config["read_lead"],  # type: ignore[index]
         )
 
     @task
-    def reporting_task(self) -> Task:
+    def preverify_lead(self) -> Task:
         return Task(
-            config=self.tasks_config['reporting_task'], # type: ignore[index]
-            output_file='report.md'
+            config=self.tasks_config["preverify_lead"],  # type: ignore[index]
         )
 
     @crew
     def crew(self) -> Crew:
-
         return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
+            agents=self.agents,  # Automatically created by the @agent decorator
+            tasks=self.tasks,  # Automatically created by the @task decorator
             process=Process.sequential,
             verbose=True,
         )
+
+

@@ -339,6 +339,7 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			const isMultiOutputNode =
 				sourceNodeId === "condition" ||
 				sourceNodeId === "preverify" ||
+				sourceNodeId === "deadlead" ||
 				sourceNodeId === "aicall";
 
 			// Tạo nhãn cho cạnh dựa trên loại node và handle

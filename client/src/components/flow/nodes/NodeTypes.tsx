@@ -112,11 +112,12 @@ export const DeadLeadNode = memo(({ data, selected, id }: any) => {
 		<BaseNode
 			data={{
 				...data,
-				label: "Dead Lead",
+				label: "Check Dead Lead",
 				icon: <ReportProblem fontSize="small" />,
 				type: "Process",
 				subType: "Flow",
 				color: "#ef4444",
+				outputs: 2,
 			}}
 			selected={selected}
 			id={id}

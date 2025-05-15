@@ -11,6 +11,7 @@ import {
 	Phone,
 	Settings,
 	ErrorOutline,
+	ReportProblem,
 } from "@mui/icons-material";
 
 // Lead Input Nodes
@@ -64,6 +65,7 @@ export const AICallNode = memo(({ data, selected, id }: any) => {
 				type: "Process",
 				subType: "AI",
 				color: "#10B981",
+
 				outputs: 2,
 			}}
 			selected={selected}
@@ -99,6 +101,22 @@ export const WebhookNode = memo(({ data, selected, id }: any) => {
 				type: "Process",
 				subType: "API",
 				color: "#8B5CF6",
+			}}
+			selected={selected}
+			id={id}
+		/>
+	);
+});
+export const DeadLeadNode = memo(({ data, selected, id }: any) => {
+	return (
+		<BaseNode
+			data={{
+				...data,
+				label: "Dead Lead",
+				icon: <ReportProblem fontSize="small" />,
+				type: "Process",
+				subType: "Flow",
+				color: "#ef4444",
 			}}
 			selected={selected}
 			id={id}

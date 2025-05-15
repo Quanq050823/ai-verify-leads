@@ -113,6 +113,7 @@ const getNodeTypeFromId = (nodeId: string): string => {
 	if (basePart.includes("google") && basePart.includes("calendar"))
 		return "googleCalendar";
 	if (basePart.includes("webhook")) return "sendWebhook";
+	if (basePart.includes("deadLead")) return "deadLead";
 	if (basePart.includes("condition") || basePart.includes("verification"))
 		return "condition";
 	if (basePart.includes("aicall") || basePart.includes("call")) return "aiCall";

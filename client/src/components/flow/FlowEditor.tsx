@@ -57,6 +57,7 @@ import {
 	ConfigNode,
 	ErrorNode,
 	FacebookLeadAdsNode,
+	DeadLeadNode,
 } from "./nodes/NodeTypes";
 import { CustomEdgeData } from "./edges/CustomEdge";
 import { getFlowById, createFlow, updateFlow } from "@/services/flowServices";
@@ -129,6 +130,7 @@ const nodeTypes = {
 	googleCalendar: CalendarNode,
 	sendWebhook: WebhookNode,
 	condition: ConditionNode,
+	deadLead: DeadLeadNode,
 	preVerify: ConditionNode,
 	email: EmailNode,
 	sms: SMSNode,
@@ -275,6 +277,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Google Calendar";
 			case "sendWebhook":
 				return "Send to webhook";
+			case "deadLead":
+				return "Dead Lead";
 			case "condition":
 				return "Condition";
 			case "preVerify":
@@ -306,6 +310,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Schedule appointments";
 			case "sendWebhook":
 				return "Send lead data to a webhook";
+			case "deadLead":
+				return "Handle dead leads in the flow";
 			case "condition":
 				return "Branch based on conditions";
 			case "preVerify":

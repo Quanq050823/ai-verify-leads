@@ -12,6 +12,7 @@ import {
 	ErrorOutline,
 	Layers,
 	VerifiedUser,
+	ReportProblem,
 } from "@mui/icons-material";
 
 // Function to determine the icon for a node type
@@ -27,6 +28,8 @@ export const getNodeIcon = (key: string) => {
 			return <CalendarMonth fontSize="small" />;
 		case "sendWebhook":
 			return <Webhook fontSize="small" />;
+		case "deadLead":
+			return <ReportProblem fontSize="small" />;
 		case "condition":
 		case "preVerify":
 			return <CallSplit fontSize="small" />;
@@ -58,6 +61,8 @@ export const getNodeColor = (key: string) => {
 			return "#4285f4";
 		case "sendWebhook":
 			return "#8b5cf6";
+		case "deadLead":
+			return "#ef4444";
 		case "condition":
 		case "preVerify":
 			return "#f59e0b";

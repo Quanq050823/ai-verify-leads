@@ -104,7 +104,6 @@ interface NodeSettings {
 		type: string;
 		operator: string;
 		value: string | boolean | number;
-		mustMet: boolean;
 	}>;
 	[key: string]:
 		| string
@@ -1010,14 +1009,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							type: "email",
 							operator: "isValid",
 							value: "",
-							mustMet: true,
 						},
 						{
 							field: "phone",
 							type: "phone",
 							operator: "isValid",
 							value: "",
-							mustMet: true,
 						},
 					],
 				};
@@ -1748,7 +1745,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									type: "string",
 									operator: "equals",
 									value: "",
-									mustMet: true,
 								},
 							]
 						).map((criterion, index) => (
@@ -1908,24 +1904,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 										}
 									/>
 								)}
-
-								<FormControlLabel
-									control={
-										<Checkbox
-											checked={criterion.mustMet}
-											onChange={(e) => {
-												const newCriteria = [...(localSettings.criteria || [])];
-												newCriteria[index] = {
-													...newCriteria[index],
-													mustMet: e.target.checked,
-												};
-												updateSettings("criteria", newCriteria);
-											}}
-											size="small"
-										/>
-									}
-									label="Must be met for verification to succeed"
-								/>
 							</Box>
 						))}
 
@@ -1943,7 +1921,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 											type: "string",
 											operator: "equals",
 											value: "",
-											mustMet: true,
 										},
 									];
 									updateSettings("criteria", newCriteria);
@@ -1964,8 +1941,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							<Typography variant="caption" color="text.secondary">
 								Configure criteria to pre-verify leads before further
 								processing. Each criteria evaluates a field against the
-								specified value based on its data type and chosen operator. You
-								can mark criteria as "must be met" for essential requirements.
+								specified value based on its data type and chosen operator.
 							</Typography>
 						</Box>
 					</>

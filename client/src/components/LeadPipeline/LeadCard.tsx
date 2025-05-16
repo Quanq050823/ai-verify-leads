@@ -64,6 +64,32 @@ const getStatusText = (status: number) => {
 	}
 };
 
+const getVerificationStatusColor = (status: number) => {
+	switch (status) {
+		case 0:
+			return "#9E9E9E"; // None - Gray
+		case 1:
+			return "#FF5722"; // Unqualified - Orange/Red
+		case 2:
+			return "#4CAF50"; // Qualified - Green
+		default:
+			return "#9E9E9E"; // Default - Gray
+	}
+};
+
+const getVerificationStatusText = (status: number) => {
+	switch (status) {
+		case 0:
+			return "Not Verified";
+		case 1:
+			return "Unqualified";
+		case 2:
+			return "Qualified";
+		default:
+			return "Unknown";
+	}
+};
+
 const getInitials = (name: string) => {
 	return name
 		? name
@@ -363,6 +389,81 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 						</Box>
 					)}
 
+					{/* Modern verification status indicator */}
+					{lead.isVerified && (
+						<Box
+							sx={{
+								my: 1,
+								py: 0.5,
+								px: 1,
+								borderRadius: "6px",
+								backgroundColor: `${getVerificationStatusColor(
+									lead.isVerified.status
+								)}10`,
+								border: `1px solid ${getVerificationStatusColor(
+									lead.isVerified.status
+								)}30`,
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
+							}}
+						>
+							<Box
+								sx={{
+									width: 6,
+									height: 6,
+									borderRadius: "50%",
+									bgcolor: getVerificationStatusColor(lead.isVerified.status),
+									boxShadow: `0 0 0 2px ${getVerificationStatusColor(
+										lead.isVerified.status
+									)}20`,
+								}}
+							/>
+							<Typography
+								variant="caption"
+								sx={{
+									color: getVerificationStatusColor(lead.isVerified.status),
+									fontWeight: 600,
+									fontSize: "0.7rem",
+									letterSpacing: "0.2px",
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+								}}
+							>
+								{getVerificationStatusText(lead.isVerified.status)}
+							</Typography>
+						</Box>
+					)}
+
+					{/* Verification message if available */}
+					{lead.isVerified && lead.isVerified.message && (
+						<Box
+							sx={{
+								mt: -0.5,
+								mb: 1,
+								ml: 0.5,
+							}}
+						>
+							<Typography
+								variant="caption"
+								sx={{
+									color: `${getVerificationStatusColor(
+										lead.isVerified.status
+									)}99`, // 60% opacity of the status color
+									fontSize: "0.7rem",
+									display: "-webkit-box",
+									WebkitLineClamp: 2,
+									WebkitBoxOrient: "vertical",
+									overflow: "hidden",
+									lineHeight: 1.4,
+								}}
+							>
+								{lead.isVerified.message}
+							</Typography>
+						</Box>
+					)}
+
 					<Box
 						sx={{
 							display: "flex",
@@ -419,16 +520,30 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 								Updated {timeAgo}
 							</Typography>
 						</Box>
-						<Chip
-							label={getStatusText(lead.status)}
-							size="small"
-							sx={{
-								ml: "auto",
-								bgcolor: `${getStatusColor(lead.status)}20`,
-								color: getStatusColor(lead.status),
-								fontWeight: "bold",
-							}}
-						/>
+						<Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
+							{lead.isVerified && (
+								<Chip
+									label={getVerificationStatusText(lead.isVerified.status)}
+									size="small"
+									sx={{
+										bgcolor: `${getVerificationStatusColor(
+											lead.isVerified.status
+										)}20`,
+										color: getVerificationStatusColor(lead.isVerified.status),
+										fontWeight: "bold",
+									}}
+								/>
+							)}
+							<Chip
+								label={getStatusText(lead.status)}
+								size="small"
+								sx={{
+									bgcolor: `${getStatusColor(lead.status)}20`,
+									color: getStatusColor(lead.status),
+									fontWeight: "bold",
+								}}
+							/>
+						</Box>
 					</Box>
 				</DialogTitle>
 				<DialogContent dividers sx={{ p: 0 }}>
@@ -803,6 +918,47 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 									</Grid>
 								</Grid>
 							</Paper>
+
+							{lead.isVerified && lead.isVerified.status > 0 && (
+								<Paper
+									elevation={0}
+									sx={{
+										mt: 3,
+										p: 2.5,
+										borderRadius: "12px",
+										border: `1px solid ${
+											lead.isVerified.status === 2 ? "#C8E6C9" : "#FFCCBC"
+										}`,
+										bgcolor:
+											lead.isVerified.status === 2 ? "#F1F8E9" : "#FBE9E7",
+									}}
+									className="column-header"
+								>
+									<Typography
+										variant="subtitle1"
+										color={
+											lead.isVerified.status === 2
+												? "success.main"
+												: "warning.main"
+										}
+										fontWeight={600}
+										gutterBottom
+									>
+										Verification Information
+									</Typography>
+									<Box sx={{ mt: 1 }}>
+										<Typography variant="body2">
+											Status:{" "}
+											{getVerificationStatusText(lead.isVerified.status)}
+										</Typography>
+										{lead.isVerified.message && (
+											<Typography variant="body2" sx={{ mt: 1 }}>
+												Message: {lead.isVerified.message}
+											</Typography>
+										)}
+									</Box>
+								</Paper>
+							)}
 
 							{lead.error && lead.error.status && (
 								<Paper

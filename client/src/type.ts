@@ -46,7 +46,10 @@ export type Lead = {
 	flowId: string;
 	source: string;
 	status: number;
-	isVerified?: number;
+	isVerified: {
+		status: number;
+		message?: string;
+	};
 	leadData: LeadData;
 	nodeId: string;
 	label?: string;

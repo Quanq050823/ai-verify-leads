@@ -2,6 +2,15 @@ from celery import Task
 
 from utils.dbUtils import *
 import traceback
+import requests
+
+# Map node names to human-readable descriptions
+NODE_TASK_NAMES = {
+    "tasks.preVerify": "Pre-verify",
+    "tasks.aiCall": "Lead call",
+    "tasks.googleCalendar": "Google Calendar",
+    "tasks.sendWebhook": "Send webhook",
+}
 
 
 class BaseTaskHandler(Task):
@@ -18,11 +27,19 @@ class BaseTaskHandler(Task):
         if is_not_finished:
             if "aiCall" not in self.name:
                 update_lead_status_and_current_node(data['leadId'], 3, data["targetNode"])
+                if retval.get("isPublish", False):
+                    response = requests.post("http://127.0.0.1:3001/api/lead/publish", json={
+                        "userId": data['userId'],
+                        "leadId": data['leadId'],
+                        "result": retval["result"],
+                        "isRetry": False,
+                    })
+                    print(f"Publish lead to next node... {response.json()}")
+
             print(f"Task {self.name} succeeded. Flow continue.")
             print("-" * 50)  # Print a horizontal line of 50 dashes
         else:
             if "aiCall" not in self.name:
-                print("Update lead status to 9")
                 update_lead_status_and_current_node(data['leadId'], 9, data["targetNode"])
             print(f"Task {self.name} succeeded. Flow finished.")
 
@@ -47,7 +64,7 @@ class BaseTaskHandler(Task):
             "status": 0,
             "error": {
                 "status": True,
-                "message": (f"Task {self.name} failed: {exc}"),
+                "message": (f"Task {NODE_TASK_NAMES.get('self.name')} occurred an error when executing."),
                 "taskId": task_id,
                 "stackTrace": tb_string[:5000]
             },

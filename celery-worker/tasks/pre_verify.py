@@ -3,7 +3,7 @@ from db import get_mongo_client
 from utils.dbUtils import *
 import requests
 import json
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import Config
 from tasks.base_tasks_handler import BaseTaskHandler
@@ -33,10 +33,9 @@ def check_url(url):
             {
                 "role": "system",
                 "content": """
-                            You are a content safety analysis assistant. 
-                            You will verify the validity of URLs and determine 
-                            if they contain any sensitive content. Return the content 
-                            in JSON with the format:
+                            You are a content safety analysis assistant. You will verify 
+                            the validity of URLs and determine if they contain any sensitive content. 
+                            Return the content in JSON with the format:
                             {
                                 "isValid": true/false, 
                                 "reason": "tell the specific reason in less than 10 words"
@@ -45,7 +44,7 @@ def check_url(url):
             },
             {
                 "role": "user",
-                "content": f"Check the following URL: {url}. Tell me if it is valid and if it contains any sensitive content."
+                "content": f"Check the following URL: {url}."
             }
         ]
     }
@@ -65,48 +64,90 @@ def pre_verify(self, message):
     try:
         print(f"Received message: {message}")
 
+        # Get required data
         settings = get_node_settings(message)
         lead = get_lead(message)
 
+        # Validate criteria exists
         criteria = settings.get("criteria")
         if not criteria:
             print("No criteria found in settings.")
             raise ValueError("No criteria found in settings.")
 
-        verifyFieldBody = {
+        # Prepare request payloads
+        verify_field_body = {
             "leadData": json.dumps(lead['leadData']),
             "criteriaField": json.dumps(criteria),
         }
 
-        scrapeBody = {
-            "url": lead['leadData']['custom_fields']['website_link'],
-            "promptCriteria": settings['webScrapingPrompt'],
+        website_url = lead['leadData']['custom_fields'].get('website_link')
+        scrape_body = {
+            "url": website_url,
+            "promptCriteria": settings.get('webScrapingPrompt', ''),
         }
 
-        fieldResponse, scrapeResponse = {}, {}
+        # Initialize response containers
+        field_response = {"pass": False}
+        scrape_response = {"pass": True}
+
         # Using ThreadPoolExecutor to run requests concurrently
         with ThreadPoolExecutor() as executor:
-            # Submit both API requests
-            if lead['leadData']['custom_fields']['website_link']:
-                check = check_url(lead['leadData']['custom_fields']['website_link'])
-                print("Check URL API:", check)
-                if check["isValid"] == False:
-                    return {'status': False, "reason": check["reason"]}
-                scrape = executor.submit(
-                    make_post_request, "http://127.0.0.1:5000/scrape", scrapeBody)
-                scrapeResponse = scrape.result()
+            futures = []
 
-            fieldVerify = executor.submit(
-                make_post_request, "http://127.0.0.1:5000/preverify", verifyFieldBody)
-            fieldResponse = fieldVerify.result()
+            # Always submit field verification request
+            field_verify_future = executor.submit(
+                make_post_request,
+                "http://127.0.0.1:5000/preverify",
+                verify_field_body
+            )
+            futures.append(field_verify_future)
 
-            print("Field verify API:", fieldResponse)
-            print("Response from web scraping API:", scrapeResponse)
+            # Only process website if URL exists
+            scrape_future = None
+            if settings.get("enableWebScraping"):
+                # Validate URL first
+                check_result = check_url(website_url)
+                print(f"Check URL API: {check_result}")
 
-        return fieldResponse['pass'] and scrapeResponse['pass']
+                if not check_result.get("isValid", False):
+                    # Update lead with invalid URL status
+                    update_lead(
+                        lead['_id'],
+                        {
+                            "isVerified": {
+                                "status": 1,
+                                "message": f"Invalid URL: {check_result.get('reason', 'Unknown error')}"
+                            },
+                        }
+                    )
+                    return {'status': False, "reason": check_result.get("reason", "Invalid URL")}
+
+                # URL is valid, submit scraping request
+                scrape_future = executor.submit(
+                    make_post_request,
+                    "http://127.0.0.1:5000/scrape",
+                    scrape_body
+                )
+                futures.append(scrape_future)
+
+            # Wait for all requests to complete
+            for future in as_completed(futures):
+                if future == field_verify_future:
+                    field_response = future.result()
+                elif future == scrape_future:
+                    scrape_response = future.result()
+
+        # Log responses for debugging
+        print(f"Field verify API: {field_response}")
+        print(f"Response from web scraping API: {scrape_response}")
+
+        # Return True only if both checks pass
+        return {"result":  field_response.get('pass', False) and scrape_response.get('pass', True),
+                "isPublish": True, }
+
     except Exception as e:
-        print("Error calling external API:", str(e))
+        print(f"Error in pre_verify task: {str(e)}")
         if self.request.retries < self.max_retries:
-            countdown = 5  # Retry after 5 seconds
+            countdown = 5 * (self.request.retries + 1)  # Exponential backoff
             raise self.retry(exc=e, countdown=countdown)
-        raise
+        raise  # Re-raise if max retries exceeded

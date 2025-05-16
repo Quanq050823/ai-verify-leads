@@ -560,6 +560,9 @@ const WebhookDialog: React.FC<WebhookDialogProps> = ({
 									label="Facebook App ID"
 									type="text"
 									fullWidth
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={appId}
 									onChange={(e) => setAppId(e.target.value)}
 								/>
@@ -1169,6 +1172,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Spreadsheet ID"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.spreadsheetId || ""}
 							onChange={handleTextChange("spreadsheetId")}
 							placeholder="Enter spreadsheet ID"
@@ -1179,6 +1185,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Sheet Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.sheetName || ""}
 							onChange={handleTextChange("sheetName")}
 							placeholder="Enter sheet name"
@@ -1251,7 +1260,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Prompt"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.prompt || ""}
 							onChange={handleTextChange("prompt")}
 							placeholder="Enter prompt"
@@ -1264,7 +1274,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.introduction || ""}
 							onChange={handleTextChange("introduction")}
 							placeholder="Enter introduction message"
@@ -1287,6 +1298,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									size="small"
 									label={`Question ${index + 1}`}
 									variant="outlined"
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={question}
 									onChange={(e) => {
 										const newQuestions = [...(localSettings.questions || [""])];
@@ -1339,7 +1353,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.goodByeMessage || ""}
 							onChange={handleTextChange("goodByeMessage")}
 							placeholder="Enter goodbye message"
@@ -1361,6 +1376,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Calendar Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.calendarName || ""}
 							onChange={handleTextChange("calendarName")}
 							placeholder="Enter calendar name"
@@ -1373,6 +1391,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Event Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.eventName || ""}
 							onChange={handleTextChange("eventName")}
 							placeholder="Enter event name"
@@ -1536,6 +1557,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Webhook URL"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.webhookUrl || ""}
 							onChange={(e) => {
 								let value = e.target.value;
@@ -1563,6 +1587,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Condition Field"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.field || ""}
 							onChange={handleTextChange("field")}
 							placeholder="Enter field name"
@@ -1587,6 +1614,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Value"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.value || ""}
 							onChange={handleTextChange("value")}
 							placeholder="Enter value to compare"
@@ -1615,6 +1645,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Subject Template"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.subject || ""}
 							onChange={handleTextChange("subject")}
 							placeholder="Enter email subject"
@@ -1626,7 +1659,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={3}
+							minRows={3}
+							maxRows={10}
 							value={localSettings.template || ""}
 							onChange={handleTextChange("template")}
 							placeholder="Enter email template"
@@ -1655,7 +1689,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={3}
+							minRows={3}
+							maxRows={10}
 							value={localSettings.template || ""}
 							onChange={handleTextChange("template")}
 							placeholder="Enter SMS template"
@@ -1691,7 +1726,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									variant="outlined"
 									margin="normal"
 									multiline
-									rows={3}
+									minRows={3}
+									maxRows={10}
 									value={localSettings.webScrapingPrompt || ""}
 									onChange={handleTextChange("webScrapingPrompt")}
 									placeholder="Enter prompt for web scraping verification"
@@ -1755,6 +1791,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									label="Field"
 									variant="outlined"
 									margin="normal"
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={criterion.field || ""}
 									onChange={(e) => {
 										const newCriteria = [...(localSettings.criteria || [])];

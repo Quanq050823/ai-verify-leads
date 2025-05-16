@@ -53,8 +53,8 @@ export const getLeadByNodes = async (userId, flowId) => {
                 continue;
             }
 
-            if (lead.isVerified == 2) qualifiedLeads.push(lead);
-            else if (lead.isVerified == 1) unqualifiedLeads.push(lead);
+            if (lead.isVerified.status == 2) qualifiedLeads.push(lead);
+            else if (lead.isVerified.status == 1) unqualifiedLeads.push(lead);
             else if (lead.status == 9) unqualifiedLeads.push(lead);
             else inProgressLeads.push(lead);
         }

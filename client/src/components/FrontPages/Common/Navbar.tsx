@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { CheckCookieServices } from "@/services/AuthServices";
-import { Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import DarkMode from "@/components/Layout/ControlPanel/DarkMode";
 import ThemeButton from "./ThemeButton/ThemeButton";
 
@@ -36,13 +36,13 @@ const Navbar: React.FC = () => {
 					<nav className="navbar navbar-expand-lg">
 						<Box className="navbar-logo"></Box>
 
-						<button className="navbar-toggler">
+						<Button className="navbar-toggler">
 							<span className="burger-menu" onClick={handleToggleNavbar}>
 								<span className="top-bar"></span>
 								<span className="middle-bar"></span>
 								<span className="bottom-bar"></span>
 							</span>
-						</button>
+						</Button>
 						<div className="other-options">
 							<Box
 								component="div"

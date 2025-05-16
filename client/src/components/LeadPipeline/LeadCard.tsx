@@ -516,33 +516,43 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 							<Typography variant="h6" sx={{ fontWeight: 600 }}>
 								{leadName}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Updated {timeAgo}
-							</Typography>
 						</Box>
-						<Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
-							{lead.isVerified && (
-								<Chip
-									label={getVerificationStatusText(lead.isVerified.status)}
-									size="small"
+						<Box
+							sx={{ ml: "auto", display: "flex", gap: 1, alignItems: "center" }}
+						>
+							<Tooltip title={`Source: ${lead.source || "Unknown"}`}>
+								<Box
 									sx={{
-										bgcolor: `${getVerificationStatusColor(
-											lead.isVerified.status
-										)}20`,
-										color: getVerificationStatusColor(lead.isVerified.status),
-										fontWeight: "bold",
+										bgcolor: `${getSourceColor(lead.source || "")}20`,
+										color: getSourceColor(lead.source || ""),
+										width: 32,
+										height: 32,
+										borderRadius: "50%",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
 									}}
-								/>
-							)}
-							<Chip
-								label={getStatusText(lead.status)}
-								size="small"
-								sx={{
-									bgcolor: `${getStatusColor(lead.status)}20`,
-									color: getStatusColor(lead.status),
-									fontWeight: "bold",
-								}}
-							/>
+								>
+									{getSourceIcon(lead.source || "")}
+								</Box>
+							</Tooltip>
+
+							<Tooltip title={`Node Type: ${nodeType}`}>
+								<Box
+									sx={{
+										bgcolor: `${nodeColor}20`,
+										color: nodeColor,
+										width: 32,
+										height: 32,
+										borderRadius: "50%",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									{getNodeIcon(nodeType)}
+								</Box>
+							</Tooltip>
 						</Box>
 					</Box>
 				</DialogTitle>
@@ -999,6 +1009,13 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 					)}
 				</DialogContent>
 				<DialogActions sx={{ p: 2 }} className="column-header">
+					<Typography
+						variant="caption"
+						color="text.secondary"
+						sx={{ marginRight: "auto", marginLeft: "10px" }}
+					>
+						Updated {timeAgo}
+					</Typography>
 					{onDelete && (
 						<Button
 							startIcon={<DeleteIcon />}

@@ -23,7 +23,7 @@ export default (app) => {
     app.use("/api/hooks", webhookRoute);
     app.use("/api/flow", authenticate, flowRoute);
     app.use("/api/nodeType", nodeTypeRoute);
-    app.use("/api/lead", authenticate, leadRoute);
+    app.use("/api/lead", leadRoute);
     app.use("/api/facebook", facebookRoute);
     app.use("/api/user", authenticate, userRoute);
     app.use("/api/calendar", calendarRoute);

@@ -958,26 +958,30 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	useEffect(() => {
 		if (selectedNode) {
 			const nodeSettings = selectedNode.data?.settings || {};
+			let defaultSettingsApplied = false;
+			let defaultSettings = {};
 
 			// Khởi tạo giá trị mặc định cho node aiCall mới
 			if (
 				selectedNode.type === "aiCall" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					language: "english",
 					prompt: "",
 					introduction: "",
 					questions: [""],
 					goodByeMessage: "",
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node googleCalendar mới
 			else if (
 				selectedNode.type === "googleCalendar" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					calendarName: "",
 					eventName: "",
 					startWorkDays: 0,
@@ -985,14 +989,16 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 					startTime: "09:00",
 					endTime: "17:00",
 					duration: 30,
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node preVerify mới
 			else if (
 				selectedNode.type === "preVerify" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					enableWebScraping: false,
 					webScrapingPrompt: "",
 					criteria: [
@@ -1011,37 +1017,53 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							mustMet: true,
 						},
 					],
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node Facebook Lead Ads mới
 			else if (
 				selectedNode.type === "facebookLeadAds" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					connection: "",
 					pageId: "",
 					formId: "",
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node webhook mới
 			else if (
 				selectedNode.type === "sendWebhook" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					webhookUrl: "",
 					method: "POST",
 					headers: "{}",
 					timeout: 30,
 					retryCount: 3,
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			} else {
 				setLocalSettings(nodeSettings as NodeSettings);
 			}
+
+			// Nếu đã áp dụng giá trị mặc định, tự động cập nhật node data
+			if (defaultSettingsApplied) {
+				// Cập nhật node data với giá trị mặc định
+				onChange(selectedNode.id, {
+					...selectedNode.data,
+					settings: defaultSettings,
+				});
+			}
+
 			setHasChanges(false);
 		}
-	}, [selectedNode]);
+	}, [selectedNode, onChange]);
 
 	const updateSettings = (
 		key: string,

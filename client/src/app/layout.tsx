@@ -32,6 +32,10 @@ import { FlowProvider } from "@/context/FlowContext";
 export const metadata = {
 	title: "Sine | AI Lead Verify Lead Automation Website",
 	description: "AI Lead Verify Lead Automation Website",
+	icons: {
+		icon: "/images/Sine_logo_icon.png",
+		apple: "/images/Sine_logo_icon.png",
+	},
 };
 
 export default function RootLayout(props: { children: React.ReactNode }) {

@@ -1156,56 +1156,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			updateSettings(key, parseInt(event.target.value) || 0);
 		};
 
-	// Add the function to handle test call
-	const handleTestCall = async () => {
-		if (!localSettings.phoneNumber || !localSettings.callerNumber) {
-			toast.error("Vui lòng nhập số điện thoại và số người gọi!");
-			return;
-		}
-
-		// Tạo attribute dựa trên các trường mới
-		let attribute = {
-			language: localSettings.language || "vietnamese",
-			prompt: localSettings.prompt || "",
-			introduction: localSettings.introduction || "",
-			questions: localSettings.questions || [""],
-			goodByeMessage: localSettings.goodByeMessage || "",
-		};
-
-		// Nếu có attributeJson, sử dụng nó thay thế
-		if (localSettings.attributeJson) {
-			try {
-				attribute = JSON.parse(localSettings.attributeJson);
-			} catch (error) {
-				toast.error("Lỗi định dạng JSON cho trường attribute!");
-				return;
-			}
-		}
-
-		try {
-			setIsTestingCall(true);
-			const leadData: LeadData = {
-				phoneNumber: localSettings.phoneNumber || "",
-				callerId: "",
-				callerNumber: localSettings.callerNumber || "",
-				attribute: attribute,
-				outreachType: "phonecall",
-				ExtendData: {},
-			};
-
-			const result = await callLead(leadData);
-			setCallResult(result);
-			setOpenCallResultDialog(true);
-		} catch (error) {
-			console.error("Error testing call:", error);
-			toast.error("Lỗi khi thực hiện cuộc gọi thử nghiệm!");
-		} finally {
-			setIsTestingCall(false);
-		}
-	};
-
 	const renderSettings = () => {
-		// Different node types have different settings
 		const nodeType = selectedNode.type || "default";
 
 		switch (nodeType) {
@@ -1600,34 +1551,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							required
 							helperText="The URL where lead data will be sent"
 						/>
-
-						{/* <FormControl fullWidth margin="normal" size="small">
-							<InputLabel>Method</InputLabel>
-							<Select
-								value={localSettings.method || "POST"}
-								onChange={handleSelectChange("method")}
-								label="Method"
-							>
-								<MenuItem value="GET">GET</MenuItem>
-								<MenuItem value="POST">POST</MenuItem>
-								<MenuItem value="PUT">PUT</MenuItem>
-								<MenuItem value="PATCH">PATCH</MenuItem>
-							</Select>
-						</FormControl>
-
-						<TextField
-							fullWidth
-							size="small"
-							label="Headers (JSON)"
-							variant="outlined"
-							margin="normal"
-							multiline
-							rows={2}
-							value={localSettings.headers || "{}"}
-							onChange={handleTextChange("headers")}
-							placeholder="Enter headers in JSON format"
-							helperText='Example: {"Content-Type": "application/json", "Authorization": "Bearer token"}'
-						/> */}
 					</>
 				);
 

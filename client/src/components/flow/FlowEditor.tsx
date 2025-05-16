@@ -455,7 +455,102 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 	const onSave = useCallback(() => {
 		if (reactFlowInstance) {
 			setLoading(true);
-			const flowData = reactFlowInstance.toObject();
+			let flowData = reactFlowInstance.toObject();
+
+			// Khởi tạo giá trị mặc định cho các node chưa có settings
+			const updatedNodes = flowData.nodes.map((node: any) => {
+				// Nếu node chưa có settings hoặc settings rỗng
+				if (
+					!node.data?.settings ||
+					Object.keys(node.data.settings).length === 0
+				) {
+					let defaultSettings = {};
+
+					// Thiết lập giá trị mặc định tùy theo loại node
+					switch (node.type) {
+						case "aiCall":
+							defaultSettings = {
+								language: "english",
+								prompt: "",
+								introduction: "",
+								questions: [""],
+								goodByeMessage: "",
+							};
+							break;
+						case "googleCalendar":
+							defaultSettings = {
+								calendarName: "",
+								eventName: "",
+								startWorkDays: 0,
+								endWorkDays: 4,
+								startTime: "09:00",
+								endTime: "17:00",
+								duration: 30,
+							};
+							break;
+						case "preVerify":
+							defaultSettings = {
+								enableWebScraping: false,
+								webScrapingPrompt: "",
+								criteria: [
+									{
+										field: "email",
+										type: "email",
+										operator: "isValid",
+										value: "",
+										mustMet: true,
+									},
+									{
+										field: "phone",
+										type: "phone",
+										operator: "isValid",
+										value: "",
+										mustMet: true,
+									},
+								],
+							};
+							break;
+						case "facebookLeadAds":
+							defaultSettings = {
+								connection: "",
+								pageId: "",
+								formId: "",
+							};
+							break;
+						case "sendWebhook":
+							defaultSettings = {
+								webhookUrl: "",
+								method: "POST",
+								headers: "{}",
+								timeout: 30,
+								retryCount: 3,
+							};
+							break;
+						default:
+							// Không có giá trị mặc định cho các loại node khác
+							break;
+					}
+
+					// Chỉ cập nhật settings nếu có giá trị mặc định
+					if (Object.keys(defaultSettings).length > 0) {
+						return {
+							...node,
+							data: {
+								...node.data,
+								settings: defaultSettings,
+							},
+						};
+					}
+				}
+				return node;
+			});
+
+			// Cập nhật flowData với các nodes đã được cập nhật settings
+			flowData = {
+				...flowData,
+				nodes: updatedNodes,
+			};
+
 			localStorage.setItem("flow-data", JSON.stringify(flowData));
 
 			// Lưu flow vào cơ sở dữ liệu

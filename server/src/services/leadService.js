@@ -55,6 +55,7 @@ export const getLeadByNodes = async (userId, flowId) => {
 
             if (lead.isVerified == 2) qualifiedLeads.push(lead);
             else if (lead.isVerified == 1) unqualifiedLeads.push(lead);
+            else if (lead.status == 9) unqualifiedLeads.push(lead);
             else inProgressLeads.push(lead);
         }
 
@@ -192,7 +193,19 @@ export const publishLead = async (
             })
         );
 
-        return flow;
+        return { message: "Lead published successfully." };
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const publishByApi = async (userId, leadId, result, isRetry) => {
+    try {
+        let lead = await Lead.findOne({ _id: getObjectId(leadId), userId: getObjectId(userId) });
+        if (!lead) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Lead not found.");
+        }
+        return await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], result, isRetry);
     } catch (error) {
         throw error;
     }

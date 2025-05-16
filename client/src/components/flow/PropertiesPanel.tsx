@@ -560,6 +560,9 @@ const WebhookDialog: React.FC<WebhookDialogProps> = ({
 									label="Facebook App ID"
 									type="text"
 									fullWidth
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={appId}
 									onChange={(e) => setAppId(e.target.value)}
 								/>
@@ -958,26 +961,30 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	useEffect(() => {
 		if (selectedNode) {
 			const nodeSettings = selectedNode.data?.settings || {};
+			let defaultSettingsApplied = false;
+			let defaultSettings = {};
 
 			// Khởi tạo giá trị mặc định cho node aiCall mới
 			if (
 				selectedNode.type === "aiCall" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					language: "english",
 					prompt: "",
 					introduction: "",
 					questions: [""],
 					goodByeMessage: "",
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node googleCalendar mới
 			else if (
 				selectedNode.type === "googleCalendar" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					calendarName: "",
 					eventName: "",
 					startWorkDays: 0,
@@ -985,14 +992,18 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 					startTime: "09:00",
 					endTime: "17:00",
 					duration: 30,
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node preVerify mới
 			else if (
 				selectedNode.type === "preVerify" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
+					enableWebScraping: false,
+					webScrapingPrompt: "",
 					criteria: [
 						{
 							field: "email",
@@ -1009,37 +1020,53 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							mustMet: true,
 						},
 					],
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node Facebook Lead Ads mới
 			else if (
 				selectedNode.type === "facebookLeadAds" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					connection: "",
 					pageId: "",
 					formId: "",
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node webhook mới
 			else if (
 				selectedNode.type === "sendWebhook" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					webhookUrl: "",
 					method: "POST",
 					headers: "{}",
 					timeout: 30,
 					retryCount: 3,
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			} else {
 				setLocalSettings(nodeSettings as NodeSettings);
 			}
+
+			// Nếu đã áp dụng giá trị mặc định, tự động cập nhật node data
+			if (defaultSettingsApplied) {
+				// Cập nhật node data với giá trị mặc định
+				onChange(selectedNode.id, {
+					...selectedNode.data,
+					settings: defaultSettings,
+				});
+			}
+
 			setHasChanges(false);
 		}
-	}, [selectedNode]);
+	}, [selectedNode, onChange]);
 
 	const updateSettings = (
 		key: string,
@@ -1132,56 +1159,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			updateSettings(key, parseInt(event.target.value) || 0);
 		};
 
-	// Add the function to handle test call
-	const handleTestCall = async () => {
-		if (!localSettings.phoneNumber || !localSettings.callerNumber) {
-			toast.error("Vui lòng nhập số điện thoại và số người gọi!");
-			return;
-		}
-
-		// Tạo attribute dựa trên các trường mới
-		let attribute = {
-			language: localSettings.language || "vietnamese",
-			prompt: localSettings.prompt || "",
-			introduction: localSettings.introduction || "",
-			questions: localSettings.questions || [""],
-			goodByeMessage: localSettings.goodByeMessage || "",
-		};
-
-		// Nếu có attributeJson, sử dụng nó thay thế
-		if (localSettings.attributeJson) {
-			try {
-				attribute = JSON.parse(localSettings.attributeJson);
-			} catch (error) {
-				toast.error("Lỗi định dạng JSON cho trường attribute!");
-				return;
-			}
-		}
-
-		try {
-			setIsTestingCall(true);
-			const leadData: LeadData = {
-				phoneNumber: localSettings.phoneNumber || "",
-				callerId: "",
-				callerNumber: localSettings.callerNumber || "",
-				attribute: attribute,
-				outreachType: "phonecall",
-				ExtendData: {},
-			};
-
-			const result = await callLead(leadData);
-			setCallResult(result);
-			setOpenCallResultDialog(true);
-		} catch (error) {
-			console.error("Error testing call:", error);
-			toast.error("Lỗi khi thực hiện cuộc gọi thử nghiệm!");
-		} finally {
-			setIsTestingCall(false);
-		}
-	};
-
 	const renderSettings = () => {
-		// Different node types have different settings
 		const nodeType = selectedNode.type || "default";
 
 		switch (nodeType) {
@@ -1194,6 +1172,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Spreadsheet ID"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.spreadsheetId || ""}
 							onChange={handleTextChange("spreadsheetId")}
 							placeholder="Enter spreadsheet ID"
@@ -1204,6 +1185,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Sheet Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.sheetName || ""}
 							onChange={handleTextChange("sheetName")}
 							placeholder="Enter sheet name"
@@ -1276,7 +1260,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Prompt"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.prompt || ""}
 							onChange={handleTextChange("prompt")}
 							placeholder="Enter prompt"
@@ -1289,7 +1274,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.introduction || ""}
 							onChange={handleTextChange("introduction")}
 							placeholder="Enter introduction message"
@@ -1312,6 +1298,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									size="small"
 									label={`Question ${index + 1}`}
 									variant="outlined"
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={question}
 									onChange={(e) => {
 										const newQuestions = [...(localSettings.questions || [""])];
@@ -1364,7 +1353,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.goodByeMessage || ""}
 							onChange={handleTextChange("goodByeMessage")}
 							placeholder="Enter goodbye message"
@@ -1386,6 +1376,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Calendar Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.calendarName || ""}
 							onChange={handleTextChange("calendarName")}
 							placeholder="Enter calendar name"
@@ -1398,6 +1391,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Event Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.eventName || ""}
 							onChange={handleTextChange("eventName")}
 							placeholder="Enter event name"
@@ -1561,6 +1557,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Webhook URL"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.webhookUrl || ""}
 							onChange={(e) => {
 								let value = e.target.value;
@@ -1576,34 +1575,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							required
 							helperText="The URL where lead data will be sent"
 						/>
-
-						{/* <FormControl fullWidth margin="normal" size="small">
-							<InputLabel>Method</InputLabel>
-							<Select
-								value={localSettings.method || "POST"}
-								onChange={handleSelectChange("method")}
-								label="Method"
-							>
-								<MenuItem value="GET">GET</MenuItem>
-								<MenuItem value="POST">POST</MenuItem>
-								<MenuItem value="PUT">PUT</MenuItem>
-								<MenuItem value="PATCH">PATCH</MenuItem>
-							</Select>
-						</FormControl>
-
-						<TextField
-							fullWidth
-							size="small"
-							label="Headers (JSON)"
-							variant="outlined"
-							margin="normal"
-							multiline
-							rows={2}
-							value={localSettings.headers || "{}"}
-							onChange={handleTextChange("headers")}
-							placeholder="Enter headers in JSON format"
-							helperText='Example: {"Content-Type": "application/json", "Authorization": "Bearer token"}'
-						/> */}
 					</>
 				);
 
@@ -1616,6 +1587,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Condition Field"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.field || ""}
 							onChange={handleTextChange("field")}
 							placeholder="Enter field name"
@@ -1640,6 +1614,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Value"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.value || ""}
 							onChange={handleTextChange("value")}
 							placeholder="Enter value to compare"
@@ -1668,6 +1645,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Subject Template"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.subject || ""}
 							onChange={handleTextChange("subject")}
 							placeholder="Enter email subject"
@@ -1679,7 +1659,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={3}
+							minRows={3}
+							maxRows={10}
 							value={localSettings.template || ""}
 							onChange={handleTextChange("template")}
 							placeholder="Enter email template"
@@ -1708,7 +1689,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={3}
+							minRows={3}
+							maxRows={10}
 							value={localSettings.template || ""}
 							onChange={handleTextChange("template")}
 							placeholder="Enter SMS template"
@@ -1744,7 +1726,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									variant="outlined"
 									margin="normal"
 									multiline
-									rows={3}
+									minRows={3}
+									maxRows={10}
 									value={localSettings.webScrapingPrompt || ""}
 									onChange={handleTextChange("webScrapingPrompt")}
 									placeholder="Enter prompt for web scraping verification"
@@ -1808,6 +1791,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									label="Field"
 									variant="outlined"
 									margin="normal"
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={criterion.field || ""}
 									onChange={(e) => {
 										const newCriteria = [...(localSettings.criteria || [])];

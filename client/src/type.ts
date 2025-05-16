@@ -44,6 +44,7 @@ export type Lead = {
 	_id: Id;
 	userId: string;
 	flowId: string;
+	source: string;
 	status: number;
 	isVerified?: number;
 	leadData: LeadData;

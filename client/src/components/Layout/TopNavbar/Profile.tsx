@@ -230,23 +230,6 @@ const Profile: React.FC<ProfileProps> = () => {
 
 				<Divider sx={{ borderColor: "#F6F7F9" }} />
 
-				<MenuItem sx={{ padding: "8px 20px" }}>
-					<Link
-						href="/settings/"
-						className="text-black"
-						style={{
-							display: "flex",
-							alignItems: "center",
-						}}
-					>
-						<ListItemIcon sx={{ mr: "-10px", mt: "-3px" }}>
-							<SettingsIcon sx={{ fontSize: "20px" }} className="text-black" />
-						</ListItemIcon>
-
-						<span style={{ fontSize: "13px" }}>Settings</span>
-					</Link>
-				</MenuItem>
-
 				{/* <MenuItem sx={{ padding: "8px 20px" }}>
                     <Link
                         href="/faq/"

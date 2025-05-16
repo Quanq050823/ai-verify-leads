@@ -32,6 +32,7 @@ import LanguageIcon from "@mui/icons-material/Language";
 import { getLeadById } from "../../services/leadServices";
 import { formatDistance } from "date-fns";
 import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
+import { getSourceIcon, getSourceColor } from "@/utils/sourceUtils";
 
 const getStatusColor = (status: number) => {
 	switch (status) {
@@ -103,7 +104,10 @@ const getNodeTypeFromId = (nodeId: string): string => {
 	if (!nodeId) return "default";
 
 	// Extract base node type from nodeId (email_123456 -> email)
-	const basePart = nodeId.split("_")[0]?.toLowerCase();
+	const basePart = nodeId.split("_")[0]?.toLowerCase() || nodeId.toLowerCase();
+
+	// For debugging
+	console.log("NodeID:", nodeId, "BasePart:", basePart);
 
 	if (basePart.includes("email")) return "email";
 	if (basePart.includes("sms")) return "sms";
@@ -113,12 +117,16 @@ const getNodeTypeFromId = (nodeId: string): string => {
 	if (basePart.includes("google") && basePart.includes("calendar"))
 		return "googleCalendar";
 	if (basePart.includes("webhook")) return "sendWebhook";
-	if (basePart.includes("deadLead")) return "deadLead";
-	if (basePart.includes("condition") || basePart.includes("verification"))
-		return "condition";
+	if (basePart.includes("deadlead")) return "deadLead";
+	if (basePart.includes("preverify") || basePart.includes("verify"))
+		return "preVerify";
 	if (basePart.includes("aicall") || basePart.includes("call")) return "aiCall";
-	if (basePart.includes("delay")) return "config";
+	if (basePart.includes("delay") || basePart.includes("config"))
+		return "config";
+	if (basePart.includes("condition")) return "condition";
 
+	// If we get here, log the unknown type
+	console.log("Unknown node type for nodeId:", nodeId);
 	return "default";
 };
 
@@ -137,7 +145,7 @@ const getNodeColorFromType = (nodeType: string): string => {
 			return "#4285f4";
 		case "sendWebhook":
 			return "#8b5cf6";
-		case "condition":
+		case "preVerify":
 			return "#f59e0b";
 		case "aiCall":
 			return "#10b981";
@@ -261,7 +269,26 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 							</Box>
 						</Box>
 						<Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-							<Tooltip title={`Source: ${nodeType}`}>
+							{/* Source Icon */}
+							<Tooltip title={`Source: ${lead.source || "Unknown"}`}>
+								<Box
+									sx={{
+										bgcolor: `${getSourceColor(lead.source || "")}20`,
+										color: getSourceColor(lead.source || ""),
+										width: 28,
+										height: 28,
+										borderRadius: "50%",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									{getSourceIcon(lead.source || "")}
+								</Box>
+							</Tooltip>
+
+							{/* Node Type Icon */}
+							<Tooltip title={`Node Type: ${nodeType}`}>
 								<Box
 									sx={{
 										bgcolor: `${nodeColor}20`,
@@ -277,16 +304,6 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 									{getNodeIcon(nodeType)}
 								</Box>
 							</Tooltip>
-							<Chip
-								label={getStatusText(lead.status)}
-								size="small"
-								sx={{
-									bgcolor: `${getStatusColor(lead.status)}20`,
-									color: getStatusColor(lead.status),
-									fontWeight: "bold",
-									borderRadius: 1,
-								}}
-							/>
 						</Box>
 					</Box>
 

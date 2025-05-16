@@ -297,7 +297,7 @@ function ColumnContainer(props: Props) {
 							if (filterText) {
 								const searchText = filterText.toLowerCase();
 								const name =
-									lead.leadData["full name"] || lead.leadData.name || "";
+									lead.leadData.full_name || lead.leadData.name || "";
 								const email = lead.leadData.email || "";
 								const phone = lead.leadData.phone || "";
 								const company =
@@ -318,7 +318,7 @@ function ColumnContainer(props: Props) {
 									if (filterText) {
 										const searchText = filterText.toLowerCase();
 										const name =
-											lead.leadData["full name"] || lead.leadData.name || "";
+											lead.leadData.full_name || lead.leadData.name || "";
 										const email = lead.leadData.email || "";
 										const phone = lead.leadData.phone || "";
 										const company =
@@ -736,7 +736,7 @@ function ColumnContainer(props: Props) {
 										required
 										fullWidth
 										id="edit-name"
-										defaultValue={editLead.leadData?.["full name"] || ""}
+										defaultValue={editLead.leadData?.full_name || ""}
 										size="small"
 										InputProps={{
 											style: { borderRadius: 8 },

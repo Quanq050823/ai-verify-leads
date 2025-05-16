@@ -993,6 +993,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 				Object.keys(nodeSettings).length === 0
 			) {
 				setLocalSettings({
+					enableWebScraping: false,
+					webScrapingPrompt: "",
 					criteria: [
 						{
 							field: "email",

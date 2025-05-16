@@ -251,21 +251,43 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 								{getInitials(leadName)}
 							</Avatar>
 							<Box sx={{ ml: 1.5 }}>
-								<Typography variant="subtitle1" fontWeight="bold">
+								<Typography
+									variant="subtitle1"
+									fontWeight="bold"
+									noWrap
+									sx={{
+										maxWidth: 130,
+										textOverflow: "ellipsis",
+										overflow: "hidden",
+									}}
+								>
 									{leadName}
 								</Typography>
-								<Typography
-									variant="body2"
-									color="text.secondary"
-									sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-								>
-									{leadPosition && (
-										<>
-											<WorkIcon fontSize="inherit" />
+
+								{leadPosition && (
+									<Box
+										sx={{
+											display: "flex",
+											alignItems: "center",
+											gap: 0.5,
+											maxWidth: 130,
+										}}
+										className="position-label"
+									>
+										<WorkIcon fontSize="small" sx={{ flexShrink: 0 }} />
+										<Typography
+											variant="body2"
+											component="span"
+											sx={{
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											}}
+										>
 											{leadPosition}
-										</>
-									)}
-								</Typography>
+										</Typography>
+									</Box>
+								)}
 							</Box>
 						</Box>
 						<Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>

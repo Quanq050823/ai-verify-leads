@@ -702,3 +702,6 @@
 .dark-theme .info-card-content {
 	background-color: #334061 !important;
 }
+.dark-theme .position-label {
+	color: #51e6e1 !important;
+}

@@ -166,7 +166,7 @@ export const getTranscript = async (data) => {
             let analysisResult = await qualifyLead(lead);
 
             lead.leadData.qualified = analysisResult;
-            lead.isVerified = analysisResult.pass ? 2 : 1;
+            lead.isVerified.status = analysisResult.pass ? 2 : 1;
             await lead.save();
         }
 
@@ -175,7 +175,7 @@ export const getTranscript = async (data) => {
             lead.flowId,
             lead.nodeId,
             [lead],
-            lead.isVerified == 2 ? 1 : 0
+            lead.isVerified.status == 2 ? 1 : 0
         );
 
         return lead;

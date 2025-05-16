@@ -12,9 +12,10 @@ export const getBasicMetrics = async (flowId, userId) => {
         let leads = await Lead.find({ flowId: getObjectId(flowId), userId: getObjectId(userId) });
 
         let totalLead = leads.length;
-        let verifiedLead = leads.filter((lead) => lead.isVerified === 2).length;
+        let verifiedLead = leads.filter((lead) => lead.isVerified.status === 2).length;
         let unverifiedLead = leads.filter(
-            (lead) => lead.isVerified === 1 || (lead.status == 9 && lead.isVerified != 2)
+            (lead) =>
+                lead.isVerified.status === 1 || (lead.status == 9 && lead.isVerified.status != 2)
         ).length;
         let conversionRate = Math.round((verifiedLead / totalLead) * 10000) / 100;
 

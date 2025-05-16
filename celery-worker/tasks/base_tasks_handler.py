@@ -64,7 +64,7 @@ class BaseTaskHandler(Task):
             "status": 0,
             "error": {
                 "status": True,
-                "message": (f"Task {NODE_TASK_NAMES.get('self.name')} occurred an error when executing."),
+                "message": (f"Task {NODE_TASK_NAMES.get(f'{self.name}')} occurred an error when executing."),
                 "taskId": task_id,
                 "stackTrace": tb_string[:5000]
             },

@@ -237,7 +237,9 @@ const categorizeNodes = (nodes: NodeType[]): NodeCategory[] => {
 		if (
 			nodeKey.includes("facebook") ||
 			nodeKey.includes("googleSheets") ||
-			nodeKey.includes("Sheets")
+			nodeKey.includes("Sheets") ||
+			nodeKey.includes("sheet") ||
+			nodeKey.includes("excel")
 		) {
 			dataSourcesCategory.push(nodeItem);
 		} else if (
@@ -291,6 +293,18 @@ const fallbackNodeCategories: NodeCategory[] = [
 				label: "Google Sheets",
 				icon: getNodeIcon("googleSheets"),
 				color: getNodeColor("googleSheets"),
+			},
+			{
+				type: "sheet",
+				label: "Sheet Import",
+				icon: getNodeIcon("sheet"),
+				color: getNodeColor("sheet"),
+			},
+			{
+				type: "excel",
+				label: "Excel Import",
+				icon: getNodeIcon("excel"),
+				color: getNodeColor("excel"),
 			},
 			{
 				type: "facebookLeadAds",

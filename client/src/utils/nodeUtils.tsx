@@ -13,6 +13,8 @@ import {
 	Layers,
 	VerifiedUser,
 	ReportProblem,
+	GridOn,
+	LibraryBooks,
 } from "@mui/icons-material";
 
 // Function to determine the icon for a node type
@@ -20,6 +22,10 @@ export const getNodeIcon = (key: string) => {
 	switch (key) {
 		case "googleSheets":
 			return <TableChart fontSize="small" />;
+		case "sheet":
+			return <GridOn fontSize="small" />;
+		case "excel":
+			return <LibraryBooks fontSize="small" />;
 		case "facebookLeadAds":
 			return <Facebook fontSize="small" />;
 		case "aiCall":
@@ -53,6 +59,10 @@ export const getNodeColor = (key: string) => {
 	switch (key) {
 		case "googleSheets":
 			return "#0F9D58";
+		case "sheet":
+			return "#16a34a"; // Green
+		case "excel":
+			return "#217346"; // Excel green
 		case "facebookLeadAds":
 			return "#1877f2";
 		case "aiCall":

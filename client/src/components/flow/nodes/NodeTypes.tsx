@@ -12,6 +12,8 @@ import {
 	Settings,
 	ErrorOutline,
 	ReportProblem,
+	GridOn,
+	LibraryBooks,
 } from "@mui/icons-material";
 
 // Lead Input Nodes
@@ -25,6 +27,40 @@ export const GoogleSheetsNode = memo(({ data, selected, id }: any) => {
 				type: "Input",
 				subType: "Sheets",
 				color: "#34A853",
+			}}
+			selected={selected}
+			id={id}
+		/>
+	);
+});
+
+export const SheetNode = memo(({ data, selected, id }: any) => {
+	return (
+		<BaseNode
+			data={{
+				...data,
+				label: "Sheet Import",
+				icon: <GridOn fontSize="small" />,
+				type: "Input",
+				subType: "SheetImport",
+				color: "#16a34a",
+			}}
+			selected={selected}
+			id={id}
+		/>
+	);
+});
+
+export const ExcelNode = memo(({ data, selected, id }: any) => {
+	return (
+		<BaseNode
+			data={{
+				...data,
+				label: "Excel Import",
+				icon: <LibraryBooks fontSize="small" />,
+				type: "Input",
+				subType: "ExcelImport",
+				color: "#217346",
 			}}
 			selected={selected}
 			id={id}

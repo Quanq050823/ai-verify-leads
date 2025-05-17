@@ -58,6 +58,8 @@ import {
 	ErrorNode,
 	FacebookLeadAdsNode,
 	DeadLeadNode,
+	SheetNode,
+	ExcelNode,
 } from "./nodes/NodeTypes";
 import { CustomEdgeData } from "./edges/CustomEdge";
 import {
@@ -130,6 +132,8 @@ const getDarkTheme = () =>
 // Define node types
 const nodeTypes = {
 	googleSheets: GoogleSheetsNode,
+	sheet: SheetNode,
+	excel: ExcelNode,
 	facebookLeadAds: FacebookLeadAdsNode,
 	aiCall: AICallNode,
 	googleCalendar: CalendarNode,
@@ -286,6 +290,10 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		switch (type) {
 			case "googleSheets":
 				return "Google Sheets";
+			case "sheet":
+				return "Sheet Import";
+			case "excel":
+				return "Excel Import";
 			case "facebookLeadAds":
 				return "Facebook Lead Ads";
 			case "aiCall":
@@ -319,6 +327,10 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		switch (type) {
 			case "googleSheets":
 				return "Import leads from Google Sheets";
+			case "sheet":
+				return "Import leads from Sheet files";
+			case "excel":
+				return "Import leads from Excel files";
 			case "facebookLeadAds":
 				return "Import leads from Facebook Lead Ads";
 			case "aiCall":
@@ -500,6 +512,22 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 								startTime: "09:00",
 								endTime: "17:00",
 								duration: 30,
+							};
+							break;
+						case "sheet":
+							defaultSettings = {
+								filePath: "",
+								sheetName: "",
+								sheetType: "csv",
+								delimiter: ",",
+								hasHeader: true,
+							};
+							break;
+						case "excel":
+							defaultSettings = {
+								filePath: "",
+								sheetName: "",
+								hasHeader: true,
 							};
 							break;
 						case "preVerify":

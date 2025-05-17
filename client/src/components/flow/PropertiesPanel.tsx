@@ -60,8 +60,8 @@ type PropertiesPanelProps = {
 };
 
 interface NodeSettings {
-	spreadsheetId?: string;
-	sheetName?: string;
+	sheetUrl?: string;
+	excelUrl?: string;
 	adAccountId?: string;
 	campaignId?: string;
 	apiProvider?: string;
@@ -1221,6 +1221,52 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							value={localSettings.sheetName || ""}
 							onChange={handleTextChange("sheetName")}
 							placeholder="Enter sheet name"
+						/>
+					</>
+				);
+
+			case "sheet":
+				return (
+					<>
+						<TextField
+							fullWidth
+							size="small"
+							label="Sheet url"
+							variant="outlined"
+							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
+							value={localSettings.sheetUrl || ""}
+							onChange={(e) => {
+								updateSettings("sheetUrl", e.target.value);
+							}}
+							placeholder="Enter sheet url"
+							required
+							helperText="The URL where lead data stored"
+						/>
+					</>
+				);
+
+			case "excel":
+				return (
+					<>
+						<TextField
+							fullWidth
+							size="small"
+							label="Excel url"
+							variant="outlined"
+							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
+							value={localSettings.excelUrl || ""}
+							onChange={(e) => {
+								updateSettings("excelUrl", e.target.value);
+							}}
+							placeholder="Enter excel url"
+							required
+							helperText="The URL where lead data stored"
 						/>
 					</>
 				);

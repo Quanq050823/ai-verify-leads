@@ -952,6 +952,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	const [hasChanges, setHasChanges] = useState<boolean>(false);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
 	const reactFlowInstance = useReactFlow();
+	const [subscribing, setSubscribing] = useState(false);
 
 	if (!selectedNode) {
 		return null;
@@ -1083,10 +1084,34 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	};
 
 	const handleSaveChanges = async () => {
+		if (selectedNode.type === "facebookLeadAds" && localSettings.pageId) {
+			setIsSaving(true);
+			try {
+				const response = await subscribePageToWebhook(
+					localSettings.pageId as string
+				);
+				if (response && !response.error) {
+				} else {
+					toast.error(
+						response.error?.message || "Failed to subscribe to webhook"
+					);
+					setIsSaving(false);
+					return;
+				}
+			} catch (err) {
+				toast.error("Unexpected error subscribing to webhook");
+				setIsSaving(false);
+				return;
+			}
+		}
+
 		// Update locally first
 		onChange(selectedNode.id, {
 			...selectedNode.data,
 			settings: localSettings,
+			...(selectedNode.type === "facebookLeadAds" && localSettings.pageId
+				? { webhookSubscribed: true }
+				: {}),
 		});
 
 		// If we have a flowId, also update on the server
@@ -1105,6 +1130,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							data: {
 								...node.data,
 								settings: localSettings,
+								...(selectedNode.type === "facebookLeadAds" &&
+								localSettings.pageId
+									? { webhookSubscribed: true }
+									: {}),
 							},
 						};
 					}
@@ -1142,6 +1171,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			// No flowId, just update locally
 			toast.success(`${selectedNode.type} node settings saved locally!`);
 			setHasChanges(false);
+			setIsSaving(false);
 		}
 	};
 
@@ -1216,26 +1246,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							onChange={(value) => updateSettings("formId", value)}
 							disabled={!localSettings.pageId}
 						/>
-
-						{localSettings.pageId && (
-							<Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
-								<Button
-									variant="contained"
-									color="primary"
-									startIcon={<NotificationImportant />}
-									onClick={() => {
-										toast.success("Facebook connection saved!");
-										onChange(selectedNode.id, {
-											...selectedNode.data,
-											settings: localSettings,
-											webhookSubscribed: true,
-										});
-									}}
-								>
-									Save Connection
-								</Button>
-							</Box>
-						)}
 					</>
 				);
 

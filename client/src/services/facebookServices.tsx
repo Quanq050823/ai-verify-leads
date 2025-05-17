@@ -119,11 +119,9 @@ export const getFacebookPageForms = async (pageId: string) => {
 export const subscribePageToWebhook = async (pageId: string) => {
 	try {
 		const response = await axios.post(`/facebook/subscribePage/${pageId}`);
-		toast.success("Đã đăng ký webhook thành công");
 		return response.data;
 	} catch (error: any) {
 		console.error("Error subscribing to webhook:", error);
-		toast.error(error?.response?.data?.message || "Lỗi khi đăng ký webhook");
 		return { error };
 	}
 };

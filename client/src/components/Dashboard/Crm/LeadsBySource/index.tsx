@@ -16,6 +16,21 @@ interface LeadSource {
 	count: number;
 }
 
+const SOURCE_COLORS: Record<string, string> = {
+	facebook: "#1877f2",
+	sheet: "#0F9D58",
+	excel: "#217346",
+	other: "#64748B",
+};
+
+function getColorForSource(source: string): string {
+	const key = source.toLowerCase();
+	if (key.includes("facebook")) return SOURCE_COLORS.facebook;
+	if (key.includes("sheet")) return SOURCE_COLORS.sheet;
+	if (key.includes("excel")) return SOURCE_COLORS.excel;
+	return SOURCE_COLORS.other;
+}
+
 const LeadsBySource: React.FC = () => {
 	// Chart
 	const [isChartLoaded, setChartLoaded] = useState(false);
@@ -67,19 +82,8 @@ const LeadsBySource: React.FC = () => {
 
 	// Dynamic colors based on number of sources
 	const getChartColors = () => {
-		const defaultColors = [
-			"#0866ff",
-			"#34a853",
-			"#016e3c",
-			"#ff6384",
-			"#36a2eb",
-		];
-		if (leadSources.length === 0) return ["#e0e0e0", "#f5f5f5"]; // Gray for empty state
-
-		// If we have more sources than colors, repeat colors
-		return leadSources.map(
-			(_, index) => defaultColors[index % defaultColors.length]
-		);
+		if (leadSources.length === 0) return ["#e0e0e0", "#f5f5f5"];
+		return leadSources.map((source) => getColorForSource(source.source));
 	};
 
 	const series = getChartSeries();
@@ -241,7 +245,7 @@ const LeadsBySource: React.FC = () => {
 													width: "11px",
 													height: "11px",
 													borderRadius: "3px",
-													backgroundColor: getChartColors()[index],
+													backgroundColor: getColorForSource(source.source),
 												}}
 											></Typography>
 											{source.source}

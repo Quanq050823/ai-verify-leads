@@ -169,9 +169,14 @@ export const getTranscript = async (data) => {
             lead.leadData.transcript = transcript;
             let analysisResult = await qualifyLead(lead);
 
-            lead.leadData.qualified = analysisResult;
+            console.log("Analysis result: ", analysisResult);
             lead.isVerified.status = analysisResult.pass ? 2 : 1;
-            await lead.save();
+            lead.isVerified.message = analysisResult.message;
+            lead.error = {
+                status: analysisResult?.pass ? false : lead.error.status,
+            };
+            lead.markModified("leadData");
+            let test = await lead.save();
         }
 
         await publishLead(

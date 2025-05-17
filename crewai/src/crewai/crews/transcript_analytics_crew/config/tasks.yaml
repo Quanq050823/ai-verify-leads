@@ -40,7 +40,8 @@ evaluate_transcript:
               "reason": "brief explanation",
               "must_have": boolean
             }
-          ]
+          ],
+          "message": "explanation of the evaluation"
         }
     expected_output: JSON with pass status and results
     agent: transcript_analyzer_agent

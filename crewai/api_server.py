@@ -49,34 +49,35 @@ def analyze():
 @app.route('/preverify', methods=['POST'])
 def preverify():
     data = request.json
-    
+
     if not data or 'leadData' not in data:
-        return jsonify({
-            'error': 'Missing required field: leadData'
-        }), 400
-    
-    lead_data = data['leadData']
-    criteria_field = data.get('criteriaField', None)
-    
+        return jsonify({'error': 'Missing required field: leadData'}), 400
+
+    # Always expect stringified JSON for both fields
+    lead_data_str = data['leadData']
+    criteria_field_str = data.get('criteriaField', None)
+
     try:
-        # Convert lead_data to JSON string if it's an object
-        if isinstance(lead_data, dict):
-            lead_data = json.dumps(lead_data)
-            
+        # Parse stringified JSON
+        lead_data = json.loads(lead_data_str)
+        criteria_field = json.loads(criteria_field_str) if criteria_field_str else None
+
         # Call lead pre-verification function
         result = preverify_lead(lead_data, criteria_field)
-        
+
         # Check if result is JSON with error
         if isinstance(result, dict) and 'error' in result:
             return jsonify(result), 500
-        
-        # Return successful result
+
         return jsonify(result)
+    except json.JSONDecodeError as e:
+        return jsonify({
+            'error': 'Invalid JSON in leadData or criteriaField',
+            'message': str(e)
+        }), 400
     except Exception as e:
-        # Log detailed error for debugging
         error_traceback = traceback.format_exc()
         print(f"Error preverifying lead: {str(e)}\n{error_traceback}")
-        
         return jsonify({
             'error': 'Failed to preverify lead',
             'message': str(e)
@@ -113,19 +114,6 @@ def scrape():
             'error': 'Failed to scrape and analyze website',
             'message': str(e)
         }), 500
-
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        'status': 'healthy',
-        'message': 'CrewAI API is running',
-        'available_endpoints': [
-            '/analyze - Transcript analysis',
-            '/preverify - Lead pre-verification',
-            '/scrape - Website scraping and analysis',
-            '/health - Health check'
-        ]
-    })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

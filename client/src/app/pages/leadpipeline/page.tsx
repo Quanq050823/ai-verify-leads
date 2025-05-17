@@ -708,16 +708,6 @@ export default function LeadPipelinePage() {
 																sx={{ display: "flex", alignItems: "center" }}
 																className="column-header"
 															>
-																<IconBox
-																	sx={{
-																		backgroundColor:
-																			activeColumn.iconColor || "#9e9e9e",
-																		width: 32,
-																		height: 32,
-																	}}
-																>
-																	{getColumnIcon(activeColumn.type as string)}
-																</IconBox>
 																<Typography component="span" sx={{ ml: 1 }}>
 																	{activeColumn.title}
 																</Typography>

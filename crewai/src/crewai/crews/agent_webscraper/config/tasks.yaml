@@ -1,16 +1,15 @@
 scrape_website:
   description: >
-    Extract relevant information from the website at {url}.
-    The scraped content is already available in {scraped_content}.
+    Extract relevant information from the website at {website_url}.
 
     Focus on:
     1. Business information
     2. Contact details
     3. Service/product descriptions
     4. Company details and facts
+    5. Location details
 
     Structure the data for easy analysis by the criteria analyzer.
-    Write findings to "scraping_result.txt".
   expected_output: Structured text containing relevant website information
   agent: web_scraper_agent
 

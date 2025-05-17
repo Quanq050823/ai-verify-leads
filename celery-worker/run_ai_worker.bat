@@ -10,6 +10,6 @@ pip install -r requirements.txt
 echo.
 
 echo Starting Celery worker...
-celery -A celery_app worker --queues=aiCall.consumer --loglevel=info --pool=eventlet --concurrency=5 --hostname=aiCallWorker@%%h
+celery -A celery_app worker --queues=aiCall.consumer --loglevel=info --pool=gevent --concurrency=5 --hostname=aiCallWorker@%%h
 
 pause

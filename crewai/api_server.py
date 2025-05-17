@@ -115,19 +115,6 @@ def scrape():
             'message': str(e)
         }), 500
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        'status': 'healthy',
-        'message': 'CrewAI API is running',
-        'available_endpoints': [
-            '/analyze - Transcript analysis',
-            '/preverify - Lead pre-verification',
-            '/scrape - Website scraping and analysis',
-            '/health - Health check'
-        ]
-    })
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port) 

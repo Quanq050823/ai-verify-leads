@@ -336,7 +336,7 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 							</Tooltip>
 
 							{/* Node Type Icon */}
-							<Tooltip title={`Node Type: ${nodeType}`}>
+							<Tooltip title={`Current Node: ${nodeType}`}>
 								<Box
 									sx={{
 										bgcolor: `${nodeColor}20`,
@@ -537,7 +537,7 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 								</Box>
 							</Tooltip>
 
-							<Tooltip title={`Node Type: ${nodeType}`}>
+							<Tooltip title={`Current Node: ${nodeType}`}>
 								<Box
 									sx={{
 										bgcolor: `${nodeColor}20`,

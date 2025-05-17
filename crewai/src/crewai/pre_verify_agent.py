@@ -25,8 +25,6 @@ class PreverifyFlow(Flow[PreverifyState]):
     @start()
     def read_lead_data(self):
         print("Reading lead data")
-        print(f"Using lead data: {self.state.lead_raw_data}")
-
     
     @listen(read_lead_data)
     def process_lead_data(self):

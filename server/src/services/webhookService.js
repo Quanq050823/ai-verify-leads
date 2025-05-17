@@ -161,7 +161,11 @@ export const getTranscript = async (data) => {
         }
 
         let lead = await Lead.findById(getObjectId(leadId));
-        if (transcript && transcript?.conversation?.length != 0) {
+        if (!lead) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Lead not found.");
+        }
+
+        if (transcript) {
             lead.leadData.transcript = transcript;
             let analysisResult = await qualifyLead(lead);
 
@@ -209,7 +213,7 @@ export const qualifyLead = async (lead) => {
         if (!node) {
             throw new ApiError(StatusCodes.BAD_REQUEST, "Node not found.");
         }
-        let response = await fetch("http://localhost:5000/analyze", {
+        let response = await fetch("http://127.0.0.1:5000/analyze", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -220,7 +224,7 @@ export const qualifyLead = async (lead) => {
             }),
         });
         let result = await response.json();
-        console.log("result: ", result);
+        // console.log("result: ", result);
         return result;
     } catch (error) {
         throw error;

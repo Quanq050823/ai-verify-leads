@@ -296,28 +296,6 @@ function ColumnContainer(props: Props) {
 						</Box>
 
 						<Box sx={{ display: "flex" }}>
-							{/* Filter input */}
-							<TextField
-								size="small"
-								placeholder="Filter leads"
-								value={filterText}
-								onChange={(e) => {
-									setFilterText(e.target.value);
-									setVisibleLeads(4);
-								}}
-								sx={{
-									mr: 1,
-									"& .MuiOutlinedInput-root": {
-										borderRadius: "8px",
-										fontSize: "0.85rem",
-										py: 0.5,
-										height: "32px",
-									},
-									width: "120px",
-									display: { xs: "none", sm: "block" },
-								}}
-							/>
-
 							<IconButton
 								onClick={handleClick}
 								size="small"

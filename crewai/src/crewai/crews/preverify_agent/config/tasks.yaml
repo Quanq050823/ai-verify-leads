@@ -1,37 +1,16 @@
-read_lead:
-  description: >
-    Extract and collect lead data from Facebook ads business resources. 
-    This task involves carefully reading and listing all raw lead data 
-    from available resources to prepare it for pre-verification.
-
-    Follow these extraction steps:
-    1. Access Facebook ads business resources from {lead_raw_data}
-    2. Extract all available lead information and metadata
-    3. Organize data in structured format for easy processing
-    4. Ensure all contact details and qualification info are included
-
-    Write results to "lead_raw_data_result.txt".
-
-  expected_output: >
-    A comprehensive list of raw lead data extracted from Facebook ads 
-    business resources, formatted for easy analysis in the pre-verification 
-    stage.
-
-  agent: read_lead_data_agent
-
 preverify_lead:
   description: >
-    Analyze if lead data in "lead_raw_data_result.txt" meets criteria from {criteria_field}.
-    Apply rules including failing if any must-have criterion fails, 
-    and passing if more than 90% of all criteria are met.
+    Access Facebook ads business resources from {lead_raw_data}
+    Analyze if lead data in {lead_raw_data} meets criteria from {criteria_field}.
+    and passing if 100% of all criteria are met.
 
     VERIFICATION PROCESS:
-    1. Read raw lead data from "lead_raw_data_result.txt"
+    1. Read raw lead data from {lead_raw_data}
     2. Apply qualification criteria rigorously to each lead
     3. Document reasons for pass/fail with brief explanations
     4. Create structured result with overall qualification status
 
-    Write to "preverify_lead_result.txt" as JSON:
+    Write to "result.txt" as JSON:
     {
       "pass": boolean,
       "criteria_results": [
@@ -47,7 +26,5 @@ preverify_lead:
   expected_output: >
     JSON format with pass/fail status and criteria results for each lead. 
     Includes brief explanations (under 8 words) for decisions made.
-    Results should be properly formatted for downstream processing
-    and human review.
 
   agent: preverify_lead_agent

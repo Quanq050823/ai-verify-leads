@@ -120,7 +120,8 @@ def pre_verify(self, message):
                             },
                         }
                     )
-                    return {'status': False, "reason": check_result.get("reason", "Invalid URL")}
+                    return {'isPublish': True, 'result': False,
+                            "reason": check_result.get("reason", "Invalid URL")}
 
                 # URL is valid, submit scraping request
                 scrape_future = executor.submit(

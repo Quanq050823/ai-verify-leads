@@ -56,11 +56,10 @@ export const retrieveLead = async (req, res, next) => {
     }
 };
 
-export const transcribe = async (req, res, next) => {
-    try {
-        res.status(StatusCodes.OK).json({ message: "Transcription request received" });
-        await services.getTranscript(req.body);
-    } catch (err) {
-        next(err);
-    }
+export const transcribe = (req, res, next) => {
+    res.status(StatusCodes.OK).json({ message: "Successfully retrieving transcribe." });
+
+    services.getTranscript(req.body).catch((err) => {
+        next(err); // Optional: Handle the error if you need further processing
+    });
 };

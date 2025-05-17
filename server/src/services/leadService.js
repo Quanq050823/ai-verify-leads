@@ -100,6 +100,12 @@ export const retryLead = async (leadId, userId) => {
         }
 
         lead.status = 1; // Reset status to 1 for retry
+        lead.error = {
+            status: false,
+            message: null,
+            stackTrace: null,
+            retryCount: lead?.error?.retryCount ? lead.error.retryCount++ : 0,
+        };
         await lead.save();
 
         await publishLead(
@@ -132,12 +138,7 @@ export const publishLead = async (
         }
 
         let routing = isRetry
-            ? flow.routeData.find(
-                  (route) =>
-                      route.target === nodeId ||
-                      route.successTarget === nodeId ||
-                      route.failTarget === nodeId
-              )
+            ? { source: nodeId, target: nodeId }
             : flow.routeData.find((route) => route.source === nodeId);
 
         if (routing?.isSeparate) {

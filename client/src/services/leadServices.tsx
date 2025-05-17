@@ -111,3 +111,16 @@ export const deleteLead = async (id: string): Promise<boolean> => {
 		return false;
 	}
 };
+
+// Retry lead processing
+export const retryLead = async (id: string): Promise<boolean> => {
+	try {
+		await apiClient.post(`/lead/retry/${id}`);
+		toast.success("Lead processing restarted!");
+		return true;
+	} catch (error) {
+		console.error(`Error retrying lead with ID ${id}:`, error);
+		toast.error("Failed to retry lead processing!");
+		return false;
+	}
+};

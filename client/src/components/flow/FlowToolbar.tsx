@@ -27,18 +27,10 @@ import {
 import { styled } from "@mui/material/styles";
 import {
 	Save,
-	Upload,
-	Download,
-	PlayArrow,
 	Delete,
-	ZoomIn,
-	ZoomOut,
-	CropFree,
 	Edit,
 	Check,
 	Close,
-	Sync,
-	MoreVert,
 	SaveAlt,
 	DarkMode as DarkModeIcon,
 	LightMode as LightModeIcon,
@@ -46,13 +38,10 @@ import {
 	FileUpload,
 	ExpandLess,
 	ExpandMore,
-	Fullscreen,
-	Settings,
 } from "@mui/icons-material";
 import { TransitionProps } from "@mui/material/transitions";
 import { useTheme } from "@/context/ThemeContext";
 
-// Constants
 const TOOLBAR_STORAGE_KEY = "flowToolbarVisible";
 
 type FlowToolbarProps = {
@@ -198,15 +187,6 @@ const ToolbarWrapper = styled(Box)({
 	width: "100%",
 });
 
-const Transition = React.forwardRef(function Transition(
-	props: TransitionProps & {
-		children: React.ReactElement<any, any>;
-	},
-	ref: React.Ref<unknown>
-) {
-	return <Slide direction="up" ref={ref} {...props} />;
-});
-
 const FlowNameTypography = styled(Typography)(({ theme }) => ({
 	fontWeight: 600,
 	cursor: "pointer",
@@ -270,20 +250,7 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 		}
 	};
 
-	// Flow is active when status is 2
 	const isFlowActive = flowStatus === 2;
-
-	const zoomIn = () => {
-		reactFlow.zoomIn();
-	};
-
-	const zoomOut = () => {
-		reactFlow.zoomOut();
-	};
-
-	const fitView = () => {
-		reactFlow.fitView({ padding: 0.2 });
-	};
 
 	return (
 		<ToolbarWrapper>
@@ -387,24 +354,6 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 						</Tooltip>
 
 						<StyledDivider orientation="vertical" flexItem />
-
-						<Tooltip title="Zoom In" arrow placement="bottom">
-							<ToolbarButton onClick={zoomIn}>
-								<ZoomIn fontSize="small" />
-							</ToolbarButton>
-						</Tooltip>
-
-						<Tooltip title="Zoom Out" arrow placement="bottom">
-							<ToolbarButton onClick={zoomOut}>
-								<ZoomOut fontSize="small" />
-							</ToolbarButton>
-						</Tooltip>
-
-						<Tooltip title="Fit View" arrow placement="bottom">
-							<ToolbarButton onClick={fitView}>
-								<CropFree fontSize="small" />
-							</ToolbarButton>
-						</Tooltip>
 					</ToolbarSection>
 
 					<ToolbarSection>

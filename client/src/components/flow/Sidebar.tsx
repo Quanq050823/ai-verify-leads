@@ -537,7 +537,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 					)}
 				</CollapsedSidebar>
 
-				<Tooltip title="Mở rộng thanh bên" placement="left">
+				<Tooltip title="Expand sidebar" placement="left">
 					<ToggleButton
 						onClick={toggleCollapse}
 						size="small"
@@ -684,7 +684,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onDragStart }) => {
 				</SidebarFooter>
 			</SidebarContainer>
 
-			<Tooltip title="Thu gọn thanh bên" placement="left">
+			<Tooltip title="Collapse sidebar" placement="left">
 				<ToggleButton
 					onClick={toggleCollapse}
 					size="small"

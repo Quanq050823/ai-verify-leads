@@ -237,7 +237,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		}
 	};
 
-	// Handle node drag from sidebar
 	const onDragOver = useCallback((event: React.DragEvent) => {
 		event.preventDefault();
 		event.dataTransfer.dropEffect = "move";
@@ -250,7 +249,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
 			const type = event.dataTransfer.getData("application/reactflow");
 
-			// Check if the dropped element is valid
 			if (
 				typeof type === "undefined" ||
 				!type ||
@@ -260,13 +258,11 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return;
 			}
 
-			// Use screenToFlowPosition instead of project
 			const position = reactFlowInstance.screenToFlowPosition({
 				x: event.clientX - reactFlowBounds.left,
 				y: event.clientY - reactFlowBounds.top,
 			});
 
-			// Create a unique ID
 			const id = `${type}_${Date.now()}`;
 
 			const newNode: Node = {
@@ -350,20 +346,17 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		}
 	};
 
-	// Handle connection between nodes
 	const onConnect = useCallback(
 		(params: Connection) => {
 			const newEdgeId = `e_${params.source}_${params.target}_${Date.now()}`;
 			const sourceNodeId = params.source?.split("_")[0].toLowerCase();
 
-			// Xác định loại node nguồn có nhiều đầu ra
 			const isMultiOutputNode =
 				sourceNodeId === "condition" ||
 				sourceNodeId === "preverify" ||
 				sourceNodeId === "deadlead" ||
 				sourceNodeId === "aicall";
 
-			// Tạo nhãn cho cạnh dựa trên loại node và handle
 			let edgeLabel = "";
 			if (isMultiOutputNode) {
 				if (params.sourceHandle === "output-0") {

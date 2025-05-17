@@ -29,6 +29,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import BusinessIcon from "@mui/icons-material/Business";
 import WorkIcon from "@mui/icons-material/Work";
 import LanguageIcon from "@mui/icons-material/Language";
+import ReplayIcon from "@mui/icons-material/Replay";
 import { getLeadById } from "../../services/leadServices";
 import { formatDistance } from "date-fns";
 import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
@@ -185,9 +186,10 @@ const getNodeColorFromType = (nodeType: string): string => {
 interface LeadCardProps {
 	lead: Lead;
 	onDelete?: (id: string) => void;
+	onRetry?: (id: string) => void;
 }
 
-const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
+const LeadCard = ({ lead, onDelete, onRetry }: LeadCardProps) => {
 	const [openDetails, setOpenDetails] = useState(false);
 	const [detailedLead, setDetailedLead] = useState<Lead | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -246,6 +248,10 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 	// Xác định loại node dựa trên dữ liệu
 	const nodeType = getNodeTypeFromId(lead.nodeId);
 	const nodeColor = getNodeColorFromType(nodeType);
+
+	const shouldShowRetryButton = () => {
+		return !lead.isVerified || lead.isVerified.status !== 2;
+	};
 
 	return (
 		<>
@@ -475,7 +481,22 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 						<Typography variant="caption" color="text.secondary">
 							{timeAgo}
 						</Typography>
-						<Box>
+						<Box sx={{ display: "flex", gap: 0.5 }}>
+							{onRetry && shouldShowRetryButton() && (
+								<Tooltip title="Retry processing">
+									<IconButton
+										size="small"
+										color="primary"
+										sx={{ bgcolor: "#e3f2fd" }}
+										onClick={(e) => {
+											e.stopPropagation();
+											onRetry(lead._id.toString());
+										}}
+									>
+										<ReplayIcon fontSize="small" />
+									</IconButton>
+								</Tooltip>
+							)}
 							{onDelete && (
 								<Tooltip title="Delete">
 									<IconButton size="small" onClick={handleOpenDeleteConfirm}>
@@ -1016,6 +1037,25 @@ const LeadCard = ({ lead, onDelete }: LeadCardProps) => {
 					>
 						Updated {timeAgo}
 					</Typography>
+					{onRetry && shouldShowRetryButton() && (
+						<Button
+							startIcon={<ReplayIcon />}
+							onClick={() => {
+								onRetry(lead._id.toString());
+								handleCloseDetails();
+							}}
+							color="primary"
+							variant="outlined"
+							sx={{
+								textTransform: "none",
+								borderRadius: "8px",
+								fontWeight: "500",
+								mr: 1,
+							}}
+						>
+							Retry Processing
+						</Button>
+					)}
 					{onDelete && (
 						<Button
 							startIcon={<DeleteIcon />}

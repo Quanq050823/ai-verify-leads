@@ -44,6 +44,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import LeadCard from "./LeadCard";
 import { toast } from "react-toastify";
+import { retryLead } from "../../services/leadServices";
 
 interface Props {
 	column: Column;
@@ -99,6 +100,17 @@ function ColumnContainer(props: Props) {
 	}, [column.leads]);
 
 	const handleDeleteLead = async (leadId: string) => {};
+
+	const handleRetryLead = async (leadId: string) => {
+		try {
+			setLoading(true);
+			const result = await retryLead(leadId);
+		} catch (error) {
+			console.error("Error retrying lead:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	const handleScroll = useCallback(() => {
 		if (!columnContentRef.current) return;
@@ -372,6 +384,7 @@ function ColumnContainer(props: Props) {
 										key={lead._id.toString()}
 										lead={lead}
 										onDelete={handleDeleteLead}
+										onRetry={handleRetryLead}
 									/>
 								))}
 

@@ -17,6 +17,8 @@ import {
 	InputAdornment,
 	alpha,
 	Slide,
+	Switch,
+	FormControlLabel,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
@@ -36,6 +38,7 @@ import {
 	SaveAlt,
 	DarkMode as DarkModeIcon,
 	LightMode as LightModeIcon,
+	PowerSettingsNew as PowerIcon,
 } from "@mui/icons-material";
 import { TransitionProps } from "@mui/material/transitions";
 import { useTheme } from "@/context/ThemeContext";
@@ -45,8 +48,9 @@ type FlowToolbarProps = {
 	onLoad: () => void;
 	onExport: () => void;
 	onClear: () => void;
-	onRun: () => void;
+	onToggleStatus: () => void;
 	flowName?: string;
+	flowStatus?: number;
 	onRename?: (newName: string) => void;
 };
 
@@ -75,6 +79,18 @@ const FlowNameContainer = styled(Box)(({ theme }) => ({
 	alignItems: "center",
 	padding: theme.spacing(0, 2),
 	marginRight: theme.spacing(1),
+}));
+
+const StatusToggleSwitch = styled(Switch)(({ theme }) => ({
+	"& .MuiSwitch-switchBase.Mui-checked": {
+		color: "#10b981",
+		"&:hover": {
+			backgroundColor: alpha("#10b981", theme.palette.action.hoverOpacity),
+		},
+	},
+	"& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+		backgroundColor: "#10b981",
+	},
 }));
 
 const ActionButton = styled(Button)(({ theme }) => ({
@@ -107,8 +123,9 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 	onLoad,
 	onExport,
 	onClear,
-	onRun,
+	onToggleStatus,
 	flowName = "Untitled Flow",
+	flowStatus = 1, // Default to disabled
 	onRename,
 }) => {
 	const { zoomIn, zoomOut, fitView } = useReactFlow();
@@ -148,6 +165,9 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 	const handleInlineEditCancel = () => {
 		setIsEditing(false);
 	};
+
+	// Flow is active when status is 2
+	const isFlowActive = flowStatus === 2;
 
 	return (
 		<>
@@ -293,20 +313,24 @@ const FlowToolbar: React.FC<FlowToolbarProps> = ({
 
 				<Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
-				<Tooltip title="Execute Flow" arrow>
-					<ActionButton
-						onClick={onRun}
-						variant="contained"
-						color="primary"
-						startIcon={<PlayArrow />}
-						sx={{
-							ml: 0.5,
-							backgroundImage: "linear-gradient(45deg, #3b82f6, #10b981)",
-							transition: "all 0.2s ease",
-						}}
-					>
-						Publish
-					</ActionButton>
+				<Tooltip title={isFlowActive ? "Disable Flow" : "Enable Flow"} arrow>
+					<Box sx={{ display: "flex", alignItems: "center", ml: 1 }}>
+						<FormControlLabel
+							control={
+								<StatusToggleSwitch
+									checked={isFlowActive}
+									onChange={onToggleStatus}
+									color="success"
+								/>
+							}
+							label={
+								<Typography variant="body2" sx={{ fontWeight: 500 }}>
+									{isFlowActive ? "Active" : "Disabled"}
+								</Typography>
+							}
+							sx={{ mr: 1 }}
+						/>
+					</Box>
 				</Tooltip>
 			</ToolbarContainer>
 

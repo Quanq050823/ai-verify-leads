@@ -88,6 +88,28 @@ export const disableFlow = async (flowId: string) => {
 	}
 };
 
+export const toggleFlowStatus = async (
+	flowId: string,
+	currentStatus: number
+) => {
+	try {
+		// Flow status: 0 = deleted, 1 = disabled, 2 = active
+		if (currentStatus === 2) {
+			// If active, disable it
+			return await disableFlow(flowId);
+		} else {
+			// If disabled or any other state, enable it
+			return await enableFlow(flowId);
+		}
+	} catch (error: any) {
+		console.log(error);
+		toast.error(
+			`${error?.response?.data?.message || "Failed to toggle flow status!"}`
+		);
+		return { error };
+	}
+};
+
 export const deleteFlow = async (flowId: string) => {
 	try {
 		const response = await axios.delete(`/flow/${flowId}`);

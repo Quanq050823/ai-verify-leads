@@ -60,7 +60,12 @@ import {
 	DeadLeadNode,
 } from "./nodes/NodeTypes";
 import { CustomEdgeData } from "./edges/CustomEdge";
-import { getFlowById, createFlow, updateFlow } from "@/services/flowServices";
+import {
+	getFlowById,
+	createFlow,
+	updateFlow,
+	toggleFlowStatus,
+} from "@/services/flowServices";
 import { useTheme } from "@/context/ThemeContext";
 
 // Define MUI themes
@@ -166,55 +171,71 @@ interface FlowEditorProps {
 }
 
 const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
-	const { isDarkMode, toggleTheme } = useTheme();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 	const [selectedNode, setSelectedNode] = useState<Node | null>(null);
 	const [reactFlowInstance, setReactFlowInstance] =
 		useState<ReactFlowInstance | null>(null);
-	const [isRunning, setIsRunning] = useState<boolean>(false);
-	const [progressPercent, setProgressPercent] = useState<number>(0);
 	const [showPropertiesPanel, setShowPropertiesPanel] =
 		useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
-	const [flowName, setFlowName] = useState<string>("New Flow");
+	const [flowName, setFlowName] = useState<string>("Untitled Flow");
+	const [flowStatus, setFlowStatus] = useState<number>(1); // Default to disabled
 	const [showMiniMap, setShowMiniMap] = useState<boolean>(true);
-	const [alertInfo, setAlertInfo] = useState<{
-		open: boolean;
-		severity: "success" | "error";
-		message: string;
-	}>({ open: false, severity: "success", message: "" });
 
-	const reactFlowUtil = useReactFlow();
+	const fetchFlowData = useCallback(async () => {
+		if (!flowId) return;
 
-	// Tải dữ liệu flow từ API khi component được mount
-	useEffect(() => {
-		const loadFlowData = async () => {
-			if (!flowId) return;
+		try {
+			setLoading(true);
+			const data = await getFlowById(flowId);
 
-			try {
-				setLoading(true);
-				const flowData = await getFlowById(flowId);
+			if (data) {
+				setFlowName(data.name);
+				setFlowStatus(data.status);
 
-				if (flowData && flowData.nodeData) {
-					// Cập nhật nodes và edges từ dữ liệu API
-					setNodes(flowData.nodeData.nodes || []);
-					setEdges(flowData.nodeData.edges || []);
-					// Lưu tên flow
-					if (flowData.name) {
-						setFlowName(flowData.name);
-					}
+				if (data.nodeData?.nodes) {
+					const processedNodes = data.nodeData.nodes.map((node: any) => {
+						return {
+							...node,
+						};
+					});
+					setNodes(processedNodes);
 				}
-			} catch (error) {
-				console.error("Error loading flow data:", error);
-			} finally {
-				setLoading(false);
-			}
-		};
 
-		loadFlowData();
-	}, [flowId, setNodes, setEdges]);
+				if (data.nodeData?.edges) {
+					const processedEdges = data.nodeData.edges.map((edge: any) => {
+						return {
+							...edge,
+							type: "custom",
+						};
+					});
+					setEdges(processedEdges);
+				}
+			}
+		} catch (error) {
+		} finally {
+			setLoading(false);
+		}
+	}, [flowId, setEdges, setNodes]);
+
+	const handleToggleStatus = async () => {
+		if (!flowId) return;
+
+		try {
+			setLoading(true);
+			const result = await toggleFlowStatus(flowId, flowStatus);
+
+			if (result && !result.error) {
+				setFlowStatus(flowStatus === 2 ? 1 : 2);
+			}
+		} catch (error) {
+			console.error("Error toggling flow status:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	// Handle node drag from sidebar
 	const onDragOver = useCallback((event: React.DragEvent) => {
@@ -660,43 +681,13 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		// });
 	}, [setNodes, setEdges]);
 
-	// Simulate running the flow
-	const onRun = useCallback(() => {
-		if (nodes.length === 0) {
-			// toast({
-			//   title: 'Empty Flow',
-			//   description: 'Please add nodes to your flow before running.',
-			//   variant: 'destructive',
-			// });
-			return;
-		}
-
-		setIsRunning(true);
-		setProgressPercent(0);
-
-		// Simulate progress
-		const totalSteps = 20;
-		let currentStep = 0;
-
-		const interval = setInterval(() => {
-			currentStep += 1;
-			setProgressPercent((currentStep / totalSteps) * 100);
-
-			if (currentStep >= totalSteps) {
-				clearInterval(interval);
-				setIsRunning(false);
-				// toast({
-				//   title: 'Flow Execution Complete',
-				//   description: 'Your flow has been executed successfully.',
-				//   variant: 'default',
-				// });
-			}
-		}, 150);
-	}, [nodes]);
-
 	const toggleMiniMap = () => {
 		setShowMiniMap(!showMiniMap);
 	};
+
+	useEffect(() => {
+		fetchFlowData();
+	}, [fetchFlowData]);
 
 	return (
 		<Box
@@ -804,41 +795,15 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 						</Tooltip>
 					</Panel>
 
-					{/* Toggle Theme Button */}
-					{isRunning && (
-						<Box
-							sx={{
-								position: "absolute",
-								top: 0,
-								left: 0,
-								right: 0,
-								zIndex: 20,
-							}}
-						>
-							<LinearProgress
-								variant="determinate"
-								value={progressPercent}
-								sx={{
-									height: 6,
-									borderRadius: "0 0 4px 4px",
-									"& .MuiLinearProgress-bar": {
-										backgroundImage:
-											"linear-gradient(to right, #3b82f6, #10b981)",
-									},
-								}}
-							/>
-						</Box>
-					)}
-
-					{/* Flow toolbar */}
 					<Panel position="top-right">
 						<FlowToolbar
 							onSave={onSave}
 							onLoad={onLoad}
 							onExport={onExport}
 							onClear={onClear}
-							onRun={onRun}
+							onToggleStatus={handleToggleStatus}
 							flowName={flowName}
+							flowStatus={flowStatus}
 							onRename={handleRenameFlow}
 						/>
 					</Panel>
@@ -863,27 +828,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			>
 				<CircularProgress color="inherit" />
 			</Backdrop>
-
-			{/* Alert Messages */}
-			<Snackbar
-				open={alertInfo.open}
-				autoHideDuration={4000}
-				onClose={() => setAlertInfo((prev) => ({ ...prev, open: false }))}
-				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-			>
-				<Alert
-					onClose={() => setAlertInfo((prev) => ({ ...prev, open: false }))}
-					severity={alertInfo.severity}
-					variant="filled"
-					sx={{
-						borderRadius: 2,
-						boxShadow: 4,
-						width: "100%",
-					}}
-				>
-					{alertInfo.message}
-				</Alert>
-			</Snackbar>
 		</Box>
 	);
 };

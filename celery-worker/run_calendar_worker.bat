@@ -10,6 +10,6 @@ pip install -r requirements.txt
 echo.
 
 echo Starting Celery worker...
-celery -A celery_app worker --queues=googleCalendar.consumer --loglevel=info --pool=solo --concurrency=5 --hostname=googleCalendarWorker@%%h
+celery -A celery_app worker --queues=googleCalendar.consumer --loglevel=info --pool=eventlet --concurrency=5 --hostname=googleCalendarWorker@%%h
 
 pause

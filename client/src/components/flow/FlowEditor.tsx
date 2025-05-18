@@ -540,14 +540,12 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 										type: "email",
 										operator: "isValid",
 										value: "",
-										mustMet: true,
 									},
 									{
 										field: "phone",
 										type: "phone",
 										operator: "isValid",
 										value: "",
-										mustMet: true,
 									},
 								],
 							};

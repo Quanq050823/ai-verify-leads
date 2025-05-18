@@ -144,7 +144,6 @@
 }
 .dark-theme textarea {
 	background-color: var(--darkCardBg);
-	border: 1px solid var(--darkBorder);
 	color: #fff;
 }
 .dark-theme .MuiSelect-icon {

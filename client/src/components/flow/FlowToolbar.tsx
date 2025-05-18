@@ -83,7 +83,8 @@ const ToolbarContainer = styled(Box)(({ theme }) => ({
 		theme.palette.mode === "dark"
 			? alpha(theme.palette.background.paper, 0.95)
 			: alpha(theme.palette.background.paper, 0.95),
-	borderRadius: "16px",
+	borderBottomLeftRadius: "16px",
+	borderBottomRightRadius: "16px",
 	boxShadow:
 		theme.palette.mode === "dark"
 			? "0 8px 24px rgba(0,0,0,0.2)"
@@ -105,13 +106,6 @@ const ToolbarSection = styled(Box)(({ theme }) => ({
 	display: "flex",
 	alignItems: "center",
 	gap: theme.spacing(0.5),
-}));
-
-const FlowNameContainer = styled(Box)(({ theme }) => ({
-	display: "flex",
-	alignItems: "center",
-	padding: theme.spacing(0, 2),
-	marginRight: theme.spacing(1),
 }));
 
 const StatusChip = styled(Chip)(({ theme }) => ({
@@ -160,8 +154,8 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
 
 const ToggleButton = styled(IconButton)(({ theme }) => ({
 	position: "absolute",
-	right: theme.spacing(2),
 	top: 0,
+	left: 563,
 	backgroundColor:
 		theme.palette.mode === "dark"
 			? alpha(theme.palette.background.paper, 0.95)

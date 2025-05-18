@@ -760,19 +760,25 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 							nodeColor={(node) => {
 								switch (node.type) {
 									case "googleSheets":
+										return "#0F9D58";
+									case "sheet":
+										return "#16a34a"; // Green
+									case "excel":
+										return "#217346"; // Excel green
 									case "facebookLeadAds":
-										return "#3B82F6";
+										return "#1877f2";
 									case "aiCall":
-									case "sendWebhook":
+										return "#10b981";
 									case "googleCalendar":
-										return "#10B981";
-									case "condition":
-										return "#F59E0B";
-									case "email":
-									case "sms":
-										return "#EC4899";
+										return "#4285f4";
+									case "sendWebhook":
+										return "#8b5cf6";
+									case "deadLead":
+										return "#ef4444";
+									case "preVerify":
+										return "#f59e0b";
 									default:
-										return "#94A3B8";
+										return "#9E9E9E";
 								}
 							}}
 							style={{

@@ -73,19 +73,8 @@ export const getNodeColor = (key: string) => {
 			return "#8b5cf6";
 		case "deadLead":
 			return "#ef4444";
-		case "condition":
 		case "preVerify":
 			return "#f59e0b";
-		case "email":
-			return "#00BCD4";
-		case "sms":
-			return "#8BC34A";
-		case "config":
-			return "#795548";
-		case "error":
-			return "#F44336";
-		case "verified":
-			return "#4CAF50";
 		default:
 			return "#9E9E9E";
 	}

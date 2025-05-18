@@ -31,7 +31,16 @@ import {
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
-import { Column, Id, Lead } from "../../../type";
+import {
+	Column,
+	Id,
+	Lead,
+	NodeType,
+	NodeDisplay,
+	LeadStatus,
+	LeadVerification,
+	Node,
+} from "../../../type";
 import ColumnContainer from "../../../components/LeadPipeline/ColumnContainer";
 import {
 	DndContext,
@@ -48,20 +57,34 @@ import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import { getLeads, fetchLeadsByNodes } from "../../../services/leadServices";
 import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
+import { useFlow } from "@/context/FlowContext";
+import FlowSelector from "@/components/common/FlowSelector";
+import { getFlowById } from "../../../services/flowServices";
 
-// Extend the Column type to include nodeType
-interface ExtendedColumn extends Column {
-	nodeType?: string;
-	iconColor?: string;
-	filterByStatus?: number; // Thêm trường này để lọc theo status
-}
+const nodeTypeMap: Record<string, NodeDisplay> = {
+	[NodeType.InProgressLeads]: {
+		title: "In Progress",
+		color: "#00BCD4",
+		icon: "config",
+	},
+	[NodeType.QualifiedLeads]: {
+		title: "Qualified Leads",
+		color: "#4CAF50",
+		icon: "verified",
+	},
+	[NodeType.UnqualifiedLeads]: {
+		title: "Unqualified Leads",
+		color: "#FFC107",
+		icon: "condition",
+	},
+	[NodeType.DeadLead]: {
+		title: "Dead Leads",
+		color: "#F44336",
+		icon: "error",
+	},
+};
 
-// Mở rộng kiểu Lead để bao gồm nodeBase
-interface ProcessedLead extends Lead {
-	nodeBase?: string;
-}
-
-// Custom styled components
+// Custom styled componentsF
 const SearchTextField = styled(TextField)(({ theme }) => ({
 	"& .MuiOutlinedInput-root": {
 		borderRadius: "10px",
@@ -93,58 +116,37 @@ const IconBox = styled(Box)(({ theme }) => ({
 	marginRight: "12px",
 }));
 
-const nodeTypeColors: Record<string, string> = {
-	email: "#00BCD4",
-	facebook: "#1877f2",
-	facebookleadads: "#1877f2",
-	sendwebhook: "#8b5cf6",
-	delay: "#795548",
-	conditional: "#f59e0b",
-	condition: "#f59e0b",
-	sms: "#8BC34A",
-	googlesheets: "#0F9D58",
-	aicall: "#10b981",
-	googlecalendar: "#4285f4",
-	config: "#795548",
-	error: "#F44336",
-	default: "#9E9E9E",
-	fail: "#FF5252",
-	success: "#4CAF50",
-};
-
 export default function LeadPipelinePage() {
 	const [open, setOpen] = useState(false);
-	const [columns, setColumns] = useState<ExtendedColumn[]>([]);
-	const [leads, setLeads] = useState<ProcessedLead[]>([]);
+	const [columns, setColumns] = useState<Column[]>([]);
+	const [leads, setLeads] = useState<Lead[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [filterType, setFilterType] = useState("all");
-	const [nodeTypes, setNodeTypes] = useState<string[]>([]);
+	const { selectedFlowId } = useFlow();
 
 	const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
-	const [activeColumn, setActiveColumn] = useState<ExtendedColumn | null>(null);
+	const [activeColumn, setActiveColumn] = useState<Column | null>(null);
 
 	// Configure sensor with strict constraints
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
-				distance: 1, // Tăng khoảng cách kích hoạt để tránh kích hoạt vô tình
-				tolerance: 0, // Thêm dung sai để tránh kích hoạt do rung nhẹ
-				delay: 0, // Thêm độ trễ để tránh kích hoạt ngay lập tức
+				distance: 1,
+				tolerance: 0,
+				delay: 0,
 			},
 		})
 	);
 
 	// Prevent drag operations when dialogs are open
 	useEffect(() => {
-		// Create a CSS class to disable pointer events on drag handles when dialog is open
 		if (typeof document !== "undefined") {
 			const style = document.createElement("style");
 			style.id = "dnd-disable-style";
 
 			if (open) {
-				// Disable drag handles when dialog is open
 				style.innerHTML = `
 					.column-header {
 						cursor: default !important;
@@ -157,7 +159,6 @@ export default function LeadPipelinePage() {
 				`;
 				document.head.appendChild(style);
 			} else {
-				// Remove style if already exists
 				const existingStyle = document.getElementById("dnd-disable-style");
 				if (existingStyle) {
 					existingStyle.remove();
@@ -187,7 +188,7 @@ export default function LeadPipelinePage() {
 		}
 	};
 
-	function onDragEnd(event: DragEndEvent) {
+	const onDragEnd = (event: DragEndEvent) => {
 		setActiveColumn(null);
 
 		const { active, over } = event;
@@ -208,201 +209,114 @@ export default function LeadPipelinePage() {
 
 			return arrayMove(columns, activeColumnIndex, overColumnIndex);
 		});
-	}
+	};
 
-	// Fetch leads data and organize by node type
+	// Fetch leads data khi selected flow thay đổi
 	useEffect(() => {
-		const loadLeads = async () => {
+		const fetchLeadData = async () => {
 			setLoading(true);
-			try {
-				// Tải leads từ API
-				let data = await getLeads();
-				console.log("All leads:", data);
+			setError(null);
 
-				// Xử lý dữ liệu sau khi tải
-				processLeadData(data);
+			try {
+				if (selectedFlowId) {
+					// Sử dụng API getLeadByNodes nếu có flowId
+					const data = await fetchLeadsByNodes(selectedFlowId);
+					console.log("Fetched lead data by nodes:", data);
+					createColumnsFromNodesData(data);
+				} else {
+					// Khi không có flow được chọn, không load dữ liệu
+					setLeads([]);
+					setColumns([]);
+					setLoading(false);
+				}
 			} catch (err) {
-				console.error("Error loading leads:", err);
+				console.error("Error fetching leads:", err);
 				setError("Failed to load leads. Please try again.");
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		loadLeads();
-	}, []);
+		fetchLeadData();
+	}, [selectedFlowId, searchTerm, filterType]);
 
-	// Xử lý dữ liệu lead và tạo cột
-	const processLeadData = (data: Lead[]) => {
-		// 1. Trích xuất và chuẩn hóa nodeType từ mỗi lead
-		const processedLeads: ProcessedLead[] = data.map((lead) => ({
-			...lead,
-			// Thêm trường nodeBase để tránh tính toán lặp lại
-			nodeBase: extractNodeBase(lead.nodeId),
-		}));
-
-		// 2. Tìm các loại node duy nhất
-		const uniqueNodeTypes = Array.from(
-			new Set(processedLeads.map((lead) => lead.nodeBase || "unassigned"))
-		);
-		console.log("Unique node types:", uniqueNodeTypes);
-		setNodeTypes(uniqueNodeTypes);
-
-		// 3. Tạo cột cho mỗi loại node
-		if (columns.length === 0 && uniqueNodeTypes.length > 0) {
-			const initialColumns: ExtendedColumn[] = uniqueNodeTypes.map(
-				(nodeType, index) => {
-					const baseType = getBaseNodeType(nodeType);
-					return {
-						id: index + 1,
-						title: nodeType,
-						nodeType: nodeType,
-						iconColor: getNodeTypeColor(baseType),
-					};
-				}
-			);
-
-			initialColumns.push({
-				id: initialColumns.length + 1,
-				title: "Fail",
-				nodeType: "fail",
-				iconColor: nodeTypeColors.fail,
-				filterByStatus: 0, // Status 0 cho Fail
-			});
-
-			initialColumns.push({
-				id: initialColumns.length + 2,
-				title: "Success",
-				nodeType: "success",
-				iconColor: nodeTypeColors.success,
-				filterByStatus: 9, // Status 9 cho Success
-			});
-
-			console.log("Initial columns:", initialColumns);
-			setColumns(initialColumns);
+	// Tạo columns từ dữ liệu API node
+	const createColumnsFromNodesData = (nodesData: Node[]) => {
+		if (!nodesData || nodesData.length === 0) {
+			setColumns([]);
+			setLeads([]);
+			return;
 		}
 
-		setLeads(processedLeads);
-	};
+		// Lọc leads theo search term
+		const filteredNodesData = nodesData.map((node) => {
+			if (!node.leads) return node;
 
-	const extractNodeBase = (nodeId: string | undefined): string => {
-		if (!nodeId) return "unassigned";
-		const parts = nodeId.split("_");
-		return normalizeNodeType(parts[0]);
-	};
+			const filteredLeads = (node.leads || []).filter((lead: Lead) => {
+				if (!searchTerm) return true;
 
-	const getBaseNodeType = (nodeType: string): string => {
-		if (!nodeType || nodeType === "unassigned") return "default";
-
-		const parts = nodeType.split("_");
-		const baseType = parts[0].toLowerCase();
-
-		console.log(
-			"getBaseNodeType input:",
-			nodeType,
-			"extracted base:",
-			baseType
-		);
-
-		const baseTypeMapping: Record<string, string> = {
-			facebookleads: "facebookleadads",
-			form: "googlesheets",
-			sheet: "googlesheets",
-			google: "googlesheets",
-			calendar: "googlecalendar",
-			ai: "aicall",
-			sendwebhook: "sendwebhook",
-			verification: "condition",
-		};
-
-		const result = baseTypeMapping[baseType] || baseType;
-		console.log("getBaseNodeType result:", result);
-		return result;
-	};
-
-	const getNodeTypeColor = (baseType: string): string => {
-		return nodeTypeColors[baseType] || nodeTypeColors.default;
-	};
-
-	const getNodeTypeDisplayName = (nodeType: string): string => {
-		if (!nodeType || nodeType === "unassigned") return "Unassigned";
-		if (nodeType === "fail") return "Fail";
-		if (nodeType === "success") return "Success";
-		if (nodeType === "aiCall") return "AI Call";
-		if (nodeType === "sendWebhook") return "Sending Webhook";
-		if (nodeType === "googleCalendar") return "Booking Meet";
-		if (nodeType === "facebookLeadAds") return "Get Lead Data";
-		const parts = nodeType.split("_");
-		return parts[0];
-	};
-
-	useEffect(() => {
-		if (leads.length > 0 && columns.length > 0) {
-			console.log(
-				"Distributing leads:",
-				leads.length,
-				"to columns:",
-				columns.length
-			);
-
-			const updatedColumns = columns.map((column) => {
-				const columnNodeBase = column.nodeType
-					? normalizeNodeType(column.nodeType.split("_")[0])
-					: null;
-
-				const columnLeads = leads.filter((lead) => {
-					const matchesSearch = searchTerm
-						? (lead.leadData?.["full name"] || "")
-								.toLowerCase()
-								.includes(searchTerm.toLowerCase()) ||
-						  (lead.leadData?.email || "")
-								.toLowerCase()
-								.includes(searchTerm.toLowerCase())
-						: true;
-
-					if (column.filterByStatus !== undefined) {
-						return matchesSearch && lead.status === column.filterByStatus;
-					}
-					if (lead.status === 0 || lead.status === 9) {
-						return false;
-					}
-
-					const nodeTypeMatch = columnNodeBase
-						? lead.nodeBase === columnNodeBase
-						: lead.nodeBase === "unassigned";
-
-					if (lead.nodeBase?.includes("aicall")) {
-						console.log(
-							`Lead nodeId: ${lead.nodeId}, Base: ${lead.nodeBase}`,
-							`Column nodeType: ${column.nodeType}, Base: ${columnNodeBase}`,
-							`Match: ${nodeTypeMatch}`
-						);
-					}
-
-					// Filter by status if filter type is not "all"
-					const statusMatch =
-						filterType === "all"
-							? true
-							: lead.status === parseInt(filterType, 10);
-
-					return matchesSearch && nodeTypeMatch && statusMatch;
-				});
-
-				console.log(
-					`Column ${column.nodeType || "unknown"} has ${
-						columnLeads.length
-					} leads`
+				return (
+					(lead.leadData?.full_name || "")
+						.toLowerCase()
+						.includes(searchTerm.toLowerCase()) ||
+					(lead.leadData?.email || "")
+						.toLowerCase()
+						.includes(searchTerm.toLowerCase())
 				);
-
-				return {
-					...column,
-					leads: columnLeads,
-				};
 			});
 
-			setColumns(updatedColumns);
+			return {
+				...node,
+				leads: filteredLeads,
+			};
+		});
+
+		// Thu thập tất cả leads đã lọc
+		const allLeads = filteredNodesData.reduce((acc: Lead[], node) => {
+			return acc.concat(node.leads || []);
+		}, []);
+
+		setLeads(allLeads);
+
+		// Tạo columns từ node data
+		const newColumns: Column[] = filteredNodesData.map((node, index) => {
+			const nodeConfig = nodeTypeMap[node.id] || {
+				title: node.label || node.id,
+				color: "#9E9E9E",
+				icon: "default",
+			};
+
+			return {
+				id: index + 1,
+				title: nodeConfig.title,
+				type: node.id,
+				iconColor: nodeConfig.color,
+				leads: node.leads || [],
+			};
+		});
+
+		console.log("Created columns from nodes:", newColumns);
+		setColumns(newColumns);
+	};
+
+	const handleRefresh = async () => {
+		setLoading(true);
+		try {
+			if (selectedFlowId) {
+				const data = await fetchLeadsByNodes(selectedFlowId);
+				createColumnsFromNodesData(data);
+			} else {
+				// Khi không có flow được chọn, không refresh dữ liệu
+				setLeads([]);
+				setColumns([]);
+			}
+		} catch (err) {
+			console.error("Error refreshing leads:", err);
+			setError("Failed to refresh leads. Please try again.");
+		} finally {
+			setLoading(false);
 		}
-	}, [leads, searchTerm, filterType]);
+	};
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchTerm(event.target.value);
@@ -410,20 +324,6 @@ export default function LeadPipelinePage() {
 
 	const handleFilterChange = (event: SelectChangeEvent<string>) => {
 		setFilterType(event.target.value);
-	};
-
-	const handleRefresh = async () => {
-		setLoading(true);
-		try {
-			const data = await getLeads();
-			console.log("Refreshed leads:", data);
-			processLeadData(data);
-		} catch (err) {
-			console.error("Error refreshing leads:", err);
-			setError("Failed to refresh leads. Please try again.");
-		} finally {
-			setLoading(false);
-		}
 	};
 
 	const handleClickOpen = () => {
@@ -434,170 +334,79 @@ export default function LeadPipelinePage() {
 		setOpen(false);
 	};
 
-	function createNewColumn() {
-		const columnToAdd: ExtendedColumn = {
-			id: generateId(),
-			title: `Custom Column ${columns.length + 1}`,
-			leads: [],
-			iconColor: "#9e9e9e",
-		};
-
-		setColumns([...columns, columnToAdd]);
-	}
-
-	function generateId() {
+	const generateId = () => {
 		return Math.floor(Math.random() * 10001);
-	}
-
-	function deleteColumn(id: Id) {
-		const filteredColumns = columns.filter((col) => col.id !== id);
-		setColumns(filteredColumns);
-	}
-
-	// Method to render the node icon for a column header
-	const renderNodeIcon = (nodeType: string | undefined) => {
-		if (!nodeType || nodeType === "unassigned") {
-			return getNodeIcon("default");
-		}
-
-		// Thêm icons cho các cột Fail và Success
-		if (nodeType === "fail") {
-			return getNodeIcon("error");
-		}
-
-		if (nodeType === "success") {
-			return getNodeIcon("verified");
-		}
-
-		const baseType = getBaseNodeType(nodeType);
-		const iconMappings: Record<string, string> = {
-			facebookleadads: "facebookLeadAds",
-			facebookads: "facebookAds",
-			facebook: "facebookLeadAds",
-			email: "email",
-			sms: "sms",
-			condition: "condition",
-			googlesheets: "googleSheets",
-			aicall: "aiCall",
-			config: "config",
-			sendwebhook: "sendWebhook",
-			conditional: "condition",
-			error: "error",
-			googlecalendar: "googleCalendar",
-			delay: "config",
-		};
-
-		return getNodeIcon(iconMappings[baseType] || "default");
 	};
 
-	const normalizeNodeType = (nodeType: string): string => {
-		if (!nodeType) return "";
-
-		if (/^[a-z]+[A-Z]/.test(nodeType)) {
-			return nodeType; // Keep camelCase as is
-		}
-
-		return nodeType.toLowerCase();
+	const deleteColumn = (id: Id) => {
+		// Chỉ để hỗ trợ interface, không thực sự xóa cột do chúng đã tạo từ API
+		console.log(
+			"Delete column functionality is disabled for API-generated columns"
+		);
 	};
 
-	if (loading) {
-		return (
-			<Box
+	// Lấy icon cho cột
+	const getColumnIcon = (columnType: string | undefined) => {
+		if (!columnType) return getNodeIcon("default");
+
+		const nodeConfig = nodeTypeMap[columnType];
+
+		if (nodeConfig) {
+			return getNodeIcon(nodeConfig.icon);
+		}
+
+		// Fallback mapping
+		switch (columnType) {
+			case NodeType.InProgressLeads:
+				return getNodeIcon("config");
+			case NodeType.QualifiedLeads:
+				return getNodeIcon("verified");
+			case NodeType.UnqualifiedLeads:
+				return getNodeIcon("condition");
+			case NodeType.DeadLead:
+				return getNodeIcon("error");
+			default:
+				return getNodeIcon("default");
+		}
+	};
+
+	// Nội dung hiển thị khi chưa chọn flow
+	const renderNoFlowSelected = () => (
+		<Box
+			sx={{
+				display: "flex",
+				flexDirection: "column",
+				alignItems: "center",
+				justifyContent: "center",
+				height: "400px",
+				width: "100%",
+			}}
+		>
+			<Paper
+				elevation={0}
 				sx={{
-					display: "flex",
-					justifyContent: "center",
-					alignItems: "center",
-					height: "70vh",
+					p: 4,
+					textAlign: "center",
+					maxWidth: "600px",
+					borderRadius: 3,
+					border: "1px dashed #d0d0d0",
 				}}
+				className="lighter-bg"
 			>
-				<CircularProgress />
-			</Box>
-		);
-	}
-
-	if (error) {
-		return (
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "center",
-					alignItems: "center",
-					height: "70vh",
-				}}
-			>
-				<Typography color="error">{error}</Typography>
-			</Box>
-		);
-	}
-
-	const renderCustomColumnContainer = (column: ExtendedColumn) => {
-		const enhancedColumn = {
-			...column,
-			renderHeader: () => (
-				<Box
-					sx={{ display: "flex", alignItems: "center" }}
-					className="column-header"
-				>
-					<IconBox
-						sx={{
-							backgroundColor: column.iconColor || "#9e9e9e",
-							width: 32,
-							height: 32,
-						}}
-					>
-						{renderNodeIcon(column.nodeType)}
-					</IconBox>
-					<Typography
-						variant="subtitle1"
-						sx={{
-							fontWeight: 600,
-							fontSize: "15px",
-							color: "#121828",
-						}}
-					>
-						{column.nodeType
-							? getNodeTypeDisplayName(column.nodeType)
-							: column.title}
-					</Typography>
-				</Box>
-			),
-		};
-
-		return (
-			<ColumnContainer
-				key={column.id}
-				column={{
-					...enhancedColumn,
-					title: (
-						<Box
-							sx={{ display: "flex", alignItems: "center" }}
-							className="column-header"
-						>
-							<IconBox
-								sx={{
-									backgroundColor: column.iconColor || "#9e9e9e",
-									width: 32,
-									height: 32,
-								}}
-							>
-								{renderNodeIcon(column.nodeType)}
-							</IconBox>
-							<Typography component="span" sx={{ ml: 1 }}>
-								{column.nodeType
-									? getNodeTypeDisplayName(column.nodeType)
-									: column.title}
-							</Typography>
-						</Box>
-					),
-				}}
-				deleteColumn={deleteColumn}
-			/>
-		);
-	};
+				<Typography variant="h5" gutterBottom fontWeight="bold">
+					No Flow Selected
+				</Typography>
+				<Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+					Please select a flow from the dropdown above to view and manage leads.
+					Each flow will show its specific leads organized by processing stages.
+				</Typography>
+			</Paper>
+		</Box>
+	);
 
 	return (
 		<>
-			<Box sx={{ mb: 3 }}>
+			<Box sx={{ minHeight: "85vh" }}>
 				<Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
 					<Link
 						underline="hover"
@@ -664,30 +473,90 @@ export default function LeadPipelinePage() {
 						</Button>
 					</Box>
 				</Box>
-			</Box>
 
-			<Divider sx={{ mb: 3 }} />
+				<Divider sx={{ mb: 3 }} />
 
-			<Paper
-				elevation={0}
-				sx={{
-					borderRadius: "16px",
-					border: "1px solid #E5E7EB",
-					overflow: "hidden",
-					mb: 3,
-					p: 0,
-				}}
-			>
-				<Box
+				{/* Flow Selector */}
+				<Paper
+					elevation={0}
 					sx={{
-						p: "16px 24px",
-						backgroundColor: "#F9FAFB",
-						borderBottom: "1px solid #E5E7EB",
+						p: 3,
+						mb: 3,
+						borderRadius: 2,
+						backgroundColor: "background.paper",
+						boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
 					}}
-					className={"lead-board"}
+					className="lighter-bg flow-selector"
 				>
-					<Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-						<Box sx={{ display: "flex", flexDirection: "row" }}>
+					<Box
+						sx={{
+							display: "flex",
+							flexDirection: { xs: "column", md: "row" },
+							gap: 2,
+							alignItems: { xs: "flex-start", md: "center" },
+							justifyContent: "space-between",
+						}}
+					>
+						<Box>
+							<Typography variant="h6" sx={{ mb: 0.5, fontWeight: 600 }}>
+								Select Flow to View Leads
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Lead pipeline data will be filtered according to the flow you
+								choose.
+							</Typography>
+						</Box>
+
+						<Box>
+							<FlowSelector />
+							{!loading && selectedFlowId && (
+								<Box sx={{ mt: 1, textAlign: "right" }}>
+									<Typography variant="caption" color="text.secondary">
+										{`Showing ${leads.length} leads for selected flow`}
+									</Typography>
+								</Box>
+							)}
+						</Box>
+					</Box>
+				</Paper>
+
+				<Paper elevation={0} sx={{ mb: 3 }} className={"lighter-bg"}>
+					<Box
+						sx={{
+							borderTopRightRadius: "12px",
+							borderTopLeftRadius: "12px",
+							p: "16px 24px",
+							overflow: "hidden",
+						}}
+						className={"flow-card-header"}
+					>
+						<Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+							{selectedFlowId && (
+								<Box sx={{ display: "flex", flexDirection: "row" }}>
+									<Box
+										sx={{
+											display: "flex",
+											gap: 1,
+											alignItems: "center",
+											ml: "auto",
+										}}
+									>
+										<IconButton size="small" title="Search leads">
+											<SearchIcon />
+										</IconButton>
+									</Box>
+									<SearchTextField
+										placeholder="Search leads..."
+										size="small"
+										value={searchTerm}
+										onChange={handleSearchChange}
+										className="white-text"
+										sx={{ minWidth: "250px" }}
+									/>
+								</Box>
+							)}
+
+							{/* Status indicator chips */}
 							<Box
 								sx={{
 									display: "flex",
@@ -696,179 +565,183 @@ export default function LeadPipelinePage() {
 									ml: "auto",
 								}}
 							>
-								<IconButton size="small" title="Refresh leads">
-									<SearchIcon />
-								</IconButton>
+								{selectedFlowId && (
+									<IconButton
+										size="small"
+										onClick={handleRefresh}
+										title="Refresh leads"
+									>
+										<RefreshIcon />
+									</IconButton>
+								)}
 							</Box>
-							<SearchTextField
-								placeholder="Search leads..."
-								size="small"
-								value={searchTerm}
-								onChange={handleSearchChange}
-								className="white-text"
-								sx={{ minWidth: "250px" }}
-							/>
-
-							<FormControl size="small" sx={{ minWidth: "150px" }}>
-								<InputLabel id="status-filter-label">Status</InputLabel>
-								<Select
-									labelId="status-filter-label"
-									value={filterType}
-									label="Status"
-									onChange={handleFilterChange}
-								>
-									<MenuItem value="all">All Statuses</MenuItem>
-									<MenuItem value="1">Pending</MenuItem>
-									<MenuItem value="2">In Progress</MenuItem>
-									<MenuItem value="3">Success</MenuItem>
-									<MenuItem value="9">Done</MenuItem>
-								</Select>
-							</FormControl>
-						</Box>
-
-						{/* Status indicator chips */}
-						<Box
-							sx={{
-								display: "flex",
-								gap: 1,
-								alignItems: "center",
-								ml: "auto",
-							}}
-						>
-							<IconButton
-								size="small"
-								onClick={handleRefresh}
-								title="Refresh leads"
-							>
-								<RefreshIcon />
-							</IconButton>
 						</Box>
 					</Box>
-				</Box>
 
-				<Box sx={{ p: 2 }} className={"lead-board-insight"}>
-					<DndContext
-						sensors={sensors}
-						onDragStart={handleDragStart}
-						onDragEnd={onDragEnd}
-						onDragCancel={handleDragCancel}
-						collisionDetection={closestCorners}
+					<Box
+						sx={{
+							p: 2,
+							borderBottomLeftRadius: "12px",
+							borderBottomRightRadius: "12px",
+							overflow: "hidden",
+						}}
+						className={"lead-board-insight"}
 					>
-						<Box
-							sx={{
-								minHeight: "calc(100vh - 300px)",
-								display: "flex",
-								flexDirection: "column",
-							}}
-						>
+						{loading ? (
 							<Box
-								style={{
-									overflowX: "auto",
-									overflowY: "hidden",
+								sx={{
+									display: "flex",
+									justifyContent: "center",
+									alignItems: "center",
+									height: "200px",
 									width: "100%",
-									padding: "8px 4px",
 								}}
 							>
-								<Box
-									display="flex"
-									flexDirection="row"
-									alignItems="flex-start"
-									gap="20px"
-									sx={{ pb: 2 }}
-								>
-									<SortableContext items={columnsId}>
-										{columns.map((column) => (
-											<ColumnContainer
-												key={column.id}
-												column={{
-													...column,
-													title: (
-														<Box
-															sx={{ display: "flex", alignItems: "center" }}
-															className="column-header"
-														>
-															<IconBox
-																sx={{
-																	backgroundColor:
-																		column.iconColor || "#9e9e9e",
-																	width: 32,
-																	height: 32,
-																}}
-															>
-																{renderNodeIcon(column.nodeType)}
-															</IconBox>
-															<Typography component="span" sx={{ ml: 1 }}>
-																{column.nodeType
-																	? getNodeTypeDisplayName(column.nodeType)
-																	: column.title}
-															</Typography>
-														</Box>
-													),
-												}}
-												deleteColumn={deleteColumn}
-											/>
-										))}
-									</SortableContext>
-								</Box>
+								<CircularProgress />
 							</Box>
-						</Box>
+						) : error ? (
+							<Box
+								sx={{
+									display: "flex",
+									justifyContent: "center",
+									alignItems: "center",
+									height: "200px",
+									width: "100%",
+								}}
+							>
+								<Typography color="error">{error}</Typography>
+							</Box>
+						) : !selectedFlowId ? (
+							renderNoFlowSelected()
+						) : columns.length === 0 ? (
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "column",
+									justifyContent: "center",
+									alignItems: "center",
+									height: "200px",
+									width: "100%",
+								}}
+							>
+								<Typography
+									variant="body1"
+									color="text.secondary"
+									sx={{ mb: 1 }}
+								>
+									No columns available for this flow
+								</Typography>
+							</Box>
+						) : (
+							<DndContext
+								sensors={sensors}
+								onDragStart={handleDragStart}
+								onDragEnd={onDragEnd}
+								onDragCancel={handleDragCancel}
+								collisionDetection={closestCorners}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+									}}
+								>
+									<Box
+										style={{
+											overflowX: "auto",
+											overflowY: "hidden",
+											width: "100%",
+											padding: "8px 4px",
+										}}
+									>
+										<Box
+											display="flex"
+											flexDirection="row"
+											alignItems="flex-start"
+											gap="20px"
+											sx={{ pb: 2 }}
+										>
+											<SortableContext items={columnsId}>
+												{columns.map((column) => (
+													<ColumnContainer
+														key={column.id}
+														column={{
+															...column,
+															title: (
+																<Box
+																	sx={{ display: "flex", alignItems: "center" }}
+																	className="column-header"
+																>
+																	<IconBox
+																		sx={{
+																			backgroundColor:
+																				column.iconColor || "#9e9e9e",
+																			width: 32,
+																			height: 32,
+																		}}
+																	>
+																		{getColumnIcon(column.type as string)}
+																	</IconBox>
+																	<Typography component="span" sx={{ ml: 1 }}>
+																		{column.title}
+																	</Typography>
+																</Box>
+															),
+														}}
+														deleteColumn={deleteColumn}
+													/>
+												))}
+											</SortableContext>
+										</Box>
+									</Box>
+								</Box>
 
-						{typeof document !== "undefined" &&
-							createPortal(
-								<DragOverlay>
-									{activeColumn && (
-										<ColumnContainer
-											column={{
-												...activeColumn,
-												title: (
-													<Box
-														sx={{ display: "flex", alignItems: "center" }}
-														className="column-header"
-													>
-														<IconBox
-															sx={{
-																backgroundColor:
-																	activeColumn.iconColor || "#9e9e9e",
-																width: 32,
-																height: 32,
-															}}
-														>
-															{renderNodeIcon(activeColumn.nodeType)}
-														</IconBox>
-														<Typography component="span" sx={{ ml: 1 }}>
-															{activeColumn.nodeType
-																? getNodeTypeDisplayName(activeColumn.nodeType)
-																: activeColumn.title}
-														</Typography>
-													</Box>
-												),
-											}}
-											deleteColumn={deleteColumn}
-										/>
+								{typeof document !== "undefined" &&
+									createPortal(
+										<DragOverlay>
+											{activeColumn && (
+												<ColumnContainer
+													column={{
+														...activeColumn,
+														title: (
+															<Box
+																sx={{ display: "flex", alignItems: "center" }}
+																className="column-header"
+															>
+																<Typography component="span" sx={{ ml: 1 }}>
+																	{activeColumn.title}
+																</Typography>
+															</Box>
+														),
+													}}
+													deleteColumn={deleteColumn}
+												/>
+											)}
+										</DragOverlay>,
+										document.body
 									)}
-								</DragOverlay>,
-								document.body
-							)}
-					</DndContext>
-				</Box>
-			</Paper>
+							</DndContext>
+						)}
+					</Box>
+				</Paper>
 
-			<Dialog
-				open={open}
-				onClose={handleClose}
-				fullWidth
-				maxWidth="lg"
-				PaperProps={{
-					sx: {
-						borderRadius: "16px",
-						boxShadow: "0px 24px 48px rgba(0, 0, 0, 0.2)",
-					},
-				}}
-			>
-				<DialogContent sx={{ p: 0 }}>
-					<ImportLeadContent />
-				</DialogContent>
-			</Dialog>
+				<Dialog
+					open={open}
+					onClose={handleClose}
+					fullWidth
+					maxWidth="lg"
+					PaperProps={{
+						sx: {
+							borderRadius: "16px",
+							boxShadow: "0px 24px 48px rgba(0, 0, 0, 0.2)",
+						},
+					}}
+				>
+					<DialogContent sx={{ p: 0 }}>
+						<ImportLeadContent />
+					</DialogContent>
+				</Dialog>
+			</Box>
 		</>
 	);
 }

@@ -69,7 +69,7 @@ const LeftSidebarMenu: React.FC<LeftSidebarProps> = ({ toggleActive }) => {
 					<Box className="logo">
 						<Link href="/">
 							<Image
-								src="/images/logo-icon.svg"
+								src="/images/Sine_logo_icon.png"
 								alt="logo-icon"
 								width={26}
 								height={26}

@@ -57,9 +57,17 @@ import {
 	ConfigNode,
 	ErrorNode,
 	FacebookLeadAdsNode,
+	DeadLeadNode,
+	SheetNode,
+	ExcelNode,
 } from "./nodes/NodeTypes";
 import { CustomEdgeData } from "./edges/CustomEdge";
-import { getFlowById, createFlow, updateFlow } from "@/services/flowServices";
+import {
+	getFlowById,
+	createFlow,
+	updateFlow,
+	toggleFlowStatus,
+} from "@/services/flowServices";
 import { useTheme } from "@/context/ThemeContext";
 
 // Define MUI themes
@@ -124,11 +132,14 @@ const getDarkTheme = () =>
 // Define node types
 const nodeTypes = {
 	googleSheets: GoogleSheetsNode,
+	sheet: SheetNode,
+	excel: ExcelNode,
 	facebookLeadAds: FacebookLeadAdsNode,
 	aiCall: AICallNode,
 	googleCalendar: CalendarNode,
 	sendWebhook: WebhookNode,
 	condition: ConditionNode,
+	deadLead: DeadLeadNode,
 	preVerify: ConditionNode,
 	email: EmailNode,
 	sms: SMSNode,
@@ -164,57 +175,72 @@ interface FlowEditorProps {
 }
 
 const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
-	const { isDarkMode, toggleTheme } = useTheme();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 	const [selectedNode, setSelectedNode] = useState<Node | null>(null);
 	const [reactFlowInstance, setReactFlowInstance] =
 		useState<ReactFlowInstance | null>(null);
-	const [isRunning, setIsRunning] = useState<boolean>(false);
-	const [progressPercent, setProgressPercent] = useState<number>(0);
 	const [showPropertiesPanel, setShowPropertiesPanel] =
 		useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
-	const [flowName, setFlowName] = useState<string>("New Flow");
+	const [flowName, setFlowName] = useState<string>("Untitled Flow");
+	const [flowStatus, setFlowStatus] = useState<number>(1); // Default to disabled
 	const [showMiniMap, setShowMiniMap] = useState<boolean>(true);
-	const [alertInfo, setAlertInfo] = useState<{
-		open: boolean;
-		severity: "success" | "error";
-		message: string;
-	}>({ open: false, severity: "success", message: "" });
 
-	const reactFlowUtil = useReactFlow();
+	const fetchFlowData = useCallback(async () => {
+		if (!flowId) return;
 
-	// Tải dữ liệu flow từ API khi component được mount
-	useEffect(() => {
-		const loadFlowData = async () => {
-			if (!flowId) return;
+		try {
+			setLoading(true);
+			const data = await getFlowById(flowId);
 
-			try {
-				setLoading(true);
-				const flowData = await getFlowById(flowId);
+			if (data) {
+				setFlowName(data.name);
+				setFlowStatus(data.status);
 
-				if (flowData && flowData.nodeData) {
-					// Cập nhật nodes và edges từ dữ liệu API
-					setNodes(flowData.nodeData.nodes || []);
-					setEdges(flowData.nodeData.edges || []);
-					// Lưu tên flow
-					if (flowData.name) {
-						setFlowName(flowData.name);
-					}
+				if (data.nodeData?.nodes) {
+					const processedNodes = data.nodeData.nodes.map((node: any) => {
+						return {
+							...node,
+						};
+					});
+					setNodes(processedNodes);
 				}
-			} catch (error) {
-				console.error("Error loading flow data:", error);
-			} finally {
-				setLoading(false);
+
+				if (data.nodeData?.edges) {
+					const processedEdges = data.nodeData.edges.map((edge: any) => {
+						return {
+							...edge,
+							type: "custom",
+						};
+					});
+					setEdges(processedEdges);
+				}
 			}
-		};
+		} catch (error) {
+		} finally {
+			setLoading(false);
+		}
+	}, [flowId, setEdges, setNodes]);
 
-		loadFlowData();
-	}, [flowId, setNodes, setEdges]);
+	const handleToggleStatus = async () => {
+		if (!flowId) return;
 
-	// Handle node drag from sidebar
+		try {
+			setLoading(true);
+			const result = await toggleFlowStatus(flowId, flowStatus);
+
+			if (result && !result.error) {
+				setFlowStatus(flowStatus === 2 ? 1 : 2);
+			}
+		} catch (error) {
+			console.error("Error toggling flow status:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const onDragOver = useCallback((event: React.DragEvent) => {
 		event.preventDefault();
 		event.dataTransfer.dropEffect = "move";
@@ -227,7 +253,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
 			const type = event.dataTransfer.getData("application/reactflow");
 
-			// Check if the dropped element is valid
 			if (
 				typeof type === "undefined" ||
 				!type ||
@@ -237,13 +262,11 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return;
 			}
 
-			// Use screenToFlowPosition instead of project
 			const position = reactFlowInstance.screenToFlowPosition({
 				x: event.clientX - reactFlowBounds.left,
 				y: event.clientY - reactFlowBounds.top,
 			});
 
-			// Create a unique ID
 			const id = `${type}_${Date.now()}`;
 
 			const newNode: Node = {
@@ -267,6 +290,10 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		switch (type) {
 			case "googleSheets":
 				return "Google Sheets";
+			case "sheet":
+				return "Sheet Import";
+			case "excel":
+				return "Excel Import";
 			case "facebookLeadAds":
 				return "Facebook Lead Ads";
 			case "aiCall":
@@ -275,6 +302,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Google Calendar";
 			case "sendWebhook":
 				return "Send to webhook";
+			case "deadLead":
+				return "Dead Lead";
 			case "condition":
 				return "Condition";
 			case "preVerify":
@@ -298,6 +327,10 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		switch (type) {
 			case "googleSheets":
 				return "Import leads from Google Sheets";
+			case "sheet":
+				return "Import leads from Sheet files";
+			case "excel":
+				return "Import leads from Excel files";
 			case "facebookLeadAds":
 				return "Import leads from Facebook Lead Ads";
 			case "aiCall":
@@ -306,6 +339,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 				return "Schedule appointments";
 			case "sendWebhook":
 				return "Send lead data to a webhook";
+			case "deadLead":
+				return "Handle dead leads in the flow";
 			case "condition":
 				return "Branch based on conditions";
 			case "preVerify":
@@ -323,19 +358,17 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		}
 	};
 
-	// Handle connection between nodes
 	const onConnect = useCallback(
 		(params: Connection) => {
 			const newEdgeId = `e_${params.source}_${params.target}_${Date.now()}`;
 			const sourceNodeId = params.source?.split("_")[0].toLowerCase();
 
-			// Xác định loại node nguồn có nhiều đầu ra
 			const isMultiOutputNode =
 				sourceNodeId === "condition" ||
 				sourceNodeId === "preverify" ||
+				sourceNodeId === "deadlead" ||
 				sourceNodeId === "aicall";
 
-			// Tạo nhãn cho cạnh dựa trên loại node và handle
 			let edgeLabel = "";
 			if (isMultiOutputNode) {
 				if (params.sourceHandle === "output-0") {
@@ -448,7 +481,116 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 	const onSave = useCallback(() => {
 		if (reactFlowInstance) {
 			setLoading(true);
-			const flowData = reactFlowInstance.toObject();
+			let flowData = reactFlowInstance.toObject();
+
+			// Khởi tạo giá trị mặc định cho các node chưa có settings
+			const updatedNodes = flowData.nodes.map((node: any) => {
+				// Nếu node chưa có settings hoặc settings rỗng
+				if (
+					!node.data?.settings ||
+					Object.keys(node.data.settings).length === 0
+				) {
+					let defaultSettings = {};
+
+					// Thiết lập giá trị mặc định tùy theo loại node
+					switch (node.type) {
+						case "aiCall":
+							defaultSettings = {
+								language: "english",
+								prompt: "",
+								introduction: "",
+								questions: [""],
+								goodByeMessage: "",
+							};
+							break;
+						case "googleCalendar":
+							defaultSettings = {
+								calendarName: "",
+								eventName: "",
+								startWorkDays: 0,
+								endWorkDays: 4,
+								startTime: "09:00",
+								endTime: "17:00",
+								duration: 30,
+							};
+							break;
+						case "sheet":
+							defaultSettings = {
+								filePath: "",
+								sheetName: "",
+								sheetType: "csv",
+								delimiter: ",",
+								hasHeader: true,
+							};
+							break;
+						case "excel":
+							defaultSettings = {
+								filePath: "",
+								sheetName: "",
+								hasHeader: true,
+							};
+							break;
+						case "preVerify":
+							defaultSettings = {
+								enableWebScraping: false,
+								webScrapingPrompt: "",
+								criteria: [
+									{
+										field: "email",
+										type: "email",
+										operator: "isValid",
+										value: "",
+									},
+									{
+										field: "phone",
+										type: "phone",
+										operator: "isValid",
+										value: "",
+									},
+								],
+							};
+							break;
+						case "facebookLeadAds":
+							defaultSettings = {
+								connection: "",
+								pageId: "",
+								formId: "",
+							};
+							break;
+						case "sendWebhook":
+							defaultSettings = {
+								webhookUrl: "",
+								method: "POST",
+								headers: "{}",
+								timeout: 30,
+								retryCount: 3,
+							};
+							break;
+						default:
+							// Không có giá trị mặc định cho các loại node khác
+							break;
+					}
+
+					// Chỉ cập nhật settings nếu có giá trị mặc định
+					if (Object.keys(defaultSettings).length > 0) {
+						return {
+							...node,
+							data: {
+								...node.data,
+								settings: defaultSettings,
+							},
+						};
+					}
+				}
+				return node;
+			});
+
+			// Cập nhật flowData với các nodes đã được cập nhật settings
+			flowData = {
+				...flowData,
+				nodes: updatedNodes,
+			};
+
 			localStorage.setItem("flow-data", JSON.stringify(flowData));
 
 			// Lưu flow vào cơ sở dữ liệu
@@ -558,43 +700,13 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 		// });
 	}, [setNodes, setEdges]);
 
-	// Simulate running the flow
-	const onRun = useCallback(() => {
-		if (nodes.length === 0) {
-			// toast({
-			//   title: 'Empty Flow',
-			//   description: 'Please add nodes to your flow before running.',
-			//   variant: 'destructive',
-			// });
-			return;
-		}
-
-		setIsRunning(true);
-		setProgressPercent(0);
-
-		// Simulate progress
-		const totalSteps = 20;
-		let currentStep = 0;
-
-		const interval = setInterval(() => {
-			currentStep += 1;
-			setProgressPercent((currentStep / totalSteps) * 100);
-
-			if (currentStep >= totalSteps) {
-				clearInterval(interval);
-				setIsRunning(false);
-				// toast({
-				//   title: 'Flow Execution Complete',
-				//   description: 'Your flow has been executed successfully.',
-				//   variant: 'default',
-				// });
-			}
-		}, 150);
-	}, [nodes]);
-
 	const toggleMiniMap = () => {
 		setShowMiniMap(!showMiniMap);
 	};
+
+	useEffect(() => {
+		fetchFlowData();
+	}, [fetchFlowData]);
 
 	return (
 		<Box
@@ -648,19 +760,25 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 							nodeColor={(node) => {
 								switch (node.type) {
 									case "googleSheets":
+										return "#0F9D58";
+									case "sheet":
+										return "#16a34a"; // Green
+									case "excel":
+										return "#217346"; // Excel green
 									case "facebookLeadAds":
-										return "#3B82F6";
+										return "#1877f2";
 									case "aiCall":
-									case "sendWebhook":
+										return "#10b981";
 									case "googleCalendar":
-										return "#10B981";
-									case "condition":
-										return "#F59E0B";
-									case "email":
-									case "sms":
-										return "#EC4899";
+										return "#4285f4";
+									case "sendWebhook":
+										return "#8b5cf6";
+									case "deadLead":
+										return "#ef4444";
+									case "preVerify":
+										return "#f59e0b";
 									default:
-										return "#94A3B8";
+										return "#9E9E9E";
 								}
 							}}
 							style={{
@@ -702,41 +820,15 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 						</Tooltip>
 					</Panel>
 
-					{/* Toggle Theme Button */}
-					{isRunning && (
-						<Box
-							sx={{
-								position: "absolute",
-								top: 0,
-								left: 0,
-								right: 0,
-								zIndex: 20,
-							}}
-						>
-							<LinearProgress
-								variant="determinate"
-								value={progressPercent}
-								sx={{
-									height: 6,
-									borderRadius: "0 0 4px 4px",
-									"& .MuiLinearProgress-bar": {
-										backgroundImage:
-											"linear-gradient(to right, #3b82f6, #10b981)",
-									},
-								}}
-							/>
-						</Box>
-					)}
-
-					{/* Flow toolbar */}
 					<Panel position="top-right">
 						<FlowToolbar
 							onSave={onSave}
 							onLoad={onLoad}
 							onExport={onExport}
 							onClear={onClear}
-							onRun={onRun}
+							onToggleStatus={handleToggleStatus}
 							flowName={flowName}
+							flowStatus={flowStatus}
 							onRename={handleRenameFlow}
 						/>
 					</Panel>
@@ -749,6 +841,8 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 					selectedNode={selectedNode}
 					onChange={onNodeDataChange}
 					onClose={() => setShowPropertiesPanel(false)}
+					flowId={flowId || undefined}
+					flowName={flowName}
 				/>
 			)}
 
@@ -759,27 +853,6 @@ const FlowEditorContent: React.FC<FlowEditorProps> = ({ flowId }) => {
 			>
 				<CircularProgress color="inherit" />
 			</Backdrop>
-
-			{/* Alert Messages */}
-			<Snackbar
-				open={alertInfo.open}
-				autoHideDuration={4000}
-				onClose={() => setAlertInfo((prev) => ({ ...prev, open: false }))}
-				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-			>
-				<Alert
-					onClose={() => setAlertInfo((prev) => ({ ...prev, open: false }))}
-					severity={alertInfo.severity}
-					variant="filled"
-					sx={{
-						borderRadius: 2,
-						boxShadow: 4,
-						width: "100%",
-					}}
-				>
-					{alertInfo.message}
-				</Alert>
-			</Snackbar>
 		</Box>
 	);
 };

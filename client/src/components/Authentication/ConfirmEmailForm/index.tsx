@@ -25,26 +25,9 @@ const ConfirmEmailForm: React.FC = () => {
 						container
 						alignItems="center"
 						columnSpacing={{ xs: 1, sm: 2, md: 4, lg: 3 }}
+						textAlign="center"
 					>
-						<Grid item xs={12} md={6} lg={6} xl={7}>
-							<Box
-								sx={{
-									display: { xs: "none", md: "block" },
-								}}
-							>
-								<Image
-									src="/images/confirm-email.jpg"
-									alt="confirm-email-image"
-									width={646}
-									height={804}
-									style={{
-										borderRadius: "24px",
-									}}
-								/>
-							</Box>
-						</Grid>
-
-						<Grid item xs={12} md={6} lg={6} xl={5}>
+						<Grid item xs={12} md={12} lg={12} xl={5}>
 							<Box
 								className="form-content"
 								sx={{

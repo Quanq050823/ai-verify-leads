@@ -1,0 +1,37 @@
+scrape_website:
+  description: >
+    Extract relevant information from the website at {website_url}.
+
+    Focus on:
+    1. Business information
+    2. Contact details
+    3. Service/product descriptions
+    4. Company details and facts
+    5. Location details
+
+    Structure the data for easy analysis by the criteria analyzer.
+  expected_output: Structured text containing relevant website information
+  agent: web_scraper_agent
+
+analyze_content:
+  description: >
+    Analyze the scraped content against the criteria: {prompt_criteria}
+
+    Follow these rules:
+    1. Compare each criterion against available content
+    2. Make logical inferences only when strongly supported by evidence
+    3. Keep reason explanations under 8 words
+
+    Write to "scraping_result.txt" as JSON:
+    {
+      "pass": boolean,
+      "criteria_results": [
+        {
+          "criterion": "criterion_name",
+          "passed": boolean,
+          "reason": "brief explanation"
+        }
+      ]
+    }
+  expected_output: JSON with pass status and criteria results
+  agent: criteria_analyzer_agent

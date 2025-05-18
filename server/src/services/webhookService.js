@@ -160,21 +160,32 @@ export const getTranscript = async (data) => {
             throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
         }
 
-        let lead;
-        if (transcript && transcript?.conversation?.length != 0) {
-            lead = await Lead.findOneAndUpdate(
-                { _id: leadId },
-                { $set: { "leadData.transcript": transcript } },
-                { new: true }
-            );
-        }
-
+        let lead = await Lead.findById(getObjectId(leadId));
         if (!lead) {
-            console.warn("Lead not found or no transcript data provided.");
-            return;
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Lead not found.");
         }
 
-        await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], false);
+        if (transcript) {
+            lead.leadData.transcript = transcript;
+            let analysisResult = await qualifyLead(lead);
+
+            console.log("Analysis result: ", analysisResult);
+            lead.isVerified.status = analysisResult.pass ? 2 : 1;
+            lead.isVerified.message = analysisResult.message;
+            lead.error = {
+                status: analysisResult?.pass ? false : lead.error.status,
+            };
+            lead.markModified("leadData");
+            let test = await lead.save();
+        }
+
+        await publishLead(
+            lead.userId,
+            lead.flowId,
+            lead.nodeId,
+            [lead],
+            lead.isVerified.status == 2 ? 1 : 0
+        );
 
         return lead;
     } catch (error) {
@@ -191,6 +202,36 @@ export const getTranscript = async (data) => {
             { new: true }
         );
         // if (lead) await publishLead(lead.userId, lead.flowId, lead.nodeId, [lead], true);
+        throw error;
+    }
+};
+
+export const qualifyLead = async (lead) => {
+    try {
+        console.log("Qualifying lead:...");
+        if (!lead) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Missing required parameters.");
+        }
+
+        let flows = await flowService.getFacebookLeadFlow(lead.page_id, lead.form_id);
+        let node = flows[0].nodeData.nodes.find((node) => node.id === lead.nodeId);
+        if (!node) {
+            throw new ApiError(StatusCodes.BAD_REQUEST, "Node not found.");
+        }
+        let response = await fetch("http://127.0.0.1:5000/analyze", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                transcript: lead.leadData.transcript,
+                customerPrompt: node.data.settings.prompt,
+            }),
+        });
+        let result = await response.json();
+        // console.log("result: ", result);
+        return result;
+    } catch (error) {
         throw error;
     }
 };

@@ -17,7 +17,7 @@ def ai_call(self, message):
         phone = lead["leadData"].get("phone", "50002")
         phone = "50002" if phone != "50002" and phone != "50002" else phone 
         data = {
-            "leadId": message["leadId"],
+            'leadId': message['leadId'],
             "questions": settings["questions"],
             "introduction": settings["introduction"],
             "goodByeMessage": settings["goodByeMessage"],

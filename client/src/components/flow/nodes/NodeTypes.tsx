@@ -11,6 +11,9 @@ import {
 	Phone,
 	Settings,
 	ErrorOutline,
+	ReportProblem,
+	GridOn,
+	LibraryBooks,
 } from "@mui/icons-material";
 
 // Lead Input Nodes
@@ -24,6 +27,40 @@ export const GoogleSheetsNode = memo(({ data, selected, id }: any) => {
 				type: "Input",
 				subType: "Sheets",
 				color: "#34A853",
+			}}
+			selected={selected}
+			id={id}
+		/>
+	);
+});
+
+export const SheetNode = memo(({ data, selected, id }: any) => {
+	return (
+		<BaseNode
+			data={{
+				...data,
+				label: "Sheet Import",
+				icon: <GridOn fontSize="small" />,
+				type: "Input",
+				subType: "SheetImport",
+				color: "#16a34a",
+			}}
+			selected={selected}
+			id={id}
+		/>
+	);
+});
+
+export const ExcelNode = memo(({ data, selected, id }: any) => {
+	return (
+		<BaseNode
+			data={{
+				...data,
+				label: "Excel Import",
+				icon: <LibraryBooks fontSize="small" />,
+				type: "Input",
+				subType: "ExcelImport",
+				color: "#217346",
 			}}
 			selected={selected}
 			id={id}
@@ -45,6 +82,7 @@ export const FacebookLeadAdsNode = memo(({ data, selected, id }: any) => {
 				type: "Input",
 				subType: isLeadAds ? "LeadAds" : "Ads",
 				color: "#1877F2",
+				inputs: 0,
 			}}
 			selected={selected}
 			id={id}
@@ -63,6 +101,7 @@ export const AICallNode = memo(({ data, selected, id }: any) => {
 				type: "Process",
 				subType: "AI",
 				color: "#10B981",
+
 				outputs: 2,
 			}}
 			selected={selected}
@@ -98,6 +137,23 @@ export const WebhookNode = memo(({ data, selected, id }: any) => {
 				type: "Process",
 				subType: "API",
 				color: "#8B5CF6",
+			}}
+			selected={selected}
+			id={id}
+		/>
+	);
+});
+export const DeadLeadNode = memo(({ data, selected, id }: any) => {
+	return (
+		<BaseNode
+			data={{
+				...data,
+				label: "Check Dead Lead",
+				icon: <ReportProblem fontSize="small" />,
+				type: "Process",
+				subType: "Flow",
+				color: "#ef4444",
+				outputs: 2,
 			}}
 			selected={selected}
 			id={id}

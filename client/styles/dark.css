@@ -144,7 +144,6 @@
 }
 .dark-theme textarea {
 	background-color: var(--darkCardBg);
-	border: 1px solid var(--darkBorder);
 	color: #fff;
 }
 .dark-theme .MuiSelect-icon {
@@ -633,7 +632,7 @@
 }
 
 .dark-theme .column-header {
-	background-color: #121a2e !important;
+	background-color: #23376a !important;
 }
 .dark-theme .lead-card {
 	background-color: #23376a !important;
@@ -667,6 +666,9 @@
 .dark-theme .flow-card-content {
 	background-color: #0b152c !important;
 }
+.dark-theme .flow-column-content {
+	background-color: #1d294f !important;
+}
 .dark-theme .flow-card-footer {
 	background-color: #0c1427 !important;
 }
@@ -677,4 +679,32 @@
 .dark-theme .sidebar {
 	background-color: rgb(37, 49, 74);
 	box-shadow: var(--sidebar-shadow);
+}
+.dark-theme .border-custom {
+	border: 1px solid #121a2e;
+}
+.dark-theme .dragging-column {
+	background-color: #63beff8b;
+}
+.dark-theme .card-lead {
+	background-color: #66a4bf8a !important;
+}
+.dark-theme .card-lead-info {
+	background-color: #66a4bf8a !important;
+}
+.dark-theme .criteria-info {
+	background-color: #334061 !important;
+}
+.dark-theme .info-card-header {
+	background-color: #334061 !important;
+}
+.dark-theme .info-card-content {
+	background-color: #334061 !important;
+}
+.dark-theme .position-label {
+	color: #51e6e1 !important;
+}
+.dark-theme .retry-button {
+	background-color: #007bff !important;
+	color: #fff !important;
 }

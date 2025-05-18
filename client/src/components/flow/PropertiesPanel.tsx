@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Node } from "@xyflow/react";
 import {
 	Box,
@@ -33,6 +33,7 @@ import {
 	Add,
 	Call,
 	Remove,
+	Save,
 } from "@mui/icons-material";
 import {
 	useFacebookConnections,
@@ -47,17 +48,20 @@ import {
 	openGoogleCalendarConnect,
 } from "@/services/googleCalendarServices";
 import { toast } from "react-toastify";
-import { callLead, LeadData } from "@/services/flowServices";
+import { callLead, LeadData, updateFlow } from "@/services/flowServices";
+import { useReactFlow } from "@xyflow/react";
 
 type PropertiesPanelProps = {
 	selectedNode: Node | null;
 	onChange: (id: string, data: any) => void;
 	onClose: () => void;
+	flowId?: string;
+	flowName?: string;
 };
 
 interface NodeSettings {
-	spreadsheetId?: string;
-	sheetName?: string;
+	sheetUrl?: string;
+	excelUrl?: string;
 	adAccountId?: string;
 	campaignId?: string;
 	apiProvider?: string;
@@ -93,16 +97,18 @@ interface NodeSettings {
 	endWorkDays?: number;
 	startTime?: string;
 	endTime?: string;
+	enableWebScraping?: boolean;
+	webScrapingPrompt?: string;
 	criteria?: Array<{
 		field: string;
 		type: string;
 		operator: string;
 		value: string | boolean | number;
-		mustMet: boolean;
 	}>;
 	[key: string]:
 		| string
 		| number
+		| boolean
 		| Array<string>
 		| Array<{ [key: string]: any }>
 		| undefined;
@@ -209,7 +215,11 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 				<Box sx={{ display: "flex", width: "100%" }}>
 					<Select
 						value={value}
-						onChange={(e) => onChange(e.target.value)}
+						onChange={(e) => {
+							if (e.target.value !== "add_new") {
+								onChange(e.target.value);
+							}
+						}}
 						label="Choose Facebook Connection"
 						disabled={loading}
 						sx={{ flex: 1 }}
@@ -240,12 +250,12 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 								{isConnecting ? (
 									<>
 										<CircularProgress size={20} sx={{ mr: 1 }} />
-										Đang kết nối...
+										Connecting...
 									</>
 								) : (
 									<>
 										<Add fontSize="small" sx={{ mr: 1 }} />
-										Thêm kết nối Facebook mới
+										Add new connection
 									</>
 								)}
 							</MenuItem>
@@ -276,12 +286,12 @@ const ConnectionSelect: React.FC<ConnectionSelectProps> = ({
 									{isConnecting ? (
 										<>
 											<CircularProgress size={20} sx={{ mr: 1 }} />
-											Đang kết nối...
+											Connecting...
 										</>
 									) : (
 										<>
 											<Add fontSize="small" sx={{ mr: 1 }} />
-											Thêm kết nối Facebook mới
+											Add new connection
 										</>
 									)}
 								</MenuItem>,
@@ -549,6 +559,9 @@ const WebhookDialog: React.FC<WebhookDialogProps> = ({
 									label="Facebook App ID"
 									type="text"
 									fullWidth
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={appId}
 									onChange={(e) => setAppId(e.target.value)}
 								/>
@@ -722,7 +735,12 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 				<Box sx={{ display: "flex", width: "100%" }}>
 					<Select
 						value={value}
-						onChange={(e) => onChange(e.target.value)}
+						onChange={(e) => {
+							// Chỉ thay đổi giá trị khi không phải là "add_new"
+							if (e.target.value !== "add_new") {
+								onChange(e.target.value);
+							}
+						}}
 						label="Google Calendar Connection"
 						disabled={loading}
 						sx={{ flex: 1 }}
@@ -753,12 +771,12 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 								{isConnecting ? (
 									<>
 										<CircularProgress size={20} sx={{ mr: 1 }} />
-										Đang kết nối...
+										Connecting...
 									</>
 								) : (
 									<>
 										<Add fontSize="small" sx={{ mr: 1 }} />
-										Thêm kết nối Google Calendar mới
+										Add new connection
 									</>
 								)}
 							</MenuItem>
@@ -789,12 +807,12 @@ const CalendarConnectionSelect: React.FC<CalendarConnectionSelectProps> = ({
 									{isConnecting ? (
 										<>
 											<CircularProgress size={20} sx={{ mr: 1 }} />
-											Đang kết nối...
+											Connecting...
 										</>
 									) : (
 										<>
 											<Add fontSize="small" sx={{ mr: 1 }} />
-											Thêm kết nối Google Calendar mới
+											Add new connection
 										</>
 									)}
 								</MenuItem>,
@@ -922,12 +940,18 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	selectedNode,
 	onChange,
 	onClose,
+	flowId,
+	flowName = "Untitled Flow",
 }) => {
 	const [localSettings, setLocalSettings] = useState<NodeSettings>({});
 	const [isTestingCall, setIsTestingCall] = useState<boolean>(false);
 	const [callResult, setCallResult] = useState<any>(null);
 	const [openCallResultDialog, setOpenCallResultDialog] =
 		useState<boolean>(false);
+	const [hasChanges, setHasChanges] = useState<boolean>(false);
+	const [isSaving, setIsSaving] = useState<boolean>(false);
+	const reactFlowInstance = useReactFlow();
+	const [subscribing, setSubscribing] = useState(false);
 
 	if (!selectedNode) {
 		return null;
@@ -937,26 +961,30 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 	useEffect(() => {
 		if (selectedNode) {
 			const nodeSettings = selectedNode.data?.settings || {};
+			let defaultSettingsApplied = false;
+			let defaultSettings = {};
 
 			// Khởi tạo giá trị mặc định cho node aiCall mới
 			if (
 				selectedNode.type === "aiCall" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					language: "english",
 					prompt: "",
 					introduction: "",
 					questions: [""],
 					goodByeMessage: "",
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node googleCalendar mới
 			else if (
 				selectedNode.type === "googleCalendar" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					calendarName: "",
 					eventName: "",
 					startWorkDays: 0,
@@ -964,73 +992,184 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 					startTime: "09:00",
 					endTime: "17:00",
 					duration: 30,
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node preVerify mới
 			else if (
 				selectedNode.type === "preVerify" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
+					enableWebScraping: false,
+					webScrapingPrompt: "",
 					criteria: [
 						{
 							field: "email",
 							type: "email",
 							operator: "isValid",
 							value: "",
-							mustMet: true,
 						},
 						{
 							field: "phone",
 							type: "phone",
 							operator: "isValid",
 							value: "",
-							mustMet: true,
 						},
 					],
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node Facebook Lead Ads mới
 			else if (
 				selectedNode.type === "facebookLeadAds" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					connection: "",
 					pageId: "",
 					formId: "",
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			}
 			// Khởi tạo giá trị mặc định cho node webhook mới
 			else if (
 				selectedNode.type === "sendWebhook" &&
 				Object.keys(nodeSettings).length === 0
 			) {
-				setLocalSettings({
+				defaultSettings = {
 					webhookUrl: "",
 					method: "POST",
 					headers: "{}",
 					timeout: 30,
 					retryCount: 3,
-				});
+				};
+				setLocalSettings(defaultSettings);
+				defaultSettingsApplied = true;
 			} else {
 				setLocalSettings(nodeSettings as NodeSettings);
 			}
+
+			// Nếu đã áp dụng giá trị mặc định, tự động cập nhật node data
+			if (defaultSettingsApplied) {
+				// Cập nhật node data với giá trị mặc định
+				onChange(selectedNode.id, {
+					...selectedNode.data,
+					settings: defaultSettings,
+				});
+			}
+
+			setHasChanges(false);
 		}
-	}, [selectedNode]);
+	}, [selectedNode, onChange]);
 
 	const updateSettings = (
 		key: string,
-		value: string | number | Array<string> | Array<{ [key: string]: any }>
+		value:
+			| string
+			| number
+			| boolean
+			| Array<string>
+			| Array<{ [key: string]: any }>
 	) => {
 		const updatedSettings = { ...localSettings, [key]: value };
 		setLocalSettings(updatedSettings);
+		setHasChanges(true);
+	};
 
-		// Update the node data
+	const handleSaveChanges = async () => {
+		if (selectedNode.type === "facebookLeadAds" && localSettings.pageId) {
+			setIsSaving(true);
+			try {
+				const response = await subscribePageToWebhook(
+					localSettings.pageId as string
+				);
+				if (response && !response.error) {
+				} else {
+					toast.error(
+						response.error?.message || "Failed to subscribe to webhook"
+					);
+					setIsSaving(false);
+					return;
+				}
+			} catch (err) {
+				toast.error("Unexpected error subscribing to webhook");
+				setIsSaving(false);
+				return;
+			}
+		}
+
+		// Update locally first
 		onChange(selectedNode.id, {
 			...selectedNode.data,
-			settings: updatedSettings,
+			settings: localSettings,
+			...(selectedNode.type === "facebookLeadAds" && localSettings.pageId
+				? { webhookSubscribed: true }
+				: {}),
 		});
+
+		// If we have a flowId, also update on the server
+		if (flowId) {
+			try {
+				setIsSaving(true);
+
+				// Get current flow data directly from the React Flow instance
+				const currentFlowData = reactFlowInstance.toObject();
+
+				// Update the specific node's settings in the current flow data
+				const updatedNodes = currentFlowData.nodes.map((node: any) => {
+					if (node.id === selectedNode.id) {
+						return {
+							...node,
+							data: {
+								...node.data,
+								settings: localSettings,
+								...(selectedNode.type === "facebookLeadAds" &&
+								localSettings.pageId
+									? { webhookSubscribed: true }
+									: {}),
+							},
+						};
+					}
+					return node;
+				});
+
+				// Prepare the data for API call (similar to onSave in FlowEditor)
+				const flowUpdateData = {
+					flowName: flowName,
+					nodeData: {
+						...currentFlowData,
+						nodes: updatedNodes,
+					},
+				};
+
+				// Save to localStorage for consistency with FlowEditor
+				localStorage.setItem(
+					"flow-data",
+					JSON.stringify({
+						...currentFlowData,
+						nodes: updatedNodes,
+					})
+				);
+
+				// Call API to update the flow on the server
+				await updateFlow(flowId, flowUpdateData);
+			} catch (error) {
+				console.error("Error saving node settings:", error);
+				toast.error("Failed to save settings to server");
+			} finally {
+				setIsSaving(false);
+				setHasChanges(false);
+			}
+		} else {
+			// No flowId, just update locally
+			toast.success(`${selectedNode.type} node settings saved locally!`);
+			setHasChanges(false);
+			setIsSaving(false);
+		}
 	};
 
 	const handleTextChange =
@@ -1047,56 +1186,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 			updateSettings(key, parseInt(event.target.value) || 0);
 		};
 
-	// Add the function to handle test call
-	const handleTestCall = async () => {
-		if (!localSettings.phoneNumber || !localSettings.callerNumber) {
-			toast.error("Vui lòng nhập số điện thoại và số người gọi!");
-			return;
-		}
-
-		// Tạo attribute dựa trên các trường mới
-		let attribute = {
-			language: localSettings.language || "vietnamese",
-			prompt: localSettings.prompt || "",
-			introduction: localSettings.introduction || "",
-			questions: localSettings.questions || [""],
-			goodByeMessage: localSettings.goodByeMessage || "",
-		};
-
-		// Nếu có attributeJson, sử dụng nó thay thế
-		if (localSettings.attributeJson) {
-			try {
-				attribute = JSON.parse(localSettings.attributeJson);
-			} catch (error) {
-				toast.error("Lỗi định dạng JSON cho trường attribute!");
-				return;
-			}
-		}
-
-		try {
-			setIsTestingCall(true);
-			const leadData: LeadData = {
-				phoneNumber: localSettings.phoneNumber || "",
-				callerId: "",
-				callerNumber: localSettings.callerNumber || "",
-				attribute: attribute,
-				outreachType: "phonecall",
-				ExtendData: {},
-			};
-
-			const result = await callLead(leadData);
-			setCallResult(result);
-			setOpenCallResultDialog(true);
-		} catch (error) {
-			console.error("Error testing call:", error);
-			toast.error("Lỗi khi thực hiện cuộc gọi thử nghiệm!");
-		} finally {
-			setIsTestingCall(false);
-		}
-	};
-
 	const renderSettings = () => {
-		// Different node types have different settings
 		const nodeType = selectedNode.type || "default";
 
 		switch (nodeType) {
@@ -1109,6 +1199,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Spreadsheet ID"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.spreadsheetId || ""}
 							onChange={handleTextChange("spreadsheetId")}
 							placeholder="Enter spreadsheet ID"
@@ -1119,9 +1212,58 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Sheet Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.sheetName || ""}
 							onChange={handleTextChange("sheetName")}
 							placeholder="Enter sheet name"
+						/>
+					</>
+				);
+
+			case "sheet":
+				return (
+					<>
+						<TextField
+							fullWidth
+							size="small"
+							label="Sheet url"
+							variant="outlined"
+							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
+							value={localSettings.sheetUrl || ""}
+							onChange={(e) => {
+								updateSettings("sheetUrl", e.target.value);
+							}}
+							placeholder="Enter sheet url"
+							required
+							helperText="The URL where lead data stored"
+						/>
+					</>
+				);
+
+			case "excel":
+				return (
+					<>
+						<TextField
+							fullWidth
+							size="small"
+							label="Excel url"
+							variant="outlined"
+							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
+							value={localSettings.excelUrl || ""}
+							onChange={(e) => {
+								updateSettings("excelUrl", e.target.value);
+							}}
+							placeholder="Enter excel url"
+							required
+							helperText="The URL where lead data stored"
 						/>
 					</>
 				);
@@ -1147,26 +1289,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							onChange={(value) => updateSettings("formId", value)}
 							disabled={!localSettings.pageId}
 						/>
-
-						{localSettings.pageId && (
-							<Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
-								<Button
-									variant="contained"
-									color="primary"
-									startIcon={<NotificationImportant />}
-									onClick={() => {
-										toast.success("Facebook connection saved!");
-										onChange(selectedNode.id, {
-											...selectedNode.data,
-											settings: localSettings,
-											webhookSubscribed: true,
-										});
-									}}
-								>
-									Save Connection
-								</Button>
-							</Box>
-						)}
 					</>
 				);
 
@@ -1191,7 +1313,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Prompt"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.prompt || ""}
 							onChange={handleTextChange("prompt")}
 							placeholder="Enter prompt"
@@ -1204,7 +1327,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.introduction || ""}
 							onChange={handleTextChange("introduction")}
 							placeholder="Enter introduction message"
@@ -1227,6 +1351,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									size="small"
 									label={`Question ${index + 1}`}
 									variant="outlined"
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={question}
 									onChange={(e) => {
 										const newQuestions = [...(localSettings.questions || [""])];
@@ -1268,7 +1395,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									updateSettings("questions", newQuestions);
 								}}
 							>
-								Thêm câu hỏi
+								Add question
 							</Button>
 						</Box>
 
@@ -1279,7 +1406,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={2}
+							minRows={1}
+							maxRows={10}
 							value={localSettings.goodByeMessage || ""}
 							onChange={handleTextChange("goodByeMessage")}
 							placeholder="Enter goodbye message"
@@ -1301,6 +1429,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Calendar Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.calendarName || ""}
 							onChange={handleTextChange("calendarName")}
 							placeholder="Enter calendar name"
@@ -1313,6 +1444,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Event Name"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.eventName || ""}
 							onChange={handleTextChange("eventName")}
 							placeholder="Enter event name"
@@ -1476,10 +1610,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Webhook URL"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.webhookUrl || ""}
 							onChange={(e) => {
 								let value = e.target.value;
-								// Nếu URL không có http/https, thêm https://
 								if (
 									value &&
 									!(value.startsWith("http://") || value.startsWith("https://"))
@@ -1492,34 +1628,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							required
 							helperText="The URL where lead data will be sent"
 						/>
-
-						{/* <FormControl fullWidth margin="normal" size="small">
-							<InputLabel>Method</InputLabel>
-							<Select
-								value={localSettings.method || "POST"}
-								onChange={handleSelectChange("method")}
-								label="Method"
-							>
-								<MenuItem value="GET">GET</MenuItem>
-								<MenuItem value="POST">POST</MenuItem>
-								<MenuItem value="PUT">PUT</MenuItem>
-								<MenuItem value="PATCH">PATCH</MenuItem>
-							</Select>
-						</FormControl>
-
-						<TextField
-							fullWidth
-							size="small"
-							label="Headers (JSON)"
-							variant="outlined"
-							margin="normal"
-							multiline
-							rows={2}
-							value={localSettings.headers || "{}"}
-							onChange={handleTextChange("headers")}
-							placeholder="Enter headers in JSON format"
-							helperText='Example: {"Content-Type": "application/json", "Authorization": "Bearer token"}'
-						/> */}
 					</>
 				);
 
@@ -1532,6 +1640,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Condition Field"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.field || ""}
 							onChange={handleTextChange("field")}
 							placeholder="Enter field name"
@@ -1556,6 +1667,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Value"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.value || ""}
 							onChange={handleTextChange("value")}
 							placeholder="Enter value to compare"
@@ -1584,6 +1698,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							label="Subject Template"
 							variant="outlined"
 							margin="normal"
+							multiline
+							minRows={1}
+							maxRows={10}
 							value={localSettings.subject || ""}
 							onChange={handleTextChange("subject")}
 							placeholder="Enter email subject"
@@ -1595,7 +1712,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={3}
+							minRows={3}
+							maxRows={10}
 							value={localSettings.template || ""}
 							onChange={handleTextChange("template")}
 							placeholder="Enter email template"
@@ -1624,7 +1742,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							variant="outlined"
 							margin="normal"
 							multiline
-							rows={3}
+							minRows={3}
+							maxRows={10}
 							value={localSettings.template || ""}
 							onChange={handleTextChange("template")}
 							placeholder="Enter SMS template"
@@ -1639,6 +1758,41 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							Configure Pre-verification Criteria
 						</Typography>
 
+						<Box sx={{ mt: 2, mb: 3 }}>
+							<FormControlLabel
+								control={
+									<Checkbox
+										checked={localSettings.enableWebScraping || false}
+										onChange={(e) => {
+											updateSettings("enableWebScraping", e.target.checked);
+										}}
+										size="small"
+									/>
+								}
+								label="Enable Web Scraping Verification"
+							/>
+							{localSettings.enableWebScraping && (
+								<TextField
+									fullWidth
+									size="small"
+									label="Web Scraping Prompt"
+									variant="outlined"
+									margin="normal"
+									multiline
+									minRows={3}
+									maxRows={10}
+									value={localSettings.webScrapingPrompt || ""}
+									onChange={handleTextChange("webScrapingPrompt")}
+									placeholder="Enter prompt for web scraping verification"
+									helperText="This prompt will be used to give criteras for the web scraping verification process"
+								/>
+							)}
+						</Box>
+
+						<Divider sx={{ my: 2 }}>
+							<Chip label="Field Criteria" />
+						</Divider>
+
 						{/* Danh sách các tiêu chí */}
 						{(
 							localSettings.criteria || [
@@ -1647,19 +1801,16 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									type: "string",
 									operator: "equals",
 									value: "",
-									mustMet: true,
 								},
 							]
 						).map((criterion, index) => (
 							<Box
 								key={index}
 								sx={{
-									border: "1px solid #e0e0e0",
-									borderRadius: "4px",
 									p: 2,
 									mb: 2,
-									backgroundColor: "#fafafa",
 								}}
+								className="criteria-info"
 							>
 								<Box
 									sx={{
@@ -1692,6 +1843,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 									label="Field"
 									variant="outlined"
 									margin="normal"
+									multiline
+									minRows={1}
+									maxRows={10}
 									value={criterion.field || ""}
 									onChange={(e) => {
 										const newCriteria = [...(localSettings.criteria || [])];
@@ -1806,24 +1960,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 										}
 									/>
 								)}
-
-								<FormControlLabel
-									control={
-										<Checkbox
-											checked={criterion.mustMet}
-											onChange={(e) => {
-												const newCriteria = [...(localSettings.criteria || [])];
-												newCriteria[index] = {
-													...newCriteria[index],
-													mustMet: e.target.checked,
-												};
-												updateSettings("criteria", newCriteria);
-											}}
-											size="small"
-										/>
-									}
-									label="Must be met for verification to succeed"
-								/>
 							</Box>
 						))}
 
@@ -1841,7 +1977,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 											type: "string",
 											operator: "equals",
 											value: "",
-											mustMet: true,
 										},
 									];
 									updateSettings("criteria", newCriteria);
@@ -1855,15 +1990,14 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 							sx={{
 								mt: 2,
 								p: 2,
-								backgroundColor: "#f5f5f5",
 								borderRadius: "4px",
 							}}
+							className="criteria-info"
 						>
 							<Typography variant="caption" color="text.secondary">
 								Configure criteria to pre-verify leads before further
 								processing. Each criteria evaluates a field against the
-								specified value based on its data type and chosen operator. You
-								can mark criteria as "must be met" for essential requirements.
+								specified value based on its data type and chosen operator.
 							</Typography>
 						</Box>
 					</>
@@ -1918,17 +2052,39 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
 			<Divider sx={{ my: 2 }} />
 
-			<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-				<Chip
-					size="small"
-					label={`ID: ${selectedNode.id.slice(0, 8)}`}
-					variant="outlined"
-				/>
-				<Chip
-					size="small"
-					label={`Type: ${selectedNode.type}`}
-					variant="outlined"
-				/>
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					mb: 2,
+				}}
+			>
+				<Box>
+					<Chip
+						size="small"
+						label={`Type: ${selectedNode.type}`}
+						variant="outlined"
+						sx={{ ml: 1 }}
+					/>
+				</Box>
+				{selectedNode.type !== "deadLead" && (
+					<Button
+						variant="contained"
+						color="primary"
+						startIcon={
+							isSaving ? (
+								<CircularProgress size={16} color="inherit" />
+							) : (
+								<Save />
+							)
+						}
+						onClick={handleSaveChanges}
+						disabled={!hasChanges || isSaving}
+					>
+						{isSaving ? "Saving..." : "Save Changes"}
+					</Button>
+				)}
 			</Box>
 		</PanelContainer>
 	);

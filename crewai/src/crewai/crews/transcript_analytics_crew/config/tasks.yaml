@@ -1,0 +1,47 @@
+analyze_prompt:
+    description: >
+        Extract essential lead qualification criteria from: {customer_prompt}.
+        Follow these extraction rules:
+        1. Identify explicit business requirements that qualify leads
+        2. Extract only criteria that can be evaluated against actual leads
+        3. Format each criterion with a name, description, and "must-have" boolean
+        4. Include only criteria that are mentioned or strongly implied
+
+        Write to "customer_prompt_result.txt".
+
+        Format as JSON array:
+        [
+          {
+            "name": "brief name",
+            "description": "short explanation",
+            "must_have": true/false
+          }
+        ]
+    expected_output: A valid JSON array of criteria objects.
+    agent: prompt_analyzer_agent
+
+evaluate_transcript:
+    description: >
+        Analyze if lead in {transcripts} meets criteria from "customer_prompt_result.txt".
+        EVALUATION LOGIC:
+        1. Review each criterion against relevant transcript content
+        2. Apply logical inference sparingly - only when evidence strongly suggests compliance
+        3. Apply these rules:
+        - Lead FAILS if any "must-have" criterion fails
+        - Lead must meeting >=50% of criteria to PASSES
+
+        Write to "transcript_result.txt" as:
+        {
+          "pass": boolean,
+          "criteria_results": [
+            {
+              "criterion": "name",
+              "passed": boolean,
+              "reason": "brief explanation",
+              "must_have": boolean
+            }
+          ],
+          "message": "explanation of the evaluation"
+        }
+    expected_output: JSON with pass status and results
+    agent: transcript_analyzer_agent

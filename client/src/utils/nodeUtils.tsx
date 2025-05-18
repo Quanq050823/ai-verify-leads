@@ -11,6 +11,10 @@ import {
 	Settings,
 	ErrorOutline,
 	Layers,
+	VerifiedUser,
+	ReportProblem,
+	GridOn,
+	LibraryBooks,
 } from "@mui/icons-material";
 
 // Function to determine the icon for a node type
@@ -18,6 +22,10 @@ export const getNodeIcon = (key: string) => {
 	switch (key) {
 		case "googleSheets":
 			return <TableChart fontSize="small" />;
+		case "sheet":
+			return <GridOn fontSize="small" />;
+		case "excel":
+			return <LibraryBooks fontSize="small" />;
 		case "facebookLeadAds":
 			return <Facebook fontSize="small" />;
 		case "aiCall":
@@ -26,6 +34,8 @@ export const getNodeIcon = (key: string) => {
 			return <CalendarMonth fontSize="small" />;
 		case "sendWebhook":
 			return <Webhook fontSize="small" />;
+		case "deadLead":
+			return <ReportProblem fontSize="small" />;
 		case "condition":
 		case "preVerify":
 			return <CallSplit fontSize="small" />;
@@ -37,6 +47,8 @@ export const getNodeIcon = (key: string) => {
 			return <Settings fontSize="small" />;
 		case "error":
 			return <ErrorOutline fontSize="small" />;
+		case "verified":
+			return <VerifiedUser fontSize="small" />;
 		default:
 			return <Layers fontSize="small" />;
 	}
@@ -47,6 +59,10 @@ export const getNodeColor = (key: string) => {
 	switch (key) {
 		case "googleSheets":
 			return "#0F9D58";
+		case "sheet":
+			return "#16a34a"; // Green
+		case "excel":
+			return "#217346"; // Excel green
 		case "facebookLeadAds":
 			return "#1877f2";
 		case "aiCall":
@@ -55,17 +71,10 @@ export const getNodeColor = (key: string) => {
 			return "#4285f4";
 		case "sendWebhook":
 			return "#8b5cf6";
-		case "condition":
+		case "deadLead":
+			return "#ef4444";
 		case "preVerify":
 			return "#f59e0b";
-		case "email":
-			return "#00BCD4";
-		case "sms":
-			return "#8BC34A";
-		case "config":
-			return "#795548";
-		case "error":
-			return "#F44336";
 		default:
 			return "#9E9E9E";
 	}

@@ -111,15 +111,12 @@ html.dark-theme .react-flow {
 }
 
 .react-flow__panel {
-	background-color: var(--panel-bg-color);
 	border-color: var(--panel-border-color);
-	box-shadow: var(--panel-box-shadow);
 }
 
 /* Custom project components */
 .lead-board {
 	background-color: var(--panel-bg-color) !important;
-	border-color: var(--panel-border-color) !important;
 	box-shadow: var(--panel-box-shadow) !important;
 }
 

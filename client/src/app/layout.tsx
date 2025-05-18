@@ -27,10 +27,15 @@ import CssBaseline from "@mui/material/CssBaseline";
 import theme from "@/theme";
 import LayoutProvider from "@/providers/LayoutProvider";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { FlowProvider } from "@/context/FlowContext";
 
 export const metadata = {
 	title: "Sine | AI Lead Verify Lead Automation Website",
 	description: "AI Lead Verify Lead Automation Website",
+	icons: {
+		icon: "/images/Sine_logo_icon.png",
+		apple: "/images/Sine_logo_icon.png",
+	},
 };
 
 export default function RootLayout(props: { children: React.ReactNode }) {
@@ -49,7 +54,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 							{/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
 							<CssBaseline />
 
-							<LayoutProvider>{props.children}</LayoutProvider>
+							<FlowProvider>
+								<LayoutProvider>{props.children}</LayoutProvider>
+							</FlowProvider>
 						</MuiThemeProvider>
 					</ThemeProvider>
 					<ToastContainer position="bottom-right" />

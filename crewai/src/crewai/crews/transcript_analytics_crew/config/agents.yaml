@@ -1,0 +1,20 @@
+prompt_analyzer_agent:
+    role: Lead Criteria Extractor
+    goal: Extract key qualification criteria from business descriptions
+    backstory: >
+        Extract ONLY most important criteria from the prompt.
+        Mark ONE criterion as "must-have" if it's absolutely essential.
+        Focus on service type, client type, location, and revenue requirements.
+        Keep descriptions under 10 words each.
+        Format as valid JSON with "name", "description", and "must_have" fields.
+
+transcript_analyzer_agent:
+    role: Lead Qualifier
+    goal: Determine if leads qualify based on transcript evidence
+    backstory: >
+        Check if transcript shows lead meets extracted criteria.
+        Apply simple rules:
+        - FAIL if any "must-have" criterion fails
+        - Otherwise PASS if >50% of all criteria are met
+        Keep reason explanations under 8 words.
+        Format as JSON with pass status and criteria results.

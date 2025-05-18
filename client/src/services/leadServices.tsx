@@ -39,10 +39,17 @@ export const fetchLeadsByNodes = async (flowId: string) => {
 	}
 };
 
-// Lấy tất cả leads
-export const getLeads = async (): Promise<Lead[]> => {
+// Lấy tất cả leads, có thể lọc theo flowId
+export const getLeads = async (flowId?: string): Promise<Lead[]> => {
 	try {
-		const response = await apiClient.get("/lead");
+		let url = "/lead";
+
+		// Nếu flowId được cung cấp, sử dụng endpoint để lấy lead theo flow
+		if (flowId) {
+			url = `/lead/flow/${flowId}`;
+		}
+
+		const response = await apiClient.get(url);
 		return response.data;
 	} catch (error) {
 		console.error("Error fetching leads:", error);
@@ -101,6 +108,19 @@ export const deleteLead = async (id: string): Promise<boolean> => {
 	} catch (error) {
 		console.error(`Error deleting lead with ID ${id}:`, error);
 		toast.error("Failed to delete lead!");
+		return false;
+	}
+};
+
+// Retry lead processing
+export const retryLead = async (id: string): Promise<boolean> => {
+	try {
+		await apiClient.post(`/lead/retry/${id}`);
+		toast.success("Lead processing restarted!");
+		return true;
+	} catch (error) {
+		console.error(`Error retrying lead with ID ${id}:`, error);
+		toast.error("Failed to retry lead processing!");
 		return false;
 	}
 };

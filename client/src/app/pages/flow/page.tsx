@@ -264,13 +264,7 @@ const FlowList: React.FC<FlowListProps> = ({
 										}}
 									/>
 									<Box sx={{ display: "flex", alignItems: "center" }}>
-										<Box
-											onClick={(e) => {
-												e.stopPropagation();
-												onToggleActive(flow.id);
-											}}
-											sx={{ display: "inline-flex", mr: 0.5 }}
-										>
+										<Box sx={{ display: "inline-flex", mr: 0.5 }}>
 											<Tooltip
 												title={
 													flow.status === 2 ? "Disable flow" : "Activate flow"
@@ -280,7 +274,10 @@ const FlowList: React.FC<FlowListProps> = ({
 													checked={flow.status === 2}
 													color="primary"
 													size="small"
-													onClick={(e) => e.stopPropagation()}
+													onChange={(e) => {
+														e.stopPropagation();
+														onToggleActive(flow.id);
+													}}
 												/>
 											</Tooltip>
 										</Box>
@@ -296,7 +293,8 @@ const FlowList: React.FC<FlowListProps> = ({
 
 								{/* Content - Now using CardActionArea outside the content area */}
 								<CardActionArea
-									onClick={() => handleEditFlow(flow)}
+									component={Link}
+									href={`/pages/customflow?id=${flow.id}`}
 									sx={{
 										flexGrow: 1,
 										display: "flex",
@@ -590,18 +588,26 @@ const ScenarioPage: React.FC = () => {
 	const handleToggleActive = async (flowId: string) => {
 		try {
 			const targetFlow = flows.find((flow) => flow.id === flowId);
-			if (!targetFlow) return;
+			if (!targetFlow) {
+				console.error("Flow not found");
+				return;
+			}
 
 			let response;
-			if (targetFlow.status === 1) {
+			// Toggle between status 1 (inactive) and 2 (active)
+			if (targetFlow.status === 1 || targetFlow.status === 0) {
 				response = await enableFlow(flowId);
 			} else if (targetFlow.status === 2) {
 				response = await disableFlow(flowId);
 			}
 
-			if (!response?.error) {
-				await loadFlows();
+			if (response?.error) {
+				console.error("Error toggling flow status:", response.error);
+				return;
 			}
+
+			// Reload flows to get updated status
+			await loadFlows();
 		} catch (error) {
 			console.error("Error toggling flow status:", error);
 		}
@@ -656,7 +662,7 @@ const ScenarioPage: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ mb: 3 }}>
+		<Box sx={{ minHeight: "85vh", mb: 10 }}>
 			<Box
 				sx={{
 					minHeight: "80vh",

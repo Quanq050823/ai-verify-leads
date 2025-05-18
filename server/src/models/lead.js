@@ -19,9 +19,14 @@ const leadSchema = mongoose.Schema(
             default: 1,
         },
         isVerified: {
-            type: Number,
-            enum: [0, 1, 2],
-            default: 0,
+            status: {
+                type: Number,
+                enum: [0, 1, 2],
+                default: 0,
+            },
+            message: {
+                type: String,
+            },
         },
         source: {
             type: String,

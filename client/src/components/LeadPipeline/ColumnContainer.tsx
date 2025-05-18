@@ -7,6 +7,8 @@ import React, {
 	useMemo,
 	MouseEvent,
 	useEffect,
+	useRef,
+	useCallback,
 } from "react";
 import {
 	Card,
@@ -31,6 +33,7 @@ import {
 	DialogActions,
 	Select,
 	SelectChangeEvent,
+	CircularProgress,
 } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import AddIcon from "@mui/icons-material/Add";
@@ -41,6 +44,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import LeadCard from "./LeadCard";
 import { toast } from "react-toastify";
+import { retryLead } from "../../services/leadServices";
 
 interface Props {
 	column: Column;
@@ -81,14 +85,75 @@ function ColumnContainer(props: Props) {
 
 	const [leads, setLeads] = useState<Lead[]>(column.leads || []);
 	const [filterText, setFilterText] = useState("");
+	const [visibleLeads, setVisibleLeads] = useState<number>(4);
+	const [loading, setLoading] = useState(false);
+	const columnContentRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		if (column.leads) {
+		if (
+			column.leads &&
+			JSON.stringify(column.leads) !== JSON.stringify(leads)
+		) {
 			setLeads(column.leads);
+			setVisibleLeads(5); // Reset visible leads count when leads array changes
 		}
 	}, [column.leads]);
 
 	const handleDeleteLead = async (leadId: string) => {};
+
+	const handleRetryLead = async (leadId: string) => {
+		try {
+			setLoading(true);
+			const result = await retryLead(leadId);
+		} catch (error) {
+			console.error("Error retrying lead:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleScroll = useCallback(() => {
+		if (!columnContentRef.current) return;
+
+		const { scrollTop, scrollHeight, clientHeight } = columnContentRef.current;
+		const scrolledToBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+		const filteredLeads = leads.filter((lead) => {
+			if (filterText) {
+				const searchText = filterText.toLowerCase();
+				const name = lead.leadData.full_name || lead.leadData.name || "";
+				const email = lead.leadData.email || "";
+				const phone = lead.leadData.phone || "";
+				const company =
+					lead.leadData.company_name || lead.leadData.company || "";
+
+				return (
+					name.toLowerCase().includes(searchText) ||
+					email.toLowerCase().includes(searchText) ||
+					phone.toLowerCase().includes(searchText) ||
+					company.toLowerCase().includes(searchText)
+				);
+			}
+			return true;
+		});
+
+		if (scrolledToBottom && visibleLeads < filteredLeads.length && !loading) {
+			setLoading(true);
+			// Simulate loading delay
+			setTimeout(() => {
+				setVisibleLeads((prev) => prev + 4);
+				setLoading(false);
+			}, 300);
+		}
+	}, [leads, visibleLeads, filterText, loading]);
+
+	useEffect(() => {
+		const columnContent = columnContentRef.current;
+		if (columnContent) {
+			columnContent.addEventListener("scroll", handleScroll);
+			return () => columnContent.removeEventListener("scroll", handleScroll);
+		}
+	}, [handleScroll]);
 
 	const {
 		setNodeRef,
@@ -123,6 +188,28 @@ function ColumnContainer(props: Props) {
 		}
 	};
 
+	// Filter leads based on search text
+	const filteredLeads = leads.filter((lead) => {
+		if (filterText) {
+			const searchText = filterText.toLowerCase();
+			const name = lead.leadData.full_name || lead.leadData.name || "";
+			const email = lead.leadData.email || "";
+			const phone = lead.leadData.phone || "";
+			const company = lead.leadData.company_name || lead.leadData.company || "";
+
+			return (
+				name.toLowerCase().includes(searchText) ||
+				email.toLowerCase().includes(searchText) ||
+				phone.toLowerCase().includes(searchText) ||
+				company.toLowerCase().includes(searchText)
+			);
+		}
+		return true;
+	});
+
+	// Get only the visible leads
+	const displayedLeads = filteredLeads.slice(0, visibleLeads);
+
 	if (isDragging) {
 		return (
 			<div ref={setNodeRef} style={style} className="columnoverlay">
@@ -145,6 +232,7 @@ function ColumnContainer(props: Props) {
 							opacity: "0.6",
 							border: "2px dashed #0dcaf0",
 						}}
+						className="dragging-column"
 					>
 						<Box
 							sx={{
@@ -171,13 +259,14 @@ function ColumnContainer(props: Props) {
 				<Paper
 					elevation={0}
 					sx={{
-						borderRadius: "16px",
 						mb: "25px",
 						width: "320px",
-						background: "#F9FAFB",
-						border: "1px solid #E5E7EB",
 						overflow: "hidden",
+						borderRadius: 2,
+						backgroundColor: "background.paper",
+						boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
 					}}
+					className="lighter-bg"
 				>
 					{/* Column Header */}
 					<Box
@@ -186,11 +275,9 @@ function ColumnContainer(props: Props) {
 							alignItems: "center",
 							justifyContent: "space-between",
 							p: "16px 20px",
-							background: "#FFFFFF",
-							borderBottom: "1px solid #E5E7EB",
 							cursor: "grab",
 						}}
-						className="column-header"
+						className="flow-card-header"
 						{...attributes}
 						{...listeners}
 						onClick={handleColumnHeaderClick}
@@ -201,7 +288,6 @@ function ColumnContainer(props: Props) {
 								sx={{
 									fontWeight: 600,
 									fontSize: "15px",
-									color: "#121828",
 								}}
 							>
 								{column.title}
@@ -276,9 +362,10 @@ function ColumnContainer(props: Props) {
 
 					{/* Card content area with scrolling */}
 					<Box
+						ref={columnContentRef}
 						sx={{
 							p: "16px",
-							maxHeight: "calc(100vh - 200px)",
+							maxHeight: "80vh",
 							overflowY: "auto",
 							"&::-webkit-scrollbar": {
 								width: "6px",
@@ -288,57 +375,52 @@ function ColumnContainer(props: Props) {
 								borderRadius: "10px",
 							},
 						}}
-						className="column-header"
+						className="flow-column-content"
 					>
-						{leads.filter((lead) => {
-							// Nếu có filter text, lọc theo tên, email, hoặc phone
-							if (filterText) {
-								const searchText = filterText.toLowerCase();
-								const name =
-									lead.leadData["full name"] || lead.leadData.name || "";
-								const email = lead.leadData.email || "";
-								const phone = lead.leadData.phone || "";
-								const company =
-									lead.leadData.company_name || lead.leadData.company || "";
-
-								return (
-									name.toLowerCase().includes(searchText) ||
-									email.toLowerCase().includes(searchText) ||
-									phone.toLowerCase().includes(searchText) ||
-									company.toLowerCase().includes(searchText)
-								);
-							}
-							return true;
-						}).length > 0 ? (
-							leads
-								.filter((lead) => {
-									// Nếu có filter text, lọc theo tên, email, hoặc phone
-									if (filterText) {
-										const searchText = filterText.toLowerCase();
-										const name =
-											lead.leadData["full name"] || lead.leadData.name || "";
-										const email = lead.leadData.email || "";
-										const phone = lead.leadData.phone || "";
-										const company =
-											lead.leadData.company_name || lead.leadData.company || "";
-
-										return (
-											name.toLowerCase().includes(searchText) ||
-											email.toLowerCase().includes(searchText) ||
-											phone.toLowerCase().includes(searchText) ||
-											company.toLowerCase().includes(searchText)
-										);
-									}
-									return true;
-								})
-								.map((lead) => (
+						{filteredLeads.length > 0 ? (
+							<>
+								{displayedLeads.map((lead) => (
 									<LeadCard
 										key={lead._id.toString()}
 										lead={lead}
-										onEdit={handleEditLead}
 										onDelete={handleDeleteLead}
+										onRetry={handleRetryLead}
 									/>
-								))
+								))}
+
+								{loading && (
+									<Box
+										sx={{
+											display: "flex",
+											justifyContent: "center",
+											my: 2,
+										}}
+									>
+										<CircularProgress size={24} color="primary" />
+									</Box>
+								)}
+
+								{!loading && visibleLeads < filteredLeads.length && (
+									<Box
+										sx={{
+											display: "flex",
+											justifyContent: "center",
+											my: 2,
+										}}
+									>
+										<Button
+											size="small"
+											onClick={() => setVisibleLeads((prev) => prev + 5)}
+											sx={{
+												textTransform: "none",
+												fontSize: "0.8rem",
+											}}
+										>
+											Load More
+										</Button>
+									</Box>
+								)}
+							</>
 						) : (
 							<Box
 								sx={{
@@ -377,37 +459,6 @@ function ColumnContainer(props: Props) {
 								)}
 							</Box>
 						)}
-					</Box>
-
-					{/* Add Lead button at bottom */}
-					<Box
-						sx={{
-							p: "12px 16px",
-							background: "#FFFFFF",
-							borderTop: "1px solid #E5E7EB",
-						}}
-						className="column-header"
-					>
-						<Button
-							onClick={handleClickOpenCreateLead}
-							variant="outlined"
-							startIcon={<AddIcon />}
-							sx={{
-								textTransform: "none",
-								borderRadius: "8px",
-								fontWeight: "500",
-								fontSize: "13px",
-								padding: "8px 16px",
-								width: "100%",
-								color: "primary.main",
-								borderColor: "primary.main",
-								"&:hover": {
-									backgroundColor: "primary.lighter",
-								},
-							}}
-						>
-							Add Lead
-						</Button>
 					</Box>
 				</Paper>
 			</Box>
@@ -766,7 +817,7 @@ function ColumnContainer(props: Props) {
 										required
 										fullWidth
 										id="edit-name"
-										defaultValue={editLead.leadData?.["full name"] || ""}
+										defaultValue={editLead.leadData?.full_name || ""}
 										size="small"
 										InputProps={{
 											style: { borderRadius: 8 },

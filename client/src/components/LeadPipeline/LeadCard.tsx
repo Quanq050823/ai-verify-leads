@@ -29,21 +29,24 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import BusinessIcon from "@mui/icons-material/Business";
 import WorkIcon from "@mui/icons-material/Work";
 import LanguageIcon from "@mui/icons-material/Language";
+import ReplayIcon from "@mui/icons-material/Replay";
 import { getLeadById } from "../../services/leadServices";
 import { formatDistance } from "date-fns";
+import { getNodeIcon, getNodeColor } from "@/utils/nodeUtils";
+import { getSourceIcon, getSourceColor } from "@/utils/sourceUtils";
 
 const getStatusColor = (status: number) => {
 	switch (status) {
 		case 1:
-			return "#FF9800"; // Pending - Orange
+			return "#FF9800";
 		case 2:
-			return "#2196F3"; // In-progress - Blue
+			return "#2196F3";
 		case 3:
-			return "#4CAF50"; // Success - Green
+			return "#4CAF50";
 		case 9:
-			return "#9C27B0"; // Done-process - Purple
+			return "#10b981";
 		default:
-			return "#9E9E9E"; // Default - Grey
+			return "#ff5252";
 	}
 };
 
@@ -59,6 +62,32 @@ const getStatusText = (status: number) => {
 			return "Done";
 		default:
 			return "Error";
+	}
+};
+
+const getVerificationStatusColor = (status: number) => {
+	switch (status) {
+		case 0:
+			return "#9E9E9E"; // None - Gray
+		case 1:
+			return "#FF5722"; // Unqualified - Orange/Red
+		case 2:
+			return "#4CAF50"; // Qualified - Green
+		default:
+			return "#9E9E9E"; // Default - Gray
+	}
+};
+
+const getVerificationStatusText = (status: number) => {
+	switch (status) {
+		case 0:
+			return "Not Verified";
+		case 1:
+			return "Unqualified";
+		case 2:
+			return "Qualified";
+		default:
+			return "Unknown";
 	}
 };
 
@@ -97,13 +126,70 @@ const getRandomColor = (name: string) => {
 	return colors[hash % colors.length];
 };
 
+// Kiểm tra nodeId để xác định loại node
+const getNodeTypeFromId = (nodeId: string): string => {
+	if (!nodeId) return "default";
+
+	// Extract base node type from nodeId (email_123456 -> email)
+	const basePart = nodeId.split("_")[0]?.toLowerCase() || nodeId.toLowerCase();
+
+	// For debugging
+	console.log("NodeID:", nodeId, "BasePart:", basePart);
+
+	if (basePart.includes("email")) return "email";
+	if (basePart.includes("sms")) return "sms";
+	if (basePart.includes("facebook")) return "facebookLeadAds";
+	if (basePart.includes("google") && basePart.includes("sheet"))
+		return "googleSheets";
+	if (basePart.includes("google") && basePart.includes("calendar"))
+		return "googleCalendar";
+	if (basePart.includes("webhook")) return "sendWebhook";
+	if (basePart.includes("deadlead")) return "deadLead";
+	if (basePart.includes("preverify") || basePart.includes("verify"))
+		return "preVerify";
+	if (basePart.includes("aicall") || basePart.includes("call")) return "aiCall";
+	if (basePart.includes("delay") || basePart.includes("config"))
+		return "config";
+	if (basePart.includes("condition")) return "condition";
+
+	// If we get here, log the unknown type
+	console.log("Unknown node type for nodeId:", nodeId);
+	return "default";
+};
+
+// Lấy màu cho node
+const getNodeColorFromType = (nodeType: string): string => {
+	switch (nodeType) {
+		case "email":
+			return "#00BCD4";
+		case "sms":
+			return "#8BC34A";
+		case "facebookLeadAds":
+			return "#1877f2";
+		case "googleSheets":
+			return "#0F9D58";
+		case "googleCalendar":
+			return "#4285f4";
+		case "sendWebhook":
+			return "#8b5cf6";
+		case "preVerify":
+			return "#f59e0b";
+		case "aiCall":
+			return "#10b981";
+		case "config":
+			return "#795548";
+		default:
+			return "#9E9E9E";
+	}
+};
+
 interface LeadCardProps {
 	lead: Lead;
 	onDelete?: (id: string) => void;
-	onEdit?: (lead: Lead) => void;
+	onRetry?: (id: string) => void;
 }
 
-const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
+const LeadCard = ({ lead, onDelete, onRetry }: LeadCardProps) => {
 	const [openDetails, setOpenDetails] = useState(false);
 	const [detailedLead, setDetailedLead] = useState<Lead | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -149,16 +235,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 			setOpenDetails(false);
 		}
 	};
-
-	const handleEdit = (e: React.MouseEvent) => {
-		e.stopPropagation();
-		if (onEdit) {
-			onEdit(lead);
-		}
-	};
-
-	const leadName =
-		lead.leadData["full name"] || lead.leadData.name || "Unknown";
+	const leadName = lead.leadData.full_name || "Unknown";
 	const leadEmail = lead.leadData.email || "";
 	const leadPhone = lead.leadData.phone || "";
 	const leadCompany = lead.leadData.company_name || lead.leadData.company || "";
@@ -167,6 +244,14 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 	const timeAgo = formatDistance(new Date(lead.updatedAt), new Date(), {
 		addSuffix: true,
 	});
+
+	// Xác định loại node dựa trên dữ liệu
+	const nodeType = getNodeTypeFromId(lead.nodeId);
+	const nodeColor = getNodeColorFromType(nodeType);
+
+	const shouldShowRetryButton = () => {
+		return !lead.isVerified || lead.isVerified.status !== 2;
+	};
 
 	return (
 		<>
@@ -183,7 +268,7 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 					cursor: "pointer",
 				}}
 				onClick={handleOpenDetails}
-				className={"lead-card"}
+				className={"card-lead"}
 			>
 				<CardContent>
 					<Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
@@ -198,34 +283,81 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 								{getInitials(leadName)}
 							</Avatar>
 							<Box sx={{ ml: 1.5 }}>
-								<Typography variant="subtitle1" fontWeight="bold">
+								<Typography
+									variant="subtitle1"
+									fontWeight="bold"
+									noWrap
+									sx={{
+										maxWidth: 130,
+										textOverflow: "ellipsis",
+										overflow: "hidden",
+									}}
+								>
 									{leadName}
 								</Typography>
-								<Typography
-									variant="body2"
-									color="text.secondary"
-									sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-								>
-									{leadPosition && (
-										<>
-											<WorkIcon fontSize="inherit" />
+
+								{leadPosition && (
+									<Box
+										sx={{
+											display: "flex",
+											alignItems: "center",
+											gap: 0.5,
+											maxWidth: 130,
+										}}
+										className="position-label"
+									>
+										<WorkIcon fontSize="small" sx={{ flexShrink: 0 }} />
+										<Typography
+											variant="body2"
+											component="span"
+											sx={{
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
+											}}
+										>
 											{leadPosition}
-										</>
-									)}
-								</Typography>
+										</Typography>
+									</Box>
+								)}
 							</Box>
 						</Box>
-						<Box>
-							<Chip
-								label={getStatusText(lead.status)}
-								size="small"
-								sx={{
-									bgcolor: `${getStatusColor(lead.status)}20`,
-									color: getStatusColor(lead.status),
-									fontWeight: "bold",
-									borderRadius: 1,
-								}}
-							/>
+						<Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+							{/* Source Icon */}
+							<Tooltip title={`Source: ${lead.source || "Unknown"}`}>
+								<Box
+									sx={{
+										bgcolor: `${getSourceColor(lead.source || "")}20`,
+										color: getSourceColor(lead.source || ""),
+										width: 28,
+										height: 28,
+										borderRadius: "50%",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									{getSourceIcon(lead.source || "")}
+								</Box>
+							</Tooltip>
+
+							{/* Node Type Icon */}
+							<Tooltip title={`Current Node: ${nodeType}`}>
+								<Box
+									sx={{
+										bgcolor: `${nodeColor}20`,
+										color: nodeColor,
+										width: 28,
+										height: 28,
+										borderRadius: "50%",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									{getNodeIcon(nodeType)}
+								</Box>
+							</Tooltip>
 						</Box>
 					</Box>
 
@@ -263,6 +395,81 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 						</Box>
 					)}
 
+					{/* Modern verification status indicator */}
+					{lead.isVerified && (
+						<Box
+							sx={{
+								my: 1,
+								py: 0.5,
+								px: 1,
+								borderRadius: "6px",
+								backgroundColor: `${getVerificationStatusColor(
+									lead.isVerified.status
+								)}10`,
+								border: `1px solid ${getVerificationStatusColor(
+									lead.isVerified.status
+								)}30`,
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
+							}}
+						>
+							<Box
+								sx={{
+									width: 6,
+									height: 6,
+									borderRadius: "50%",
+									bgcolor: getVerificationStatusColor(lead.isVerified.status),
+									boxShadow: `0 0 0 2px ${getVerificationStatusColor(
+										lead.isVerified.status
+									)}20`,
+								}}
+							/>
+							<Typography
+								variant="caption"
+								sx={{
+									color: getVerificationStatusColor(lead.isVerified.status),
+									fontWeight: 600,
+									fontSize: "0.7rem",
+									letterSpacing: "0.2px",
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+								}}
+							>
+								{getVerificationStatusText(lead.isVerified.status)}
+							</Typography>
+						</Box>
+					)}
+
+					{/* Verification message if available */}
+					{lead.isVerified && lead.isVerified.message && (
+						<Box
+							sx={{
+								mt: -0.5,
+								mb: 1,
+								ml: 0.5,
+							}}
+						>
+							<Typography
+								variant="caption"
+								sx={{
+									color: `${getVerificationStatusColor(
+										lead.isVerified.status
+									)}99`, // 60% opacity of the status color
+									fontSize: "0.7rem",
+									display: "-webkit-box",
+									WebkitLineClamp: 2,
+									WebkitBoxOrient: "vertical",
+									overflow: "hidden",
+									lineHeight: 1.4,
+								}}
+							>
+								{lead.isVerified.message}
+							</Typography>
+						</Box>
+					)}
+
 					<Box
 						sx={{
 							display: "flex",
@@ -274,11 +481,20 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 						<Typography variant="caption" color="text.secondary">
 							{timeAgo}
 						</Typography>
-						<Box>
-							{onEdit && (
-								<Tooltip title="Edit">
-									<IconButton size="small" onClick={handleEdit}>
-										<EditIcon fontSize="small" />
+						<Box sx={{ display: "flex", gap: 0.5 }}>
+							{onRetry && shouldShowRetryButton() && (
+								<Tooltip title="Retry processing">
+									<IconButton
+										size="small"
+										color="primary"
+										sx={{ bgcolor: "#e3f2fd" }}
+										onClick={(e) => {
+											e.stopPropagation();
+											onRetry(lead._id.toString());
+										}}
+										className="retry-button"
+									>
+										<ReplayIcon fontSize="small" />
 									</IconButton>
 								</Tooltip>
 							)}
@@ -322,20 +538,44 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 							<Typography variant="h6" sx={{ fontWeight: 600 }}>
 								{leadName}
 							</Typography>
-							<Typography variant="caption" color="text.secondary">
-								Updated {timeAgo}
-							</Typography>
 						</Box>
-						<Chip
-							label={getStatusText(lead.status)}
-							size="small"
-							sx={{
-								ml: "auto",
-								bgcolor: `${getStatusColor(lead.status)}20`,
-								color: getStatusColor(lead.status),
-								fontWeight: "bold",
-							}}
-						/>
+						<Box
+							sx={{ ml: "auto", display: "flex", gap: 1, alignItems: "center" }}
+						>
+							<Tooltip title={`Source: ${lead.source || "Unknown"}`}>
+								<Box
+									sx={{
+										bgcolor: `${getSourceColor(lead.source || "")}20`,
+										color: getSourceColor(lead.source || ""),
+										width: 32,
+										height: 32,
+										borderRadius: "50%",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									{getSourceIcon(lead.source || "")}
+								</Box>
+							</Tooltip>
+
+							<Tooltip title={`Current Node: ${nodeType}`}>
+								<Box
+									sx={{
+										bgcolor: `${nodeColor}20`,
+										color: nodeColor,
+										width: 32,
+										height: 32,
+										borderRadius: "50%",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									{getNodeIcon(nodeType)}
+								</Box>
+							</Tooltip>
+						</Box>
 					</Box>
 				</DialogTitle>
 				<DialogContent dividers sx={{ p: 0 }}>
@@ -711,6 +951,47 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 								</Grid>
 							</Paper>
 
+							{lead.isVerified && lead.isVerified.status > 0 && (
+								<Paper
+									elevation={0}
+									sx={{
+										mt: 3,
+										p: 2.5,
+										borderRadius: "12px",
+										border: `1px solid ${
+											lead.isVerified.status === 2 ? "#C8E6C9" : "#FFCCBC"
+										}`,
+										bgcolor:
+											lead.isVerified.status === 2 ? "#F1F8E9" : "#FBE9E7",
+									}}
+									className="column-header"
+								>
+									<Typography
+										variant="subtitle1"
+										color={
+											lead.isVerified.status === 2
+												? "success.main"
+												: "warning.main"
+										}
+										fontWeight={600}
+										gutterBottom
+									>
+										Verification Information
+									</Typography>
+									<Box sx={{ mt: 1 }}>
+										<Typography variant="body2">
+											Status:{" "}
+											{getVerificationStatusText(lead.isVerified.status)}
+										</Typography>
+										{lead.isVerified.message && (
+											<Typography variant="body2" sx={{ mt: 1 }}>
+												Message: {lead.isVerified.message}
+											</Typography>
+										)}
+									</Box>
+								</Paper>
+							)}
+
 							{lead.error && lead.error.status && (
 								<Paper
 									elevation={0}
@@ -750,19 +1031,30 @@ const LeadCard = ({ lead, onDelete, onEdit }: LeadCardProps) => {
 					)}
 				</DialogContent>
 				<DialogActions sx={{ p: 2 }} className="column-header">
-					{onEdit && (
+					<Typography
+						variant="caption"
+						color="text.secondary"
+						sx={{ marginRight: "auto", marginLeft: "10px" }}
+					>
+						Updated {timeAgo}
+					</Typography>
+					{onRetry && shouldShowRetryButton() && (
 						<Button
-							startIcon={<EditIcon />}
-							onClick={handleEdit}
+							startIcon={<ReplayIcon />}
+							onClick={() => {
+								onRetry(lead._id.toString());
+								handleCloseDetails();
+							}}
 							color="primary"
 							variant="outlined"
 							sx={{
 								textTransform: "none",
 								borderRadius: "8px",
 								fontWeight: "500",
+								mr: 1,
 							}}
 						>
-							Edit
+							Retry Processing
 						</Button>
 					)}
 					{onDelete && (

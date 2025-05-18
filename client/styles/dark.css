@@ -705,3 +705,7 @@
 .dark-theme .position-label {
 	color: #51e6e1 !important;
 }
+.dark-theme .retry-button {
+	background-color: #007bff !important;
+	color: #fff !important;
+}

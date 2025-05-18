@@ -492,6 +492,7 @@ const LeadCard = ({ lead, onDelete, onRetry }: LeadCardProps) => {
 											e.stopPropagation();
 											onRetry(lead._id.toString());
 										}}
+										className="retry-button"
 									>
 										<ReplayIcon fontSize="small" />
 									</IconButton>
